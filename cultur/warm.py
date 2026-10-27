@@ -6,7 +6,7 @@ import sys
 
 from . import fingerprint as fpmod
 from . import registry
-from .qloo import ent_id, entities_of
+from .qloo import ent_id, entities_of, etype
 from .service import Service
 
 TTL = 30 * 86400
@@ -14,12 +14,14 @@ TTL = 30 * 86400
 
 async def warm_case(svc: Service, case: dict) -> dict:
     anchors, tried = [], []
-    for name in case["names"]:
+    svc.db.cache_del(f"regfp:{case['id']}")  # drop stale fingerprints before re-resolving
+    for name in case.get("qloo_anchor_names", []):
         r = await svc.q.search(name, take=5)
         tried.append({"name": name, "ok": r.ok})
         if not r.ok:
             continue
-        ex = [e for e in entities_of(r.data) if registry.norm(e.get("name") or "") == registry.norm(name)]
+        ex = [e for e in entities_of(r.data) if registry.norm(e.get("name") or "") == registry.norm(name)
+              and etype(e) in ("urn:entity:person", "urn:entity:brand")]
         if len(ex) == 1 and ent_id(ex[0]) not in anchors:
             anchors.append(ent_id(ex[0]))
     if not anchors:

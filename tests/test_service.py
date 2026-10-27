@@ -129,3 +129,27 @@ async def test_zero_qloo_footprint_is_coverage_warning_not_penalty(settings):
     assert any("Zero Qloo footprint" in c for c in d["caveats"])
     v = d["scores"]["trust_score"]["value"]
     assert v is None or v >= 50
+
+
+async def test_handle_resolved_by_twitter_lookup_when_entity_lists_that_handle(settings):
+    ent = lambda i, ty: {"entity_id": i, "name": "Foo Creator", "types": [ty], "properties": {"external": {"twitter": {"id": "foocreator"}}}}
+
+    class H(FakeQloo):
+        def __call__(self, request):
+            if request.url.path == "/entities":
+                self.calls.append(str(request.url))
+                return httpx.Response(200, json={"results": [ent("P1", "urn:entity:person"), ent("A1", "urn:entity:artist")]})
+            return super().__call__(request)
+    d = await make_service(settings, H()).generate(DossierRequest(input="@FooCreator"))
+    assert d["resolved_identity"]["qloo_entity_id"] == "P1"
+    assert d["fingerprint"]["anchors"] == ["P1", "A1"]
+
+
+async def test_handle_owned_by_other_entity_is_not_accepted(settings):
+    class H(FakeQloo):
+        def __call__(self, request):
+            if request.url.path == "/entities":
+                return httpx.Response(200, json={"results": [{"entity_id": "X", "name": "Other", "types": ["urn:entity:person"], "properties": {"external": {"twitter": {"id": "someoneelse"}}}}, {"entity_id": "Y", "name": "Another", "types": ["urn:entity:person"]}]})
+            return super().__call__(request)
+    d = await make_service(settings, H()).generate(DossierRequest(input="@foocreator"))
+    assert d["resolved_identity"] is None

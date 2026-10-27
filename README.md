@@ -19,8 +19,7 @@ Cultur is due-diligence support for fans and creators. It never calls anyone a f
 ```bash
 python -m venv .venv && . .venv/bin/activate      # Windows: .venv\Scripts\activate
 pip install -r requirements-dev.txt
-cp .env.example .env                                # then set QLOO_API_KEY (server-side only)
-export $(grep -v '^#' .env | xargs)                 # or set the variables in your shell
+cp .env.example .env                                # then set QLOO_API_KEY (server-side only); the hackathon host is hackathon.api.qloo.com
 python -m pytest -q
 uvicorn cultur.app:app --port 8000
 ```
@@ -62,7 +61,7 @@ No accounts. No Twitter/X scraping and no X API. Analysis uses submitted public 
 
 - Ethereum mainnet only. Standard RPC cannot find a contract's creator or enumerate holdings; creation info needs a supplied `creation_tx_hash` or a sourced registry record. Sender, factory, owner and creator are kept distinct. No chain scans.
 - The registry holds 12 cases built from public reporting (DOJ/SEC releases, CoinDesk, The Block and others); its wallet lists are empty because no primary-sourced wallet was verified. A failed project is not a fraudulent one; each record carries a claim status (established / alleged / disputed / unresolved). Absence of a match is not clearance.
-- Qloo coverage varies by entity; some registry cases may have no Qloo footprint. Trend momentum is not reported (the trending route is unverified in this build).
+- Qloo coverage varies by entity. In the live warm-up (2026-10-27) 6 of the 12 registry cases had a Qloo person anchor with a fingerprint (Do Kwon, Kim Kardashian, Richard Heart, Sam Bankman-Fried, Javier Milei, Logan Paul); the rest have no usable Qloo entity and are not compared. Only named people/brands are used as anchors, never generic project names. `/v2/trending` exists but returned no data for the probed query; momentum is limited to Qloo's raw `audience_growth` measurements.
 - Free-tier hosting cold-starts (about a minute on Render) and has an ephemeral disk: SQLite caches and saved dossiers can vanish on restart.
 - Qloo audience associations describe aggregated audiences, not any person's private preferences.
 

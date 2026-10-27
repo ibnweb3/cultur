@@ -10,14 +10,14 @@ from cultur.service import Service
 
 
 def fake_entities(prefix, n=5):
-    return [{"entity_id": f"{prefix}{i}", "name": f"{prefix} item {i}", "type": "urn:entity:artist", "popularity": 0.1,
-             "tags": [{"id": f"tag:{prefix}{i % 2}", "name": f"t{i % 2}"}]} for i in range(n)]
+    return [{"entity_id": f"{prefix}{i}", "name": f"{prefix} item {i}", "subtype": "urn:entity:artist", "popularity": 0.1,
+             "tags": [{"tag_id": f"tag:{prefix}{i % 2}", "name": f"t{i % 2}"}]} for i in range(n)]
 
 
 class FakeQloo:
     def __init__(self, search=None, fail=None):
         self.calls = []
-        self.search_result = search if search is not None else [{"entity_id": "ANCHOR", "name": "Foo Creator", "type": "urn:entity:person"}]
+        self.search_result = search if search is not None else [{"entity_id": "ANCHOR", "name": "Foo Creator", "types": ["urn:entity:person"]}]
         self.fail = fail  # None | "429" | "timeout" | "malformed" | "500"
 
     def __call__(self, request: httpx.Request) -> httpx.Response:
@@ -39,12 +39,12 @@ class FakeQloo:
         if p == "/v2/insights":
             t = q.get("filter.type")
             if t == "urn:tag":
-                return httpx.Response(200, json={"results": {"tags": [{"tag_id": "tag:a", "name": "A"}, {"tag_id": "tag:b", "name": "B"}]}})
+                return httpx.Response(200, json={"results": {"tags": [{"tag_id": "tag:a", "name": "A", "query": {"affinity": 1}}, {"tag_id": "tag:b", "name": "B", "query": {"affinity": 0.5}}]}})
             if t == "urn:demographics":
-                return httpx.Response(200, json={"results": {"demographics": [{"id": "d1", "name": "Age 25-34"}]}})
+                return httpx.Response(200, json={"results": {"demographics": [{"entity_id": "x", "query": {"age": {"25_to_29": 0.3}, "gender": {"female": 0.4}}}]}})
             return httpx.Response(200, json={"results": {"entities": fake_entities(t.split(":")[-1])}})
         if p == "/v2/analysis/compare":
-            return httpx.Response(200, json={"success": True, "results": []})
+            return httpx.Response(200, json={"success": True, "results": {"tags": [{"tag_id": "t", "name": "T", "query": {"score": 0.7}}], "a": [], "b": [], "matchEntities": []}})
         return httpx.Response(404)
 
 

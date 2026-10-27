@@ -1,5 +1,19 @@
 import os
+from pathlib import Path
 from dataclasses import dataclass, field
+
+
+def _load_dotenv():
+    f = Path(__file__).resolve().parent.parent / ".env"
+    if f.exists():
+        for line in f.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if line and not line.startswith("#") and "=" in line:
+                k, v = line.split("=", 1)
+                os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
+
+
+_load_dotenv()
 
 
 def _env(name: str, default: str = "") -> str:
@@ -9,7 +23,7 @@ def _env(name: str, default: str = "") -> str:
 @dataclass
 class Settings:
     qloo_api_key: str = field(default_factory=lambda: _env("QLOO_API_KEY"))
-    qloo_base_url: str = field(default_factory=lambda: _env("QLOO_BASE_URL", "https://api.qloo.com").rstrip("/"))
+    qloo_base_url: str = field(default_factory=lambda: _env("QLOO_BASE_URL", "https://hackathon.api.qloo.com").rstrip("/"))
     eth_rpc_url: str = field(default_factory=lambda: _env("ETH_RPC_URL", "https://ethereum-rpc.publicnode.com"))
     indexer_api_key: str = field(default_factory=lambda: _env("INDEXER_API_KEY"))
     db_path: str = field(default_factory=lambda: _env("DB_PATH", "data/cultur.db"))

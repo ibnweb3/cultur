@@ -49,6 +49,14 @@ def ent_id(e: dict) -> Optional[str]:
     return e.get("entity_id") or e.get("id")
 
 
+def etype(e: dict) -> Optional[str]:
+    """Verified shapes: /search and /entities use `types` (list); /v2/insights uses `subtype`."""
+    t = e.get("types")
+    if isinstance(t, list) and t:
+        return t[0]
+    return e.get("subtype") or e.get("type")
+
+
 class QlooClient:
     def __init__(self, settings: Settings, db: DB, http: Optional[httpx.AsyncClient] = None):
         self.s, self.db = settings, db
@@ -130,6 +138,11 @@ class QlooClient:
     async def insights(self, entity_ids: list[str], type_: str, take: int = 10, fresh=False, **extra):
         p = {"filter.type": type_, "signal.interests.entities": ",".join(entity_ids), "take": take, **extra}
         return await self.get("/v2/insights", p, fresh=fresh)
+
+    async def trending(self, entity_ids: list[str], type_: str, start: str, end: str, take: int = 10, fresh=False):
+        p = {"filter.type": type_, "signal.interests.entities": ",".join(entity_ids), "filter.start_date": start,
+             "filter.end_date": end, "take": take}
+        return await self.get("/v2/trending", p, fresh=fresh)
 
     async def compare(self, a_ids: list[str], b_ids: list[str], fresh=False):
         p = {"a.signal.interests.entities": ",".join(a_ids), "b.signal.interests.entities": ",".join(b_ids)}

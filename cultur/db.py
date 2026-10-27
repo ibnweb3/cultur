@@ -33,6 +33,11 @@ class DB:
             self.conn.execute("REPLACE INTO cache VALUES(?,?,?,?)", (k, json.dumps(v), time.time(), ttl))
             self.conn.commit()
 
+    def cache_del(self, k: str):
+        with _lock:
+            self.conn.execute("DELETE FROM cache WHERE k=?", (k,))
+            self.conn.commit()
+
     def save_dossier(self, id_: str, body: dict, expires: float):
         with _lock:
             self.conn.execute("REPLACE INTO dossiers VALUES(?,?,?)", (id_, json.dumps(body), expires))

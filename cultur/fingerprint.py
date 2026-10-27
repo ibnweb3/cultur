@@ -11,27 +11,24 @@ CATEGORIES = ["urn:entity:artist", "urn:entity:brand", "urn:entity:person", "urn
 def _ent(e: dict, rank: int) -> dict:
     tags = []
     for t in e.get("tags") or []:
-        if isinstance(t, dict) and (t.get("id") or t.get("name")):
-            tags.append({"id": t.get("id") or t.get("name"), "name": t.get("name") or t.get("id")})
+        tid = isinstance(t, dict) and (t.get("tag_id") or t.get("id") or t.get("name"))
+        if tid:
+            tags.append({"id": tid, "name": t.get("name") or tid})
     q = e.get("query") if isinstance(e.get("query"), dict) else {}
     return {"id": ent_id(e), "name": e.get("name"), "rank": rank,
             "affinity_raw": q.get("affinity", e.get("affinity", e.get("score"))),  # scale unverified: preserved as-is
-            "popularity": e.get("popularity"), "tags": tags}
+            "popularity": e.get("popularity"), "tags": tags,
+            "audience_growth": (q.get("measurements") or {}).get("audience_growth") if isinstance(q.get("measurements"), dict) else None}
 
 
-def _audience(data) -> list[dict]:
-    out = []
+def _audience(data) -> dict:
+    """Verified: results.demographics[0].query = {age:{bucket:signed score}, gender:{...}} (aggregated audience)."""
     res = data.get("results") if isinstance(data, dict) else None
-    items = []
-    if isinstance(res, dict):
-        for v in res.values():
-            if isinstance(v, list):
-                items += [x for x in v if isinstance(x, dict)]
-    elif isinstance(res, list):
-        items = [x for x in res if isinstance(x, dict)]
-    for it in items[:15]:
-        out.append({"id": it.get("id") or it.get("entity_id"), "name": it.get("name"), "raw": it.get("query") or it.get("affinity")})
-    return out
+    items = res.get("demographics") if isinstance(res, dict) else None
+    if isinstance(items, list) and items and isinstance(items[0], dict) and isinstance(items[0].get("query"), dict):
+        qd = items[0]["query"]
+        return {k: v for k, v in qd.items() if k in ("age", "gender") and isinstance(v, dict)}
+    return {}
 
 
 async def build(q: QlooClient, anchors: list[str], take: int = 10) -> dict:
@@ -41,7 +38,7 @@ async def build(q: QlooClient, anchors: list[str], take: int = 10) -> dict:
     jobs.append(q.insights(anchors, "urn:tag", take, fresh=True))
     jobs.append(q.insights(anchors, "urn:demographics", take, fresh=True))
     res = await asyncio.gather(*jobs, return_exceptions=True)
-    out = {"entities": {}, "tags": [], "audience": [], "calls": calls}
+    out = {"entities": {}, "tags": [], "audience": {}, "momentum": {}, "calls": calls}
     labels = CATEGORIES + ["urn:tag", "urn:demographics"]
     for label, r in zip(labels, res):
         if isinstance(r, Exception):
@@ -60,6 +57,10 @@ async def build(q: QlooClient, anchors: list[str], take: int = 10) -> dict:
             ents = [_ent(e, i) for i, e in enumerate(entities_of(r.data)) if ent_id(e)]
             if ents:
                 out["entities"][label.split(":")[-1]] = ents
+                growth = [e["audience_growth"] for e in ents if isinstance(e.get("audience_growth"), (int, float))]
+                if growth:
+                    out["momentum"][label.split(":")[-1]] = {"audience_growth_values": growth[:10],
+                        "note": "Raw query.measurements.audience_growth of associated entities; meaning/scale not interpreted."}
     return out
 
 

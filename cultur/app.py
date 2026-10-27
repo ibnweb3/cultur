@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import contextlib
 import time
 from collections import defaultdict, deque
@@ -14,6 +15,7 @@ from .schemas import Dossier, DossierRequest
 from .service import InvalidInput, Service
 from .warm import warm_all
 
+logging.getLogger("httpx").setLevel(logging.WARNING)  # keep provider URLs out of logs
 STATIC = Path(__file__).resolve().parent.parent / "static"
 svc = Service()
 _hits: dict[str, deque] = defaultdict(deque)

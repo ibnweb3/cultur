@@ -78,10 +78,10 @@ def rebrand_risk(best_band: Optional[str], continuity_sourced: bool, adverse_sta
     if not comparison_ran:
         return Score(status="insufficient_evidence", limitations=["No Qloo fingerprint to compare."])
     lim = ["A rebrand is not misconduct. Taste similarity alone never establishes common identity."]
-    if best_band in (None, "none"):
+    if best_band in (None, "none", "low"):  # low-band overlap is within noise: not a lead
         return Score(value=0.0, band="no_lead", status="available",
                      limitations=lim + [f"No lead among {registry_size} curated cases; this is not clearance (registry is small)."])
-    base = {"low": 5, "moderate": 15, "high": 30}[best_band]
+    base = {"moderate": 15, "high": 30}[best_band]
     v = base
     if continuity_sourced:
         v += 15

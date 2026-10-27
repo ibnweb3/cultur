@@ -16,7 +16,7 @@ from . import registry, scoring
 from .config import Settings
 from .db import DB
 from .onchain import ADDR_RE, TX_RE, Chain
-from .qloo import QlooClient, ent_id, entities_of
+from .qloo import QlooClient, ent_id, entities_of, etype
 from .schemas import SCHEMA_VERSION, SCORING_VERSION, Dossier, DossierRequest, Evidence, Score
 
 
@@ -107,6 +107,15 @@ class Service:
             self._note_q(ctx, "entities by external.twitter.ids", r)
             ents = entities_of(r.data) if r.ok else []
             self._trace(ctx, "resolve handle", "qloo.entities", f"external.twitter.ids={norm_in}", r.ok, t)
+            owned = [e for e in ents if str(((e.get("properties") or {}).get("external") or {}).get("twitter", {}).get("id", "")).lower() == norm_in.lower()]
+            if owned and len({registry.norm(e.get("name") or "") for e in owned}) == 1:
+                # several Qloo entities (e.g. person + artist) may list the same handle; all are the same named subject
+                first = self._accept(ctx, owned[0], r, "Qloo lookup by external.twitter.ids (handle listed on the entity)")
+                for extra in owned[1:4]:
+                    if ent_id(extra) not in ctx["anchors"]:
+                        ctx["anchors"].append(ent_id(extra))
+                        ctx["identity"]["also_listed_as"] = ctx["identity"].get("also_listed_as", []) + [{"qloo_entity_id": ent_id(extra), "type": etype(extra)}]
+                return first
             if len(ents) == 1:
                 return self._accept(ctx, ents[0], r, "Qloo lookup by external.twitter.ids")
             if len(ents) > 1:
@@ -127,15 +136,15 @@ class Service:
                 ctx["ambiguity"] = [{"id": ent_id(exact[0]), "name": exact[0].get("name"), "note": "name match only; handle ownership not verified"}]
                 return None
             return self._accept(ctx, exact[0], r, "exact name match in Qloo search")
-        ctx["ambiguity"] = [{"id": ent_id(e), "name": e.get("name"), "type": e.get("type")} for e in ents[:5]]
+        ctx["ambiguity"] = [{"id": ent_id(e), "name": e.get("name"), "type": etype(e)} for e in ents[:5]]
         if ents:
             ctx["caveats"].append("Qloo returned candidates but none is an unambiguous exact match; none was assumed.")
         return None
 
     def _accept(self, ctx, e, r, how):
-        eid = ctx["book"].add("qloo", r.ref, ent_id(e), f"Qloo entity '{e.get('name')}' ({e.get('type', 'type n/a')}) resolved via {how}",
+        eid = ctx["book"].add("qloo", r.ref, ent_id(e), f"Qloo entity '{e.get('name')}' ({etype(e) or 'type n/a'}) resolved via {how}",
                               r.freshness, "observed", r.fetched_at)
-        ctx["identity"] = {"qloo_entity_id": ent_id(e), "name": e.get("name"), "type": e.get("type"), "method": how, "evidence": [eid]}
+        ctx["identity"] = {"qloo_entity_id": ent_id(e), "name": e.get("name"), "type": etype(e), "method": how, "evidence": [eid]}
         ctx["anchors"].append(ent_id(e))
         ctx["identity_conf"] = 60.0
         return e
@@ -275,6 +284,9 @@ class Service:
             if ctx["reg_self"] and case["id"] == ctx["reg_self"]["id"]:
                 continue
             hit = self.db.cache_get(f"regfp:{case['id']}")
+            if hit and set(hit[0].get("anchors", [])) & set(ctx["anchors"]):
+                ctx["caveats"].append(f"Subject shares a Qloo entity with curated case '{case['id']}'; that case was excluded from comparison as a self-match.")
+                continue
             if hit:
                 warmed.append((case, hit[0]))
         ctx["coverage"]["registry_fingerprints_available"] = f"{len(warmed)}/{len(registry.load())}"
@@ -312,8 +324,12 @@ class Service:
                 m["qloo_compare"] = {"ok": r.ok, "freshness": r.freshness, "error": r.error,
                                      "raw_top_level_keys": sorted(r.data.keys()) if r.ok and isinstance(r.data, dict) else None,
                                      "note": "Raw Qloo comparison value preserved; its scale is not interpreted by Cultur."}
-                if r.ok and isinstance(r.data, dict):
-                    m["qloo_compare"]["value"] = {k: r.data[k] for k in list(r.data)[:6] if k not in ("results",)} or None
+                res = r.data.get("results") if r.ok and isinstance(r.data, dict) else None
+                if isinstance(res, dict) and isinstance(res.get("tags"), list):
+                    sc = [t["query"]["score"] for t in res["tags"] if isinstance(t, dict) and isinstance(t.get("query"), dict) and isinstance(t["query"].get("score"), (int, float))]
+                    m["qloo_compare"]["shared_tags_scored"] = len(sc)
+                    m["qloo_compare"]["top_shared_tags"] = [{"name": t.get("name"), "score": t["query"].get("score")} for t in res["tags"][:5] if isinstance(t, dict) and isinstance(t.get("query"), dict)]
+                    m["qloo_compare"]["note"] = "Qloo compare returns shared tags with per-tag scores (raw values preserved)."
             if band != "none":
                 m["evidence"] = [book.add("local-comparison", "weighted Jaccard over Qloo fingerprints", case["id"],
                     f"Overlap with curated case '{case['id']}': band {band}, {len(shared_e)} shared entities, {len(shared_t)} shared tags", "cached" if True else "fresh", "inferred")]
@@ -386,9 +402,9 @@ class Service:
             caveats.append("No fresh Qloo grounding for this input: no fingerprint, rebrand lead or trust verdict was produced.")
         if grounded and fp is not None and ent_n == 0 and tag_n == 0:
             caveats.append("Zero Qloo footprint found for the anchor. This is a coverage warning that needs follow-up; it does not lower trust or imply suspicious conduct.")
-        if ctx["coverage"].get("registry_fingerprints_available", "0/").startswith("0/"):
+        if grounded and ctx["coverage"].get("registry_fingerprints_available", "0/").startswith("0/"):
             caveats.append("No registry fingerprints are warmed in this instance's cache, so no rebrand comparison was run (run the warm-up job).")
-        caveats.append("Trend momentum is not reported: the Qloo trending route has not been verified for this build.")
+        caveats.append("Momentum is limited to Qloo's raw audience_growth measurements on associated entities; /v2/trending returned no data and is not interpreted.")
 
         if not grounded:
             status = "insufficient_evidence"
@@ -416,7 +432,7 @@ class Service:
             input=req.input, input_type=itype, status=status, resolved_identity=ctx["identity"], ambiguity=ctx["ambiguity"],
             verification=ver, scores=scores,
             fingerprint=({"anchors": ctx["anchors"], "entities": fp["entities"], "tags": fp["tags"], "audience": fp["audience"],
-                          "momentum": None, "provenance": "Qloo, fresh"} if (fp and grounded) else {}),
+                          "momentum": fp.get("momentum") or None, "provenance": "Qloo, fresh"} if (fp and grounded) else {}),
             rebrand_matches=ctx["matches"], wallet_findings=ctx["wallet"], plain_english_report=rep,
             evidence=book.items, coverage={**ctx["coverage"], "qloo_categories_with_results": cats,
                                            "registry_size": len(registry.load()), "chain": "ethereum-mainnet only"},
