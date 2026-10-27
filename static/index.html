@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cultur</title>
+<meta name="description" content="Cultural-fingerprint due diligence for crypto creators and projects, grounded in Qloo.">
+<style>
+:root{--bg:#f7f5f0;--fg:#1b1a17;--mut:#625e55;--card:#fff;--line:#ddd8cc;--acc:#1f4d3a;--acc-fg:#fff;--warn:#8a5a00;--bad:#9b2c2c}
+@media (prefers-color-scheme:dark){:root{--bg:#14130f;--fg:#efece4;--mut:#a9a497;--card:#1d1c17;--line:#38362d;--acc:#7fc4a2;--acc-fg:#10201a;--warn:#e0b05a;--bad:#e58a8a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:860px;margin:0 auto;padding:24px 16px 64px}
+h1{font-size:clamp(1.9rem,5vw,2.8rem);line-height:1.1;margin:.2em 0 .3em;text-wrap:balance}
+h2{font-size:1.1rem;margin:1.6em 0 .5em}
+.brand{font-weight:700;letter-spacing:.04em;color:var(--acc)}
+.lede,.mut{color:var(--mut)}
+form{display:flex;gap:8px;margin:20px 0 8px;flex-wrap:wrap}
+input[type=text]{flex:1 1 260px;min-height:44px;padding:8px 12px;font:inherit;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--fg)}
+button{min-height:44px;padding:8px 18px;font:inherit;font-weight:600;border:0;border-radius:8px;background:var(--acc);color:var(--acc-fg);cursor:pointer}
+button:disabled{opacity:.6;cursor:progress}
+:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin:10px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+.score .v{font-size:1.8rem;font-weight:700;font-variant-numeric:tabular-nums}
+.score .n{color:var(--mut);font-size:.9rem}
+.tag{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:1px 10px;margin:2px 4px 2px 0;font-size:.85rem}
+.warn{border-left:4px solid var(--warn)}
+code,pre{font:13px/1.45 ui-monospace,Consolas,monospace}
+pre{overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px;white-space:pre-wrap;word-break:break-word}
+details{margin:8px 0}summary{cursor:pointer;font-weight:600}
+.cite{font-size:.8rem;color:var(--mut)}
+#status{min-height:1.5em}
+.priv{font-size:.9rem;border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin:14px 0}
+a{color:var(--acc)}
+</style>
+</head>
+<body>
+<main>
+<div class="brand">CULTUR</div>
+<h1>New name. Familiar cultural footprint.</h1>
+<p class="lede">Cultur uses Qloo's cross-domain taste graph to surface possible connections between crypto creators and prior projects, with cited evidence and onchain corroboration. Taste similarity is a lead, never proof of identity or fraud.</p>
+
+<form id="f">
+  <label for="q" class="mut" style="width:100%">Twitter/X handle, ENS name, Ethereum contract, or project name</label>
+  <input id="q" type="text" name="input" autocomplete="off" spellcheck="false" maxlength="200" placeholder="e.g. @handle, name.eth, 0x…, Wonderland" required>
+  <button id="go" type="submit">Analyze</button>
+</form>
+<div id="status" role="status" aria-live="polite"></div>
+<div id="out"></div>
+
+<div class="priv"><strong>Privacy.</strong> No accounts. No Twitter/X scraping. Analysis uses submitted public identifiers, cited public records, public onchain facts, and Qloo's aggregated cultural intelligence. Public handles and wallet addresses can still be personal data; submitted inputs and generated dossiers are kept for 7 days and then expire.</div>
+
+<h2>API first</h2>
+<p class="mut">This page is a thin client. Everything below is the same service exposed as REST and as an MCP tool (<code>generate_dossier</code> at <code>/mcp</code>, Streamable HTTP).</p>
+<pre id="curl"></pre>
+<p class="mut"><a href="/docs">OpenAPI docs</a> · <a href="/health">health</a></p>
+
+<h2>Why it matters</h2>
+<p>Americans reported $7.2 billion in cryptocurrency investment-fraud losses in 2025, according to the FBI's IC3 (<a href="https://www.ic3.gov/AnnualReport/Reports/2025_IC3Report.pdf" rel="noopener">2025 Internet Crime Report</a>). That figure covers U.S. reports and is not attributable to creator rebrands. Cultur is due-diligence support for fans and creators, not a verdict on anyone.</p>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+$("curl").textContent=`curl -s -X POST ${location.origin}/api/dossier \\
+  -H 'content-type: application/json' \\
+  -d '{"input": "Wonderland"}'`;
+function el(tag,attrs,...kids){const e=document.createElement(tag);for(const[k,v]of Object.entries(attrs||{}))e[k]=v;for(const c of kids)e.append(c);return e}
+const fmt=s=>s.value==null?"Unavailable":String(s.value);
+function render(d){
+  const out=$("out");out.replaceChildren();
+  out.append(el("div",{className:"card"},el("strong",{},`Status: ${d.status}`),` · verification: ${d.verification} · ${d.duration_ms} ms · `,
+    el("a",{href:`/api/dossier/${d.id}`},"saved dossier")));
+  if(d.resolved_identity)out.append(el("div",{className:"card"},el("strong",{},"Resolved: "),`${d.resolved_identity.name} (${d.resolved_identity.method})`));
+  for(const a of d.ambiguity||[])out.append(el("div",{className:"card warn"},`Unconfirmed candidate: ${a.name||a.id}${a.note?" - "+a.note:""}`));
+  const g=el("div",{className:"grid"});
+  for(const[k,s]of Object.entries(d.scores)){
+    g.append(el("div",{className:"card score"},el("div",{className:"n"},k.replaceAll("_"," ")),el("div",{className:"v"},fmt(s)),
+      el("div",{className:"n"},`${s.band} · ${s.status.replaceAll("_"," ")}`)));
+  }
+  out.append(el("h2",{},"Scores"),g);
+  out.append(el("h2",{},"Findings"));
+  for(const r of d.plain_english_report)out.append(el("div",{className:"card"},r.text,el("div",{className:"cite"},r.evidence.length?`Evidence: ${r.evidence.join(", ")}`:"No evidence cited")));
+  const fp=d.fingerprint||{};
+  if(fp.entities&&Object.keys(fp.entities).length){
+    out.append(el("h2",{},"Cultural fingerprint (Qloo)"));
+    for(const[c,items]of Object.entries(fp.entities))out.append(el("div",{className:"card"},el("strong",{},c+": "),...items.slice(0,8).map(i=>el("span",{className:"tag"},i.name||i.id))));
+    if(fp.tags?.length)out.append(el("div",{className:"card"},el("strong",{},"tags: "),...fp.tags.slice(0,12).map(t=>el("span",{className:"tag"},t.name||t.id))));
+  }
+  if(d.rebrand_matches?.length){
+    out.append(el("h2",{},"Possible rebrand leads"));
+    for(const m of d.rebrand_matches)out.append(el("div",{className:"card"},el("strong",{},m.names[0]),` - overlap band: ${m.band} (${m.similarity}); continuity: ${m.continuity.status}; adverse history: ${m.adverse_history_status}. `,
+      el("div",{className:"cite"},m.limitations.join(" "))));
+  }
+  if(d.caveats?.length){out.append(el("h2",{},"Coverage gaps and caveats"));const u=el("ul");for(const c of d.caveats)u.append(el("li",{},c));out.append(u)}
+  const ev=el("details",{},el("summary",{},`Evidence (${d.evidence.length})`));
+  for(const e of d.evidence)ev.append(el("div",{className:"card"},el("strong",{},e.id+" "),`${e.fact} `,el("div",{className:"cite"},`${e.source} · ${e.origin} · ${e.freshness} · ${e.ref}`)));
+  out.append(ev);
+  const tr=el("details",{},el("summary",{},"Tool trace"),el("pre",{},JSON.stringify(d.tool_trace,null,2)));out.append(tr);
+  out.append(el("details",{},el("summary",{},"Raw JSON"),el("pre",{},JSON.stringify(d,null,2))));
+}
+$("f").addEventListener("submit",async ev=>{
+  ev.preventDefault();const b=$("go"),s=$("status");b.disabled=true;s.textContent="Analyzing… this can take up to ~30 seconds.";
+  try{
+    const r=await fetch("/api/dossier",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({input:$("q").value})});
+    const j=await r.json();
+    if(!r.ok){s.textContent=j.error?.message||"Request failed";$("out").replaceChildren();}
+    else{s.textContent="";render(j);}
+  }catch(e){s.textContent="Network error. Try again."}
+  b.disabled=false;
+});
+</script>
+</body>
+</html>
