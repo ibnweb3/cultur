@@ -78,7 +78,7 @@ function render(d){
     g.append(el("div",{className:"card score"},el("div",{className:"n"},k.replaceAll("_"," ")),el("div",{className:"v"},fmt(s)),
       el("div",{className:"n"},`${s.band} · ${s.status.replaceAll("_"," ")}`)));
   }
-  out.append(el("h2",{},"Scores"),g);
+  out.append(el("h2",{},"Scores"),el("p",{className:"mut"},"The trust score measures how much sourced evidence supports integrity. A low value can mean little evidence was found, not wrongdoing. Unavailable means the evidence did not support a value."),g);
   out.append(el("h2",{},"Findings"));
   for(const r of d.plain_english_report)out.append(el("div",{className:"card"},r.text,el("div",{className:"cite"},r.evidence.length?`Evidence: ${r.evidence.join(", ")}`:"No evidence cited")));
   const fp=d.fingerprint||{};

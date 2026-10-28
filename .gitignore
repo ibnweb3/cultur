@@ -7,3 +7,7 @@ __pycache__/
 data/
 captures/
 .pytest_cache/
+.wrangler-out/
+worker/node_modules/
+worker/.wrangler/
+worker/.dev.vars

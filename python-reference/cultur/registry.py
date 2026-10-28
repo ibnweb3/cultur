@@ -3,7 +3,7 @@ import re
 from functools import lru_cache
 from pathlib import Path
 
-PATH = Path(__file__).resolve().parent.parent / "registry" / "cases.json"
+PATH = Path(__file__).resolve().parents[2] / "registry" / "cases.json"
 
 
 def norm(s: str) -> str:

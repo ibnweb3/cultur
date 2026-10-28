@@ -1,0 +1,9 @@
+{
+  "name": "cultur",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  "assets": { "directory": "./public", "binding": "ASSETS", "run_worker_first": true },
+  "kv_namespaces": [{ "binding": "KV", "id": "13051071866745eba0df513e3ceaece5" }],
+  "triggers": { "crons": ["*/2 * * * *"] },
+  "vars": { "QLOO_BASE_URL": "https://hackathon.api.qloo.com", "ETH_RPC_URL": "https://ethereum-rpc.publicnode.com,https://1rpc.io/eth,https://eth.llamarpc.com,https://cloudflare-eth.com", "RATE_LIMIT_PER_MIN": "10" }
+}
