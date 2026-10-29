@@ -1080,7 +1080,10 @@ async function run(input, mode = state.mode) {
       $("#out").hidden = true;
       const reasons = (v.caveats || []).map(readableNote).map((s) => (/[.!?]$/.test(s) ? s : s + "."));
       st.className = "status err";
-      st.textContent = "We couldn't create a supported design direction. " + (reasons.join(" ") || "Try a more specific artist, brand or film name.");
+      const aiDown = (v.caveats || []).some((c) => /language model.*unavailable/i.test(c));
+      st.textContent = aiDown
+        ? "The step that turns a project description into audience references is unavailable right now (the free language-model allowance may be used up for today). Switch to ‘I know my audience’s taste’ and enter artists, brands or films, or try again later."
+        : "We couldn't create a supported design direction. " + (reasons.join(" ") || "Try a more specific artist, brand or film name.");
       return;
     }
     state.vibe = v;
