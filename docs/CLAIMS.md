@@ -22,7 +22,7 @@ Every sentence in the README, the Devpost text and the demo must fit this ledger
 - Benchmark numbers exactly as stored by `scripts/benchmark.mjs` (n=12, one model, one temperature, closed vocabulary pooled from Qloo output).
 - `audit_ui` / `POST /api/audit` run deterministic code checks (no model, no Qloo call) of generated code against the chosen direction's palette and fonts, plus a published list of starter-template markers. The result is pass or needs_changes with findings; it measures adherence to the direction, not design quality.
 - Build test `docs/audit-benchmark.json` (`scripts/audit-bench.mjs`): 7 projects, one model (Llama 3.3 70B, temperature 0), one run. Pages written from project text only passed the audit 0 of 7 times; pages written with the brief passed 5 of 7; after one audit-and-fix round 7 of 7 passed. The baseline cannot match the direction's palette or fonts by design, so the first comparison shows the brief is followed, not that it is better. One project (a Mexico City bakery) returned no direction and is not in the 7.
-- Model-suggested audience names are stored for a week per project text, so the same text returns the same names.
+- Model-suggested audience names are stored for 30 days per project text, so the same text returns the same names.
 
 ## Not allowed
 

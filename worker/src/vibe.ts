@@ -139,13 +139,13 @@ export class Service {
     const t0 = ctx.now();
     let proposed: string[] = [];
     try {
-      // The same project text always yields the same proposed names: the first answer is kept for a week.
+      // The same project text always yields the same proposed names: the first answer is kept for 30 days.
       const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(project.replace(/\s+/g, " ").trim().toLowerCase()));
       const key = "sugg:" + [...new Uint8Array(digest)].slice(0, 12).map((b) => b.toString(16).padStart(2, "0")).join("");
       let cached: { names: string[]; model: string } | null = null;
       try { const raw = await this.d.store.get(key); const j = raw ? JSON.parse(raw) : null; if (j && Array.isArray(j.names) && typeof j.model === "string") cached = j; } catch { /* a bad cache entry is ignored */ }
       const r = cached ?? await this.d.suggest(project);
-      if (!cached && r.names.length) { try { await this.d.store.put(key, JSON.stringify({ names: r.names, model: r.model }), 7 * 24 * 3600); } catch { /* storage must not break the response */ } }
+      if (!cached && r.names.length) { try { await this.d.store.put(key, JSON.stringify({ names: r.names, model: r.model }), 30 * 24 * 3600); } catch { /* storage must not break the response */ } }
       proposed = [...new Map(r.names.map((n) => [n.toLowerCase(), n])).values()].slice(0, 8);
       ctx.trace.push({ step: "suggest audience names from project text", call: `Workers AI ${r.model} (names only)`, freshness: cached ? "cached" : "fresh", status: "ok", ms: ctx.now() - t0 });
     } catch (e) {

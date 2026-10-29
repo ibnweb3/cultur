@@ -24,7 +24,7 @@
 (() => {
   const h1 = document.getElementById("hero-title");
   if (!h1 || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-  const lines = ["Good design", "starts with", "your project."];
+  const lines = ["Good design", "starts with", "your TASTE."];
   const star = h1.querySelector(".headline-star");
   h1.setAttribute("aria-label", lines.join(" "));
   const caret = document.createElement("span");

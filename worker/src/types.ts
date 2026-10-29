@@ -2,6 +2,8 @@ export interface Env extends Pick<CloudflareBindings, "KV" | "ASSETS">,
   Partial<Pick<CloudflareBindings, "AI" | "QLOO_BASE_URL" | "RATE_LIMIT_PER_MIN">> {
   QLOO_API_KEY?: string;
   ADMIN_TOKEN?: string;
+  /** Optional smaller model for the project-to-names step; defaults to the benchmark model. */
+  SUGGEST_MODEL?: string;
 }
 
 export interface Store {
