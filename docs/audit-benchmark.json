@@ -1,0 +1,1040 @@
+{
+ "summary": {
+  "version": "qv-audit-bench-1",
+  "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+  "temperature": 0,
+  "projects": 7,
+  "baseline": {
+   "pass": 0,
+   "template_markers": 0,
+   "off_palette_colors": 52,
+   "color_literals": 66
+  },
+  "briefed": {
+   "pass": 5,
+   "template_markers": 2,
+   "off_palette_colors": 0,
+   "color_literals": 145
+  },
+  "repaired": {
+   "pass": 7,
+   "template_markers": 0,
+   "off_palette_colors": 0,
+   "pages_needing_fix": 2
+  },
+  "note": "Palette and font checks compare against the QlooVibe direction, so the baseline cannot match them by design. The template-marker rows are independent of the direction. Neither measures design quality."
+ },
+ "rows": [
+  {
+   "project": "A site for a student podcast series in Lagos Nigeria",
+   "direction": "Audience blend",
+   "baseline": {
+    "code_chars": 2743,
+    "audit": {
+     "status": "needs_changes",
+     "summary": "2 checks failed and 0 warnings. Fix the failures, then audit again.",
+     "metrics": {
+      "color_literals": 7,
+      "off_palette_colors": 6,
+      "token_color_share": 0,
+      "font_families_used": [
+       "arial"
+      ],
+      "distinct_radii": 2
+     },
+     "checks": [
+      {
+       "id": "palette",
+       "label": "Colours come from the direction's palette",
+       "result": "fail"
+      },
+      {
+       "id": "fonts",
+       "label": "Fonts match the direction's pair",
+       "result": "fail"
+      },
+      {
+       "id": "tokens",
+       "label": "Colours use the direction's variables",
+       "result": "not_applicable"
+      },
+      {
+       "id": "generic_markers",
+       "label": "No generic starter-template markers",
+       "result": "pass"
+      },
+      {
+       "id": "radius",
+       "label": "Corner radii are consistent",
+       "result": "pass"
+      }
+     ],
+     "finding_ids": [
+      "off_palette_colors",
+      "wrong_fonts"
+     ]
+    }
+   },
+   "briefed": {
+    "code_chars": 3602,
+    "audit": {
+     "status": "pass",
+     "summary": "No failures, 1 warning.",
+     "metrics": {
+      "color_literals": 17,
+      "off_palette_colors": 0,
+      "token_color_share": 45,
+      "font_families_used": [
+       "figtree"
+      ],
+      "distinct_radii": 0
+     },
+     "checks": [
+      {
+       "id": "palette",
+       "label": "Colours come from the direction's palette",
+       "result": "pass"
+      },
+      {
+       "id": "fonts",
+       "label": "Fonts match the direction's pair",
+       "result": "pass"
+      },
+      {
+       "id": "tokens",
+       "label": "Colours use the direction's variables",
+       "result": "warn"
+      },
+      {
+       "id": "generic_markers",
+       "label": "No generic starter-template markers",
+       "result": "pass"
+      },
+      {
+       "id": "radius",
+       "label": "Corner radii are consistent",
+       "result": "pass"
+      }
+     ],
+     "finding_ids": [
+      "low_token_use"
+     ]
+    }
+   },
+   "repaired": {
+    "code_chars": 3602,
+    "audit": {
+     "status": "pass",
+     "summary": "No failures, 1 warning.",
+     "metrics": {
+      "color_literals": 17,
+      "off_palette_colors": 0,
+      "token_color_share": 45,
+      "font_families_used": [
+       "figtree"
+      ],
+      "distinct_radii": 0
+     },
+     "checks": [
+      {
+       "id": "palette",
+       "label": "Colours come from the direction's palette",
+       "result": "pass"
+      },
+      {
+       "id": "fonts",
+       "label": "Fonts match the direction's pair",
+       "result": "pass"
+      },
+      {
+       "id": "tokens",
+       "label": "Colours use the direction's variables",
+       "result": "warn"
+      },
+      {
+       "id": "generic_markers",
+       "label": "No generic starter-template markers",
+       "result": "pass"
+      },
+      {
+       "id": "radius",
+       "label": "Corner radii are consistent",
+       "result": "pass"
+      }
+     ],
+     "finding_ids": [
+      "low_token_use"
+     ]
+    },
+    "rounds": 0
+   }
+  },
+  {
+   "project": "A booking site for an independent yoga studio in Lisbon for people who like indie folk and slow living",
+   "direction": "Audience blend",
+   "baseline": {
+    "code_chars": 3942,
+    "audit": {
+     "status": "needs_changes",
+     "summary": "2 checks failed and 1 warning. Fix the failures, then audit again.",
+     "metrics": {
+      "color_literals": 15,
+      "off_palette_colors": 13,
+      "token_color_share": 0,
+      "font_families_used": [
+       "merriweather"
+      ],
+      "distinct_radii": 0
+     },
+     "checks": [
+      {
+       "id": "palette",
+       "label": "Colours come from the direction's palette",
+       "result": "fail"
+      },
+      {
+       "id": "fonts",
+       "label": "Fonts match the direction's pair",
+       "result": "fail"
+      },
+      {
+       "id": "tokens",
+       "label": "Colours use the direction's variables",
+       "result": "warn"
+      },
+      {
+       "id": "generic_markers",
+       "label": "No generic starter-template markers",
+       "result": "pass"
+      },
+      {
+       "id": "radius",
+       "label": "Corner radii are consistent",
+       "result": "pass"
+      }
+     ],
+     "finding_ids": [
+      "off_palette_colors",
+      "wrong_fonts",
+      "low_token_use"
+     ]
+    }
+   },
+   "briefed": {
+    "code_chars": 4055,
+    "audit": {
+     "status": "needs_changes",
+     "summary": "1 check failed and 1 warning. Fix the failures, then audit again.",
+     "metrics": {
+      "color_literals": 23,
+      "off_palette_colors": 0,
+      "token_color_share": 32,
+      "font_families_used": [
+       "figtree"
+      ],
+      "distinct_radii": 0
+     },
+     "checks": [
+      {
+       "id": "palette",
+       "label": "Colours come from the direction's palette",
+       "result": "pass"
+      },
+      {
+       "id": "fonts",
+       "label": "Fonts match the direction's pair",
+       "result": "pass"
+      },
+      {
+       "id": "tokens",
+       "label": "Colours use the direction's variables",
+       "result": "warn"
+      },
+      {
+       "id": "generic_markers",
+       "label": "No generic starter-template markers",
+       "result": "fail"
+      },
+      {
+       "id": "radius",
+       "label": "Corner radii are consistent",
+       "result": "pass"
+      }
+     ],
+     "finding_ids": [
+      "low_token_use",
+      "generic_markers"
+     ]
+    }
+   },
+   "repaired": {
+    "code_chars": 3581,
+    "audit": {
+     "status": "pass",
+     "summary": "No failures, 1 warning.",
+     "metrics": {
+      "color_literals": 17,
+      "off_palette_colors": 0,
+      "token_color_share": 41,
+      "font_families_used": [
+       "figtree"
+      ],
+      "distinct_radii": 0
+     },
+     "checks": [
+      {
+       "id": "palette",
+       "label": "Colours come from the direction's palette",
+       "result": "pass"
+      },
+      {
+       "id": "fonts",
+       "label": "Fonts match the direction's pair",
+       "result": "pass"
+      },
+      {
+       "id": "tokens",
+       "label": "Colours use the direction's variables",
+       "result": "warn"
+      },
+      {
+       "id": "generic_markers",
+       "label": "No generic starter-template markers",
+       "result": "pass"
+      },
+      {
+       "id": "radius",
+       "label": "Corner radii are consistent",
+       "result": "pass"
+      }
+     ],
+     "finding_ids": [
+      "low_token_use"
+     ]
+    },
+    "rounds": 1
+   }
+  },
+  {
+   "project": "A landing page for a retro arcade bar in Osaka aimed at twenty-somethings who love city pop and anime",
+   "direction": "Audience blend",
+   "baseline": {
+    "code_chars": 3902,
+    "audit": {
+     "status": "needs_changes",
+     "summary": "1 check failed and 1 warning. Fix the failures, then audit again.",
+     "metrics": {
+      "color_literals": 8,
+      "off_palette_colors": 4,
+      "token_color_share": 0,
+      "font_families_used": [
+       "arial"
+      ],
+      "distinct_radii": 1
+     },
+     "checks": [
+      {
+       "id": "palette",
+       "label": "Colours come from the direction's palette",
+       "result": "fail"
+      },
+      {
+       "id": "fonts",
+       "label": "Fonts match the direction's pair",
+       "result": "pass"
+      },
+      {
+       "id": "tokens",
+       "label": "Colours use the direction's variables",
+       "result": "warn"
+      },
+      {
+       "id": "generic_markers",
+       "label": "No generic starter-template markers",
+       "result": "pass"
+      },
+      {
+       "id": "radius",
+       "label": "Corner radii are consistent",
+       "result": "pass"
+      }
+     ],
+     "finding_ids": [
+      "off_palette_colors",
+      "low_token_use"
+     ]
+    }
+   },
+   "briefed": {
+    "code_chars": 3993,
+    "audit": {
+     "status": "pass",
+     "summary": "No failures, 1 warning.",
+     "metrics": {
+      "color_literals": 23,
+      "off_palette_colors": 0,
+      "token_color_share": 32,
+      "font_families_used": [
+       "figtree"
+      ],
+      "distinct_radii": 0
+     },
+     "checks": [
+      {
+       "id": "palette",
+       "label": "Colours come from the direction's palette",
+       "result": "pass"
+      },
+      {
+       "id": "fonts",
+       "label": "Fonts match the direction's pair",
+       "result": "pass"
+      },
+      {
+       "id": "tokens",
+       "label": "Colours use the direction's variables",
+       "result": "warn"
+      },
+      {
+       "id": "generic_markers",
+       "label": "No generic starter-template markers",
+       "result": "pass"
+      },
+      {
+       "id": "radius",
+       "label": "Corner radii are consistent",
+       "result": "pass"
+      }
+     ],
+     "finding_ids": [
+      "low_token_use"
+     ]
+    }
+   },
+   "repaired": {
+    "code_chars": 3993,
+    "audit": {
+     "status": "pass",
+     "summary": "No failures, 1 warning.",
+     "metrics": {
+      "color_literals": 23,
+      "off_palette_colors": 0,
+      "token_color_share": 32,
+      "font_families_used": [
+       "figtree"
+      ],
+      "distinct_radii": 0
+     },
+     "checks": [
+      {
+       "id": "palette",
+       "label": "Colours come from the direction's palette",
+       "result": "pass"
+      },
+      {
+       "id": "fonts",
+       "label": "Fonts match the direction's pair",
+       "result": "pass"
+      },
+      {
+       "id": "tokens",
+       "label": "Colours use the direction's variables",
+       "result": "warn"
+      },
+      {
+       "id": "generic_markers",
+       "label": "No generic starter-template markers",
+       "result": "pass"
+      },
+      {
+       "id": "radius",
+       "label": "Corner radii are consistent",
+       "result": "pass"
+      }
+     ],
+     "finding_ids": [
+      "low_token_use"
+     ]
+    },
+    "rounds": 0
+   }
+  },
+  {
+   "project": "A storefront for handmade ceramics sold to fans of Japanese minimalism and quiet coffee shops",
+   "direction": "Audience blend",
+   "baseline": {
+    "code_chars": 4661,
+    "audit": {
+     "status": "needs_changes",
+     "summary": "2 checks failed and 1 warning. Fix the failures, then audit again.",
+     "metrics": {
+      "color_literals": 8,
+      "off_palette_colors": 6,
+      "token_color_share": 0,
+      "font_families_used": [
+       "helvetica"
+      ],
+      "distinct_radii": 1
+     },
+     "checks": [
+      {
+       "id": "palette",
+       "label": "Colours come from the direction's palette",
+       "result": "fail"
+      },
+      {
+       "id": "fonts",
+       "label": "Fonts match the direction's pair",
+       "result": "fail"
+      },
+      {
+       "id": "tokens",
+       "label": "Colours use the direction's variables",
+       "result": "warn"
+      },
+      {
+       "id": "generic_markers",
+       "label": "No generic starter-template markers",
+       "result": "pass"
+      },
+      {
+       "id": "radius",
+       "label": "Corner radii are consistent",
+       "result": "pass"
+      }
+     ],
+     "finding_ids": [
+      "off_palette_colors",
+      "wrong_fonts",
+      "low_token_use"
+     ]
+    }
+   },
+   "briefed": {
+    "code_chars": 4670,
+    "audit": {
+     "status": "pass",
+     "summary": "No failures, 1 warning.",
+     "metrics": {
+      "color_literals": 25,
+      "off_palette_colors": 0,
+      "token_color_share": 31,
+      "font_families_used": [
+       "figtree"
+      ],
+      "distinct_radii": 0
+     },
+     "checks": [
+      {
+       "id": "palette",
+       "label": "Colours come from the direction's palette",
+       "result": "pass"
+      },
+      {
+       "id": "fonts",
+       "label": "Fonts match the direction's pair",
+       "result": "pass"
+      },
+      {
+       "id": "tokens",
+       "label": "Colours use the direction's variables",
+       "result": "warn"
+      },
+      {
+       "id": "generic_markers",
+       "label": "No generic starter-template markers",
+       "result": "pass"
+      },
+      {
+       "id": "radius",
+       "label": "Corner radii are consistent",
+       "result": "pass"
+      }
+     ],
+     "finding_ids": [
+      "low_token_use"
+     ]
+    }
+   },
+   "repaired": {
+    "code_chars": 4670,
+    "audit": {
+     "status": "pass",
+     "summary": "No failures, 1 warning.",
+     "metrics": {
+      "color_literals": 25,
+      "off_palette_colors": 0,
+      "token_color_share": 31,
+      "font_families_used": [
+       "figtree"
+      ],
+      "distinct_radii": 0
+     },
+     "checks": [
+      {
+       "id": "palette",
+       "label": "Colours come from the direction's palette",
+       "result": "pass"
+      },
+      {
+       "id": "fonts",
+       "label": "Fonts match the direction's pair",
+       "result": "pass"
+      },
+      {
+       "id": "tokens",
+       "label": "Colours use the direction's variables",
+       "result": "warn"
+      },
+      {
+       "id": "generic_markers",
+       "label": "No generic starter-template markers",
+       "result": "pass"
+      },
+      {
+       "id": "radius",
+       "label": "Corner radii are consistent",
+       "result": "pass"
+      }
+     ],
+     "finding_ids": [
+      "low_token_use"
+     ]
+    },
+    "rounds": 0
+   }
+  },
+  {
+   "project": "A fan hub for a metal band's touring crew in Berlin",
+   "direction": "Audience blend",
+   "baseline": {
+    "code_chars": 3216,
+    "audit": {
+     "status": "needs_changes",
+     "summary": "1 check failed and 1 warning. Fix the failures, then audit again.",
+     "metrics": {
+      "color_literals": 12,
+      "off_palette_colors": 12,
+      "token_color_share": 0,
+      "font_families_used": [
+       "arial"
+      ],
+      "distinct_radii": 1
+     },
+     "checks": [
+      {
+       "id": "palette",
+       "label": "Colours come from the direction's palette",
+       "result": "fail"
+      },
+      {
+       "id": "fonts",
+       "label": "Fonts match the direction's pair",
+       "result": "pass"
+      },
+      {
+       "id": "tokens",
+       "label": "Colours use the direction's variables",
+       "result": "warn"
+      },
+      {
+       "id": "generic_markers",
+       "label": "No generic starter-template markers",
+       "result": "pass"
+      },
+      {
+       "id": "radius",
+       "label": "Corner radii are consistent",
+       "result": "pass"
+      }
+     ],
+     "finding_ids": [
+      "off_palette_colors",
+      "low_token_use"
+     ]
+    }
+   },
+   "briefed": {
+    "code_chars": 3505,
+    "audit": {
+     "status": "pass",
+     "summary": "No failures, 1 warning.",
+     "metrics": {
+      "color_literals": 17,
+      "off_palette_colors": 0,
+      "token_color_share": 39,
+      "font_families_used": [
+       "figtree"
+      ],
+      "distinct_radii": 0
+     },
+     "checks": [
+      {
+       "id": "palette",
+       "label": "Colours come from the direction's palette",
+       "result": "pass"
+      },
+      {
+       "id": "fonts",
+       "label": "Fonts match the direction's pair",
+       "result": "pass"
+      },
+      {
+       "id": "tokens",
+       "label": "Colours use the direction's variables",
+       "result": "warn"
+      },
+      {
+       "id": "generic_markers",
+       "label": "No generic starter-template markers",
+       "result": "pass"
+      },
+      {
+       "id": "radius",
+       "label": "Corner radii are consistent",
+       "result": "pass"
+      }
+     ],
+     "finding_ids": [
+      "low_token_use"
+     ]
+    }
+   },
+   "repaired": {
+    "code_chars": 3505,
+    "audit": {
+     "status": "pass",
+     "summary": "No failures, 1 warning.",
+     "metrics": {
+      "color_literals": 17,
+      "off_palette_colors": 0,
+      "token_color_share": 39,
+      "font_families_used": [
+       "figtree"
+      ],
+      "distinct_radii": 0
+     },
+     "checks": [
+      {
+       "id": "palette",
+       "label": "Colours come from the direction's palette",
+       "result": "pass"
+      },
+      {
+       "id": "fonts",
+       "label": "Fonts match the direction's pair",
+       "result": "pass"
+      },
+      {
+       "id": "tokens",
+       "label": "Colours use the direction's variables",
+       "result": "warn"
+      },
+      {
+       "id": "generic_markers",
+       "label": "No generic starter-template markers",
+       "result": "pass"
+      },
+      {
+       "id": "radius",
+       "label": "Corner radii are consistent",
+       "result": "pass"
+      }
+     ],
+     "finding_ids": [
+      "low_token_use"
+     ]
+    },
+    "rounds": 0
+   }
+  },
+  {
+   "project": "A study-habit tracker app for university students in Seoul who follow K-pop and webtoons",
+   "direction": "Audience blend",
+   "baseline": {
+    "code_chars": 3706,
+    "audit": {
+     "status": "needs_changes",
+     "summary": "2 checks failed and 1 warning. Fix the failures, then audit again.",
+     "metrics": {
+      "color_literals": 10,
+      "off_palette_colors": 6,
+      "token_color_share": 0,
+      "font_families_used": [
+       "noto sans kr"
+      ],
+      "distinct_radii": 2
+     },
+     "checks": [
+      {
+       "id": "palette",
+       "label": "Colours come from the direction's palette",
+       "result": "fail"
+      },
+      {
+       "id": "fonts",
+       "label": "Fonts match the direction's pair",
+       "result": "fail"
+      },
+      {
+       "id": "tokens",
+       "label": "Colours use the direction's variables",
+       "result": "warn"
+      },
+      {
+       "id": "generic_markers",
+       "label": "No generic starter-template markers",
+       "result": "pass"
+      },
+      {
+       "id": "radius",
+       "label": "Corner radii are consistent",
+       "result": "pass"
+      }
+     ],
+     "finding_ids": [
+      "off_palette_colors",
+      "wrong_fonts",
+      "low_token_use"
+     ]
+    }
+   },
+   "briefed": {
+    "code_chars": 3455,
+    "audit": {
+     "status": "needs_changes",
+     "summary": "1 check failed and 1 warning. Fix the failures, then audit again.",
+     "metrics": {
+      "color_literals": 17,
+      "off_palette_colors": 0,
+      "token_color_share": 39,
+      "font_families_used": [
+       "figtree"
+      ],
+      "distinct_radii": 0
+     },
+     "checks": [
+      {
+       "id": "palette",
+       "label": "Colours come from the direction's palette",
+       "result": "pass"
+      },
+      {
+       "id": "fonts",
+       "label": "Fonts match the direction's pair",
+       "result": "pass"
+      },
+      {
+       "id": "tokens",
+       "label": "Colours use the direction's variables",
+       "result": "warn"
+      },
+      {
+       "id": "generic_markers",
+       "label": "No generic starter-template markers",
+       "result": "fail"
+      },
+      {
+       "id": "radius",
+       "label": "Corner radii are consistent",
+       "result": "pass"
+      }
+     ],
+     "finding_ids": [
+      "low_token_use",
+      "generic_markers"
+     ]
+    }
+   },
+   "repaired": {
+    "code_chars": 3464,
+    "audit": {
+     "status": "pass",
+     "summary": "No failures or warnings.",
+     "metrics": {
+      "color_literals": 7,
+      "off_palette_colors": 0,
+      "token_color_share": 61,
+      "font_families_used": [
+       "figtree"
+      ],
+      "distinct_radii": 0
+     },
+     "checks": [
+      {
+       "id": "palette",
+       "label": "Colours come from the direction's palette",
+       "result": "pass"
+      },
+      {
+       "id": "fonts",
+       "label": "Fonts match the direction's pair",
+       "result": "pass"
+      },
+      {
+       "id": "tokens",
+       "label": "Colours use the direction's variables",
+       "result": "pass"
+      },
+      {
+       "id": "generic_markers",
+       "label": "No generic starter-template markers",
+       "result": "pass"
+      },
+      {
+       "id": "radius",
+       "label": "Corner radii are consistent",
+       "result": "pass"
+      }
+     ],
+     "finding_ids": []
+    },
+    "rounds": 1
+   }
+  },
+  {
+   "project": "A portfolio for a documentary photographer in Nairobi who loves jazz and long-form journalism",
+   "direction": "Audience blend",
+   "baseline": {
+    "code_chars": 3916,
+    "audit": {
+     "status": "needs_changes",
+     "summary": "2 checks failed and 0 warnings. Fix the failures, then audit again.",
+     "metrics": {
+      "color_literals": 6,
+      "off_palette_colors": 5,
+      "token_color_share": 0,
+      "font_families_used": [
+       "merriweather"
+      ],
+      "distinct_radii": 3
+     },
+     "checks": [
+      {
+       "id": "palette",
+       "label": "Colours come from the direction's palette",
+       "result": "fail"
+      },
+      {
+       "id": "fonts",
+       "label": "Fonts match the direction's pair",
+       "result": "fail"
+      },
+      {
+       "id": "tokens",
+       "label": "Colours use the direction's variables",
+       "result": "not_applicable"
+      },
+      {
+       "id": "generic_markers",
+       "label": "No generic starter-template markers",
+       "result": "pass"
+      },
+      {
+       "id": "radius",
+       "label": "Corner radii are consistent",
+       "result": "pass"
+      }
+     ],
+     "finding_ids": [
+      "off_palette_colors",
+      "wrong_fonts"
+     ]
+    }
+   },
+   "briefed": {
+    "code_chars": 4126,
+    "audit": {
+     "status": "pass",
+     "summary": "No failures, 1 warning.",
+     "metrics": {
+      "color_literals": 23,
+      "off_palette_colors": 0,
+      "token_color_share": 30,
+      "font_families_used": [
+       "figtree"
+      ],
+      "distinct_radii": 0
+     },
+     "checks": [
+      {
+       "id": "palette",
+       "label": "Colours come from the direction's palette",
+       "result": "pass"
+      },
+      {
+       "id": "fonts",
+       "label": "Fonts match the direction's pair",
+       "result": "pass"
+      },
+      {
+       "id": "tokens",
+       "label": "Colours use the direction's variables",
+       "result": "warn"
+      },
+      {
+       "id": "generic_markers",
+       "label": "No generic starter-template markers",
+       "result": "pass"
+      },
+      {
+       "id": "radius",
+       "label": "Corner radii are consistent",
+       "result": "pass"
+      }
+     ],
+     "finding_ids": [
+      "low_token_use"
+     ]
+    }
+   },
+   "repaired": {
+    "code_chars": 4126,
+    "audit": {
+     "status": "pass",
+     "summary": "No failures, 1 warning.",
+     "metrics": {
+      "color_literals": 23,
+      "off_palette_colors": 0,
+      "token_color_share": 30,
+      "font_families_used": [
+       "figtree"
+      ],
+      "distinct_radii": 0
+     },
+     "checks": [
+      {
+       "id": "palette",
+       "label": "Colours come from the direction's palette",
+       "result": "pass"
+      },
+      {
+       "id": "fonts",
+       "label": "Fonts match the direction's pair",
+       "result": "pass"
+      },
+      {
+       "id": "tokens",
+       "label": "Colours use the direction's variables",
+       "result": "warn"
+      },
+      {
+       "id": "generic_markers",
+       "label": "No generic starter-template markers",
+       "result": "pass"
+      },
+      {
+       "id": "radius",
+       "label": "Corner radii are consistent",
+       "result": "pass"
+      }
+     ],
+     "finding_ids": [
+      "low_token_use"
+     ]
+    },
+    "rounds": 0
+   }
+  }
+ ]
+}

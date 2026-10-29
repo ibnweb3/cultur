@@ -613,8 +613,8 @@ pre {
     <div class="card stack" id="out" hidden>
       <div class="result-head" id="result-head"></div>
       <div id="direction-picker" class="direction-picker" role="group" aria-label="Choose a design direction" hidden></div>
-      <div role="tablist" aria-label="Design brief" id="tabs"><button role="tab" id="t-preview" aria-controls="p-preview" aria-selected="true">Design direction</button><button role="tab" id="t-tokens" aria-controls="p-tokens" aria-selected="false" tabindex="-1">Export &amp; sources</button><button role="tab" id="t-vocab" aria-controls="p-vocab" aria-selected="false" tabindex="-1">Audience evidence</button><button role="tab" id="t-critic" aria-controls="p-critic" aria-selected="false" tabindex="-1">Check references</button></div>
-      <div role="tabpanel" id="p-preview" aria-labelledby="t-preview" tabindex="0"></div><div role="tabpanel" id="p-tokens" aria-labelledby="t-tokens" tabindex="0" hidden></div><div role="tabpanel" id="p-vocab" aria-labelledby="t-vocab" tabindex="0" hidden></div><div role="tabpanel" id="p-critic" aria-labelledby="t-critic" tabindex="0" hidden></div>
+      <div role="tablist" aria-label="Design brief" id="tabs"><button role="tab" id="t-preview" aria-controls="p-preview" aria-selected="true">Design direction</button><button role="tab" id="t-tokens" aria-controls="p-tokens" aria-selected="false" tabindex="-1">Export &amp; sources</button><button role="tab" id="t-vocab" aria-controls="p-vocab" aria-selected="false" tabindex="-1">Audience evidence</button><button role="tab" id="t-critic" aria-controls="p-critic" aria-selected="false" tabindex="-1">Check references</button><button role="tab" id="t-audit" aria-controls="p-audit" aria-selected="false" tabindex="-1">Audit your build</button></div>
+      <div role="tabpanel" id="p-preview" aria-labelledby="t-preview" tabindex="0"></div><div role="tabpanel" id="p-tokens" aria-labelledby="t-tokens" tabindex="0" hidden></div><div role="tabpanel" id="p-vocab" aria-labelledby="t-vocab" tabindex="0" hidden></div><div role="tabpanel" id="p-critic" aria-labelledby="t-critic" tabindex="0" hidden></div><div role="tabpanel" id="p-audit" aria-labelledby="t-audit" tabindex="0" hidden></div>
     </div>
     <details class="request-drawer"><summary>Behind your brief <span class="drawer-hint">Follow the data</span></summary><div id="trace"><h2>Request details</h2><p class="small muted">After you create a brief, see which Qloo requests succeeded, were cached, or failed.</p></div></details>
   </section>
@@ -748,7 +748,7 @@ function selectDirection(v, id) {
   state.selectedDirection = direction.id;
   $("#direction-picker").querySelectorAll("button").forEach((button) => button.setAttribute("aria-pressed", String(button.getAttribute("data-direction-id") === id)));
   const view = directionView(v);
-  renderPreview(view); renderTokens(view);
+  renderPreview(view); renderTokens(view); renderAudit(view);
   $("#selected-direction-status").textContent = `${direction.name} selected. Preview, CSS and design brief now use this direction.`;
 }
 function renderDirections(v) {
@@ -947,6 +947,28 @@ function renderCritic(v) {
   p.append(h("h2", null, "Will these references fit your audience?"), h("p", { class: "small muted" }, `Check artists, brands or films against the audience used in this brief: ${v.seeds.map((s) => s.name).join(", ")}.`), form, h("p", { class: "help", id: "cand-help" }, "Add up to 12 names, separated by commas. For example: Bon Iver, Metallica, Nick Drake."), status, res);
 }
 
+function renderAudit(view) {
+  const p = $("#p-audit"), name = view.selected_direction?.name || "your direction";
+  const code = h("textarea", { id: "audit-code", rows: "10", maxlength: "200000", required: true, spellcheck: "false", "aria-describedby": "audit-help", placeholder: "Paste the CSS, HTML, JSX or Tailwind your agent produced" });
+  const res = h("div", { id: "audit-res", "aria-busy": "false" }), status = h("p", { class: "status", role: "status", "aria-live": "polite" });
+  const go = h("button", { class: "btn primary", type: "submit" }, "Audit my build");
+  const form = h("form", { class: "ask", onsubmit: async (e) => {
+    e.preventDefault();
+    if (code.value.trim().length < 20) { status.className = "status err"; status.textContent = "Paste at least a few lines of the code your agent generated."; code.focus(); return; }
+    go.disabled = true; res.replaceChildren(); res.setAttribute("aria-busy", "true"); status.className = "status"; status.textContent = "Checking your code against " + name + "…";
+    try {
+      const d = await post("/api/audit", { code: code.value, reference: view.agent_brief });
+      status.textContent = d.summary;
+      res.append(h("div", { class: "row space" }, h("span", { class: "badge " + (d.status === "pass" ? "ok" : "bad") }, d.status === "pass" ? "Follows this direction" : "Needs changes")));
+      res.append(h("ul", { class: "audit-checks" }, d.checks.filter((c) => c.result !== "not_applicable").map((c) => h("li", null, h("span", { class: "badge " + (c.result === "pass" ? "ok" : c.result === "warn" ? "warn" : "bad") }, c.result === "pass" ? "Pass" : c.result === "warn" ? "Warning" : "Fail"), " ", c.label))));
+      for (const f of d.findings) res.append(h("div", { class: "notice" }, h("b", null, f.message), f.examples.length ? h("p", { class: "small" }, h("code", null, f.examples.join("  "))) : null, h("p", { class: "small muted" }, "Fix: " + f.fix)));
+      res.append(h("p", { class: "small muted" }, d.limits));
+    } catch (er) { status.className = "status err"; status.textContent = er.message; }
+    finally { go.disabled = false; res.setAttribute("aria-busy", "false"); }
+  } }, h("label", { class: "label", for: "audit-code", style: "width:100%" }, "Your generated code"), code, h("div", { class: "row" }, go));
+  p.replaceChildren(h("h2", null, "Did the build follow the direction?"), h("p", { class: "small muted", id: "audit-help" }, `Checks colours, fonts and generic template leftovers against ${name}. Plain code checks run on our server and your code is not stored. It measures adherence to the direction, not design quality.`), form, status, res);
+}
+
 let benchLoaded = false, benchBusy = false;
 async function loadBench() {
   if (benchLoaded || benchBusy) return; benchBusy = true;
@@ -1063,9 +1085,9 @@ async function run(input, mode = state.mode) {
     }
     state.vibe = v;
     state.selectedDirection = v.selected_direction_id || v.directions?.[0]?.id || null;
-    setContent($("#result-head"), h("div", { class: "row space" }, h("h2", null, "Your design directions"), h("span", { class: "badge " + (v.status === "partial" ? "warn" : "ok") }, v.status === "partial" ? "Some evidence is limited" : "Ready to explore")), v.project_context ? h("p", { class: "project-context" }, v.project_context.source_name ? `Project context: ${v.project_context.source_name}. ` : "Project context: ", v.project_context.summary || v.project_context.input_excerpt) : null, h("p", { class: "small muted" }, (v.audience?.source === "model_suggested" ? "Qloo-verified references proposed from your project: " : "Audience references: ") + v.seeds.map((s) => `${s.name} (${s.type.split(":").pop().replaceAll("_", " ")})`).join(", ") + "."), v.caveats?.length ? notice("Before you use these directions", v.caveats) : null);
+    setContent($("#result-head"), h("div", { class: "row space" }, h("h2", null, "Your design directions"), h("span", { class: "badge " + (v.status === "partial" ? "warn" : "ok") }, v.status === "partial" ? "Some evidence is limited" : "Ready to explore")), v.project_context ? h("p", { class: "project-context" }, v.project_context.source_name ? `Project context: ${v.project_context.source_name}. ` : "Project context: ", v.project_context.summary || v.project_context.input_excerpt) : null, h("p", { class: "small muted" }, (v.audience?.source === "model_suggested" ? "Qloo-verified references proposed from your project: " : "Audience references: ") + v.seeds.map((s) => `${s.name} (${s.type.split(":").pop().replaceAll("_", " ")})`).join(", ") + "."), v.audience?.source === "model_suggested" ? h("button", { type: "button", class: "btn", onclick: () => { setInputMode("audience"); $("#aud").value = v.seeds.map((s) => s.query).join(", "); $("#create")?.scrollIntoView({ behavior: "smooth" }); $("#aud").focus(); } }, "Not right? Edit these names") : null, v.caveats?.length ? notice("Before you use these directions", v.caveats) : null);
     const view = directionView(v);
-    renderDirections(v); renderPreview(view); renderTokens(view); renderVocab(v); renderCritic(v); selectTab($("#t-preview")); $("#out").hidden = false;
+    renderDirections(v); renderPreview(view); renderTokens(view); renderVocab(v); renderCritic(v); renderAudit(view); selectTab($("#t-preview")); $("#out").hidden = false;
     st.textContent = `Directions ready in ${((performance.now() - t0) / 1000).toFixed(1)}s. Choose a direction below; preview and exports follow your selection.`;
   } catch (e) { state.vibe = null; $("#out").hidden = true; st.className = controller.signal.aborted && /^Request canceled/.test(e.message) ? "status" : "status err"; st.textContent = e.name === "TypeError" ? "We couldn't display the returned brief. Please try again." : e.message; renderTrace(null); }
   finally { clearInterval(timer); state.request = null; setBusy(false); }

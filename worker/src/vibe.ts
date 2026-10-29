@@ -139,9 +139,15 @@ export class Service {
     const t0 = ctx.now();
     let proposed: string[] = [];
     try {
-      const r = await this.d.suggest(project);
+      // The same project text always yields the same proposed names: the first answer is kept for a week.
+      const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(project.replace(/\s+/g, " ").trim().toLowerCase()));
+      const key = "sugg:" + [...new Uint8Array(digest)].slice(0, 12).map((b) => b.toString(16).padStart(2, "0")).join("");
+      let cached: { names: string[]; model: string } | null = null;
+      try { const raw = await this.d.store.get(key); const j = raw ? JSON.parse(raw) : null; if (j && Array.isArray(j.names) && typeof j.model === "string") cached = j; } catch { /* a bad cache entry is ignored */ }
+      const r = cached ?? await this.d.suggest(project);
+      if (!cached && r.names.length) { try { await this.d.store.put(key, JSON.stringify({ names: r.names, model: r.model }), 7 * 24 * 3600); } catch { /* storage must not break the response */ } }
       proposed = [...new Map(r.names.map((n) => [n.toLowerCase(), n])).values()].slice(0, 8);
-      ctx.trace.push({ step: "suggest audience names from project text", call: `Workers AI ${r.model} (names only)`, freshness: "fresh", status: "ok", ms: ctx.now() - t0 });
+      ctx.trace.push({ step: "suggest audience names from project text", call: `Workers AI ${r.model} (names only)`, freshness: cached ? "cached" : "fresh", status: "ok", ms: ctx.now() - t0 });
     } catch (e) {
       ctx.trace.push({ step: "suggest audience names from project text", call: "Workers AI", freshness: "fresh", status: "error", ms: ctx.now() - t0, note: "language model unavailable" });
       return none("The language model that turns a project description into audience names was unavailable. Pass audience names (seeds) instead.");
@@ -330,7 +336,7 @@ function agentBrief(audience: string, seeds: Seed[], t: Tokens, touch: { type: s
     ...(direction ? [`Selected direction: ${direction.name}. ${direction.description}`, `Evidence interpretation: ${direction.provenance.method}; rules ${direction.provenance.focus_rules.join(", ")}. Alternatives are design choices from the same Qloo data, not separate audience findings.`] : []),
     ...(context ? [`Project context (user supplied${context.source_name ? `, ${context.source_name}` : ""}): ${context.summary}`, `Project application: ${direction?.project_fit.at(-1) ?? "Use these tokens with the supplied project requirements."}`] : []),
     ``,
-    `Use a standard accessible component set (shadcn/ui, Radix). Do not invent layout patterns. Change only the skin with these variables:`,
+    `Use a standard accessible component set (shadcn/ui, Radix) for behaviour and accessibility. Apply this direction through these variables; the project's own content decides the layout:`,
     "```css", t.css_shadcn, "", t.css_qv, "```",
     ``,
     `- Colour mode: ${d.mode.value}; corner radius ${d.radius.value}px; spacing unit ${Math.round((d.density.value as number) * 4 * 100) / 100}px; display type: ${d.font.value}; motion ${d.motion.value}ms.`,
@@ -339,5 +345,12 @@ function agentBrief(audience: string, seeds: Seed[], t: Tokens, touch: { type: s
     `- Microcopy tone words from Qloo (verbatim): ${voice.join(", ") || "n/a"}.`,
     `- Touchstones this audience loves (use for tone and imagery references, not logos): brands ${top("brand") || "n/a"}; artists ${top("artist") || "n/a"}; films ${top("movie") || "n/a"}.`,
     `- Before shipping copy or imagery that names artists, brands or films, call check_audience_fit to score each against this audience.`,
+    ``,
+    `## Avoid generic defaults (QlooVibe rules, not Qloo data)`,
+    `- Do not leave starter-template choices in place: Inter or Roboto as the only font, Tailwind default colour classes (bg-blue-500, text-gray-900), purple or indigo gradients, or unmodified shadcn colours.`,
+    `- Colours come only from the variables above. Write each colour once in :root and reference the variable everywhere.`,
+    `- Write copy for this project and audience, in the tone words above. No placeholder or filler copy ("Unlock the power of...", "Lorem ipsum", "Welcome to our...").`,
+    `- Let one or two touchstones from this audience set the imagery and mood; do not add decoration with no link to the project.`,
+    `- When the UI is built, call audit_ui with your CSS/HTML/JSX as code and this brief as reference. Fix every failure it reports, then audit again. A pass means the build follows this direction; it does not prove the design is good.`,
   ].join("\n");
 }

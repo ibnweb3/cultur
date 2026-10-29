@@ -247,6 +247,16 @@ describe("project text to audience names", () => {
     expect(v.project_context).toMatchObject({ summary: PROJECT, basis: "user_supplied" });
     expect(v.directions[0].project_fit.join(" ")).toContain(PROJECT);
   });
+  it("asks the model once per project text and repeats the same names afterwards", async () => {
+    let calls = 0;
+    const counting = async () => { calls++; return { names: calls === 1 ? ["Slowdive (artist)", "Aesop (brand)"] : ["Something else (artist)"], model: "test-model" }; };
+    const { svc } = makeSvc(new FakeQloo(), { suggest: counting });
+    const first = await svc.generate({ project: PROJECT });
+    const again = await svc.generate({ project: "  " + PROJECT.toUpperCase() + " " });
+    expect(calls).toBe(1);
+    expect(again.audience.suggested_seeds).toEqual(first.audience.suggested_seeds);
+    expect(again.trace.find((s: Json) => /suggest/.test(s.step)).freshness).toBe("cached");
+  });
   it("requires exact model-proposed names, while user-provided prefixes remain disclosed", async () => {
     const { svc } = makeSvc(new FakeQloo(), { suggest: suggest(["Slow (artist)", "Aesop (brand)"]) });
     const inferred = await svc.generate({ project: PROJECT });

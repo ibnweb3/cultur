@@ -173,7 +173,7 @@ describe("api", () => {
       call(e, "/mcp", { method: "POST", headers: { "content-type": "application/json", accept: "application/json, text/event-stream" }, body: JSON.stringify({ jsonrpc: "2.0", id, method, params }) });
     await rpc(1, "initialize", { protocolVersion: "2025-03-26", capabilities: {}, clientInfo: { name: "t", version: "1" } });
     const list = (await (await rpc(2, "tools/list")).json()) as { result: { tools: { name: string }[] } };
-    expect(list.result.tools.map((t) => t.name).sort()).toEqual(["check_audience_fit", "design_brief", "get_rule_table"]);
+    expect(list.result.tools.map((t) => t.name).sort()).toEqual(["audit_ui", "check_audience_fit", "design_brief", "get_rule_table"]);
     const run = (await (await rpc(3, "tools/call", { name: "design_brief", arguments: { audience: "Slowdive, Aesop" } })).json()) as { result: { content: { text: string }[] } };
     expect(run.result.content[0]!.text).toContain("Design direction for");
     expect(JSON.parse(run.result.content[1]!.text).status).toBe("complete");

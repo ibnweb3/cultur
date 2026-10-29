@@ -16,6 +16,12 @@ When a project has no explicit audience references and remote inference is enabl
 
 Qloo then supplies ranked decor, ambience and style descriptors, cultural touchstones and affinity scores. QlooVibe filters the descriptors and maps them through its published rule table. The options are distinct interpretations of the same Qloo evidence, with their contributing tags and rules shown. Alternatives require no extra Qloo queries. When evidence supports fewer options, the app returns fewer; unsupported briefs contain no tokens.
 
+## After the build: audit and fix
+
+Templates give every audience the same look, and an agent can still ship generic work from a good brief. So QlooVibe closes the loop. After your agent builds the UI, `audit_ui` (MCP) or `POST /api/audit` checks the generated code against the direction you chose: colours outside the palette, wrong fonts, starter-template fonts and Tailwind default colours, blue-violet gradients, filler copy, scattered radii. It returns specific findings and fixes. These are plain code checks with no model and no Qloo call. A pass means the build follows the direction; it does not prove the design is good.
+
+Measured (7 projects, one model, one run): pages written from project text alone passed the audit 0 of 7 times, pages written with the brief 5 of 7, and 7 of 7 after one audit-and-fix round. The brief alone did not remove generic filler copy (2 of 7 pages); the audit-and-fix round did. This shows the loop works on a small sample, not how much it helps in general. Results are in docs/audit-benchmark.json.
+
 ## What the design recommendations mean
 
 Qloo supplies no font names, colors or CSS. QlooVibe recommends named font pairs and translates descriptors into tokens. Every option includes its rationale, receipts, explicit defaults and checked contrast pairs. These mappings are design hypotheses; the seven contrast checks do not certify a finished interface's accessibility or prove that an audience will prefer a design.
@@ -32,4 +38,4 @@ Cloudflare Workers, KV, Workers AI for project-reference inference and the bench
 
 ## Try it
 
-The development version includes the project-first chooser and local MCP connection. See README.md and docs/MCP.md for setup and data-processing choices. The public endpoint is https://qloovibe.ibnweb3lab.workers.dev; local changes must be deployed before they are available there.
+The public endpoint is https://qloovibe.ibnweb3lab.workers.dev. It includes the project-first chooser, three directions, the audit tab and the hosted MCP endpoint. The local MCP bridge that reads Markdown in your project folder is described in README.md and docs/MCP.md.

@@ -54,6 +54,12 @@ Responses include a `directions` array. Present its names, font pairs, palettes 
 
 Separate audience names with commas, semicolons or newlines. Names containing `and`, `&` or `+` stay intact, such as `Pride and Prejudice` and `Salt & Stone`. Put names containing commas in straight or curly double quotes: `Slowdive, “Earth, Wind & Fire”`. API clients can supply `seeds: ["Slowdive", "Earth, Wind & Fire"]` to preserve each name exactly.
 
+## Audit what your agent built
+
+`POST /api/audit` and the MCP tool `audit_ui` take the code your agent generated and the chosen direction's brief, and return `pass` or `needs_changes` with findings and fixes (off-palette colours, wrong or starter-template fonts, Tailwind default colours, blue-violet gradients, filler copy, scattered radii). Plain code checks; no model and no Qloo call. It measures adherence to the direction, not design quality. The marker lists are public at `/api/rules`.
+
+Build test (`scripts/audit-bench.mjs`, results in `docs/audit-benchmark.json`): 7 projects, one model, one run. Project text only: 0 of 7 passed. With the brief: 5 of 7. With one audit-and-fix round: 7 of 7. The baseline cannot match the palette by design, and the brief alone did not remove generic filler copy; the audit-and-fix round did. Small sample, not a quality measure.
+
 ## Measured, not claimed
 
 A batch comparison (script: `scripts/benchmark.mjs`; stored results are served at `GET /api/benchmark` and shown in the page's measured-comparison section) pits Qloo's top-8 decor words per audience against an LLM (Llama 3.3 70B on Workers AI) that is shown the same pooled word list. 12 audiences, 3 runs at temperature 0.7, run 2026-10-29:
