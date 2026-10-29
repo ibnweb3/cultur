@@ -768,8 +768,8 @@ function renderPreview(v) {
   const values = Object.fromEntries([...tk.css_qv.matchAll(/(--qv-[a-z-]+):\s*([^;]+);/g)].map((m) => [m[1], m[2].trim()]));
   const specimen = h("div", { class: "specimen" }); for (const [name, value] of Object.entries(values)) specimen.style.setProperty(name, value);
   const descriptors = (v.voice?.words || []).slice(0, 5).map((w) => w.tag);
-  const contextTitle = v.project_context?.summary || "A direction for your next build";
-  const previewTitle = contextTitle.length > 80 ? contextTitle.slice(0, 77).replace(/\s+\S*$/, "") + "…" : contextTitle;
+  const names = (v.seeds || []).slice(0, 3).map((s) => s.name);
+  const previewTitle = names.length ? (v.project_context ? "Made for fans of " : "") + names.join(" · ") : "A direction for your next build";
   specimen.append(
     h("span", { class: "caption" }, v.selected_direction?.name || "Your audience, in type and color"),
     h("h3", null, previewTitle),
