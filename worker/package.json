@@ -1,5 +1,5 @@
 {
-  "name": "cultur-worker",
+  "name": "qloovibe-worker",
   "private": true,
   "type": "module",
   "version": "1.0.0",
@@ -12,7 +12,6 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.32.2",
-    "@noble/hashes": "^2.4.0",
     "zod": "^4.6.7"
   },
   "devDependencies": {

@@ -108,11 +108,15 @@ export class QlooClient {
   }
 
   search(query: string, take = 5, fresh = false) { return this.get("/search", { query, take }, fresh); }
-  entityByTwitter(handle: string, fresh = false) { return this.get("/entities", { "external.twitter.ids": handle }, fresh); }
-  insights(ids: string[], type: string, take = 10, fresh = false) {
-    return this.get("/v2/insights", { "filter.type": type, "signal.interests.entities": ids.join(","), take }, fresh);
+  /** Ranked design-vocabulary tags for an audience (tag family = decor | ambience | style). */
+  tagInsights(ids: string[], family: string, take = 25, fresh = false) {
+    return this.get("/v2/insights", { "filter.type": "urn:tag", "filter.tag.types": `urn:tag:${family}:qloo`, "signal.interests.entities": ids.join(","), take }, fresh);
   }
-  compare(a: string[], b: string[], fresh = false) {
-    return this.get("/v2/analysis/compare", { "a.signal.interests.entities": a.join(","), "b.signal.interests.entities": b.join(",") }, fresh);
+  /** Taste-ranked entities of one type for an audience; `only` scores specific candidate ids (critic mode). */
+  entityInsights(ids: string[], type: string, take: number, o: { explain?: boolean; only?: string[] } = {}, fresh = false) {
+    const p: Record<string, string | number> = { "filter.type": type, "signal.interests.entities": ids.join(","), take };
+    if (o.explain) p["feature.explainability"] = "true";
+    if (o.only?.length) p["filter.entities"] = o.only.join(",");
+    return this.get("/v2/insights", p, fresh);
   }
 }

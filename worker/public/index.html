@@ -3,112 +3,336 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="color-scheme" content="light dark">
-<title>Cultur</title>
-<meta name="description" content="Cultural-fingerprint due diligence for crypto creators and projects, grounded in Qloo.">
+<title>QlooVibe</title>
+<meta name="description" content="Audience-grounded design direction for coding agents, from Qloo taste data. Every token has a receipt.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cstyle%3Erect%7Bfill:%230f766e%7D@media(prefers-color-scheme:dark)%7Brect%7Bfill:%232dd4bf%7D%7D%3C/style%3E%3Crect width='32' height='32' rx='8'/%3E%3Cpath d='M9 10h14M9 16h9M9 22h12' stroke='%23fff' stroke-width='3' stroke-linecap='round' fill='none'/%3E%3C/svg%3E">
 <style>
-:root{--bg:#f7f5f0;--fg:#1b1a17;--mut:#625e55;--card:#fff;--line:#ddd8cc;--acc:#1f4d3a;--acc-fg:#fff;--warn:#8a5a00;--bad:#9b2c2c}
-@media (prefers-color-scheme:dark){:root{--bg:#14130f;--fg:#efece4;--mut:#a9a497;--card:#1d1c17;--line:#38362d;--acc:#7fc4a2;--acc-fg:#10201a;--warn:#e0b05a;--bad:#e58a8a}}
+:root{color-scheme:light dark;--bg:#fafaf9;--panel:#ffffff;--ink:#1c1917;--mute:#57534e;--line:#e7e5e4;--soft:#f5f5f4;--accent:#0f766e;--accent-ink:#ffffff;--ok:#166534;--okbg:#dcfce7;--warn:#854d0e;--warnbg:#fef9c3;--bad:#991b1b;--badbg:#fee2e2;--ring:0 0 0 2px var(--bg),0 0 0 4px var(--accent)}
+@media (prefers-color-scheme:dark){:root{--bg:#0c0a09;--panel:#171412;--ink:#f5f5f4;--mute:#a8a29e;--line:#2b2724;--soft:#1f1b19;--accent:#2dd4bf;--accent-ink:#042f2e;--ok:#86efac;--okbg:#14301f;--warn:#fde68a;--warnbg:#33290d;--bad:#fca5a5;--badbg:#3b1414}}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}
-main{max-width:860px;margin:0 auto;padding:24px 16px 64px}
-h1{font-size:clamp(1.9rem,5vw,2.8rem);line-height:1.1;margin:.2em 0 .3em;text-wrap:balance}
-h2{font-size:1.1rem;margin:1.6em 0 .5em}
-.brand{font-weight:700;letter-spacing:.04em;color:var(--acc)}
-.lede,.mut{color:var(--mut)}
-form{display:flex;gap:8px;margin:20px 0 8px;flex-wrap:wrap}
-input[type=text]{flex:1 1 260px;min-height:44px;padding:8px 12px;font:inherit;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--fg)}
-button{min-height:44px;padding:8px 18px;font:inherit;font-weight:600;border:0;border-radius:8px;background:var(--acc);color:var(--acc-fg);cursor:pointer}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important;animation:none!important}}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;-webkit-tap-highlight-color:rgba(0,0,0,0)}
+::selection{background:var(--accent);color:var(--accent-ink)}
+a{color:inherit}
+code,pre,.mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:.82rem}
+.num{font-variant-numeric:tabular-nums}
+.wrap{max-width:1280px;margin:0 auto;padding:0 16px}
+header.top{border-bottom:1px solid var(--line);background:var(--panel)}
+header.top .wrap{display:flex;align-items:center;gap:12px;padding-top:12px;padding-bottom:12px;flex-wrap:wrap}
+.brand{font-weight:600;font-size:1.1rem;letter-spacing:-.01em}
+.tag{color:var(--mute);font-size:.9rem;flex:1;min-width:220px}
+.pill{font-size:.78rem;padding:2px 10px;border-radius:999px;border:1px solid var(--line);color:var(--mute);background:var(--soft)}
+.pill.ok{color:var(--ok);background:var(--okbg);border-color:transparent}
+main{padding:20px 0 48px}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:20px;align-items:start}
+@media (max-width:980px){.grid{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px}
+.pad{padding:16px}
+h1{font-size:clamp(1.25rem,2.2vw,1.6rem);line-height:1.2;margin:0 0 4px;font-weight:600;letter-spacing:-.015em}
+h2{font-size:1rem;margin:0 0 8px;font-weight:600}
+h3{font-size:.9rem;margin:16px 0 6px;font-weight:600}
+p{margin:0 0 8px}
+.mute{color:var(--mute)}
+.small{font-size:.85rem}
+form.ask{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+label.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+input[type=text],textarea{flex:1;min-width:220px;font:inherit;font-size:16px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+input:focus-visible,textarea:focus-visible,button:focus-visible,[role=tab]:focus-visible,summary:focus-visible{outline:none;box-shadow:var(--ring)}
+button{font:inherit;font-size:.95rem;font-weight:500;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:9px 14px;cursor:pointer;user-select:none;-webkit-user-select:none;transition:transform .12s ease,background .12s ease}
+button:active{transform:scale(.97)}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent}
 button:disabled{opacity:.6;cursor:progress}
-:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin:10px 0}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
-.score .v{font-size:1.8rem;font-weight:700;font-variant-numeric:tabular-nums}
-.score .n{color:var(--mut);font-size:.9rem}
-.tag{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:1px 10px;margin:2px 4px 2px 0;font-size:.85rem}
-.warn{border-left:4px solid var(--warn)}
-code,pre{font:13px/1.45 ui-monospace,Consolas,monospace}
-pre{overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px;white-space:pre-wrap;word-break:break-word}
-details{margin:8px 0}summary{cursor:pointer;font-weight:600}
-.cite{font-size:.8rem;color:var(--mut)}
-#status{min-height:1.5em}
-.priv{font-size:.9rem;border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin:14px 0}
-a{color:var(--acc)}
+@media (hover:hover){button:hover:not(:disabled){background:var(--soft)}button.primary:hover:not(:disabled){background:var(--accent);filter:brightness(1.08)}}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chip{font-size:.85rem;padding:5px 10px;border-radius:999px}
+.status{min-height:1.5em;margin-top:8px;font-size:.9rem}
+.status.err{color:var(--bad)}
+[role=tablist]{display:flex;gap:4px;border-bottom:1px solid var(--line);padding:0 8px;overflow-x:auto}
+[role=tab]{border:0;border-bottom:2px solid transparent;border-radius:0;background:none;padding:12px 12px 10px;color:var(--mute);white-space:nowrap}
+[role=tab][aria-selected=true]{color:var(--ink);border-bottom-color:var(--accent)}
+[role=tabpanel]{padding:16px}
+table{width:100%;border-collapse:collapse;font-size:.88rem}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:600;color:var(--mute);font-size:.8rem}
+.badge{display:inline-block;font-size:.75rem;padding:1px 8px;border-radius:999px;background:var(--soft);color:var(--mute);border:1px solid var(--line);white-space:nowrap}
+.badge.ok{background:var(--okbg);color:var(--ok);border-color:transparent}
+.badge.warn{background:var(--warnbg);color:var(--warn);border-color:transparent}
+.badge.bad{background:var(--badbg);color:var(--bad);border-color:transparent}
+pre{margin:6px 0;padding:12px;background:var(--soft);border:1px solid var(--line);border-radius:8px;overflow:auto;white-space:pre-wrap;word-break:break-word;max-height:340px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.copy-ok{color:var(--ok);font-size:.85rem}
+.empty{text-align:center;padding:32px 16px}
+.trace li{list-style:none;border-bottom:1px solid var(--line);padding:8px 0}
+.trace ol{margin:0;padding:0}
+.trace .call{display:block;color:var(--mute);word-break:break-all;margin-top:2px}
+.split{display:flex;height:10px;border-radius:5px;overflow:hidden;background:var(--soft);min-width:120px}
+.split i{display:block;height:100%}
+.legend{display:flex;gap:10px;flex-wrap:wrap;font-size:.82rem;color:var(--mute);margin:4px 0 10px}
+.legend b{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+details{margin-top:10px}
+summary{cursor:pointer;color:var(--mute);font-size:.88rem;border-radius:6px}
+.colhead{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+/* ---------- locked sample shell: shadcn-style structure, skinned ONLY by --qv-* tokens ---------- */
+.stage{border:1px dashed var(--line);border-radius:12px;padding:12px;background:var(--soft)}
+.pv{background:var(--qv-bg);color:var(--qv-text);font-family:var(--qv-font-body);border-radius:var(--qv-radius);overflow:hidden;border:1px solid var(--qv-border);line-height:1.5}
+.pv *{box-sizing:border-box}
+.pv nav{display:flex;align-items:center;gap:calc(var(--qv-unit)*4);padding:calc(var(--qv-unit)*3) calc(var(--qv-unit)*5);border-bottom:1px solid var(--qv-border);background:var(--qv-surface)}
+.pv nav b{font-family:var(--qv-font-display);font-size:1.05rem;font-weight:600;margin-right:auto}
+.pv nav span{color:var(--qv-muted);font-size:.9rem}
+.pv .hero{padding:calc(var(--qv-unit)*10) calc(var(--qv-unit)*5) calc(var(--qv-unit)*8)}
+.pv .eyebrow{display:inline-block;font-size:.8rem;padding:2px calc(var(--qv-unit)*3);border-radius:999px;border:1px solid var(--qv-border);color:var(--qv-muted);background:var(--qv-surface)}
+.pv h4{font-family:var(--qv-font-display);font-weight:600;font-size:clamp(1.6rem,3.4vw,2.4rem);line-height:1.12;margin:calc(var(--qv-unit)*3) 0;letter-spacing:-.01em}
+.pv p{color:var(--qv-muted);max-width:56ch;margin:0 0 calc(var(--qv-unit)*5)}
+.pv .btn{display:inline-block;font:inherit;font-weight:500;font-size:.95rem;padding:calc(var(--qv-unit)*2.5) calc(var(--qv-unit)*4.5);border-radius:var(--qv-radius);border:1px solid var(--qv-border);background:var(--qv-surface);color:var(--qv-text);transition:transform var(--qv-dur) var(--qv-ease),box-shadow var(--qv-dur) var(--qv-ease);box-shadow:var(--qv-shadow);cursor:default}
+.pv .btn.pri{background:var(--qv-accent);color:var(--qv-accent-text);border-color:transparent;margin-right:calc(var(--qv-unit)*2)}
+@media (hover:hover){.pv .btn:hover{transform:translateY(-1px)}}
+.pv .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:calc(var(--qv-unit)*4);padding:0 calc(var(--qv-unit)*5) calc(var(--qv-unit)*6)}
+.pv .tile{background:var(--qv-surface);border:1px solid var(--qv-border);border-radius:var(--qv-radius);padding:calc(var(--qv-unit)*4);box-shadow:var(--qv-shadow)}
+.pv .tile b{display:block;font-family:var(--qv-font-display);font-weight:600;margin-bottom:calc(var(--qv-unit)*1)}
+.pv .tile span{color:var(--qv-muted);font-size:.9rem}
+.pv .join{display:flex;gap:calc(var(--qv-unit)*2);padding:calc(var(--qv-unit)*5);border-top:1px solid var(--qv-border);background:var(--qv-surface);flex-wrap:wrap}
+.pv .fake{flex:1;min-width:160px;padding:calc(var(--qv-unit)*2.5) calc(var(--qv-unit)*3);border-radius:var(--qv-radius);border:1px solid var(--qv-border);background:var(--qv-bg);color:var(--qv-muted);font-size:.95rem}
 </style>
 </head>
 <body>
-<main>
-<div class="brand">CULTUR</div>
-<h1>New name. Familiar cultural footprint.</h1>
-<p class="lede">Cultur uses Qloo's cross-domain taste graph to surface possible connections between crypto creators and prior projects, with cited evidence and onchain corroboration. Taste similarity is a lead, never proof of identity or fraud.</p>
+<header class="top"><div class="wrap">
+  <span class="brand">QlooVibe</span>
+  <span class="tag">Audience-grounded design direction for coding agents. Qloo supplies the taste data; every token has a receipt.</span>
+  <span class="pill" id="health" role="status">checking…</span>
+  <a class="pill" href="/docs">API docs</a><a class="pill" href="/api/rules">Rule table</a>
+</div></header>
 
-<form id="f">
-  <label for="q" class="mut" style="width:100%">Twitter/X handle, ENS name, Ethereum contract, or project name</label>
-  <input id="q" type="text" name="input" autocomplete="off" spellcheck="false" maxlength="200" placeholder="e.g. @handle, name.eth, 0x…, Wonderland" required>
-  <button id="go" type="submit">Analyze</button>
-</form>
-<div id="status" role="status" aria-live="polite"></div>
-<div id="out"></div>
+<main class="wrap">
+<div class="grid">
+<section>
+  <div class="card pad">
+    <h1>Who are you building for?</h1>
+    <p class="mute small">Name 1–5 things the audience loves (artists, brands, films, shows, books). Add a hint like <code>Slowdive (artist)</code> to disambiguate.</p>
+    <form class="ask" id="ask" autocomplete="off">
+      <label class="sr" for="aud">Audience</label>
+      <input id="aud" type="text" name="audience" maxlength="300" required spellcheck="false" placeholder="fans of Slowdive, Aesop and A24" autocomplete="off">
+      <button class="primary" id="go" type="submit">Generate</button>
+    </form>
+    <div class="chips" id="chips" aria-label="Starter audiences"></div>
+    <div class="status" id="status" role="status" aria-live="polite"></div>
+  </div>
 
-<div class="priv"><strong>Privacy.</strong> No accounts. No Twitter/X scraping. Analysis uses submitted public identifiers, cited public records, public onchain facts, and Qloo's aggregated cultural intelligence. Public handles and wallet addresses can still be personal data; submitted inputs and generated dossiers are kept for 7 days and then expire.</div>
+  <div class="card" id="out" style="margin-top:16px" hidden>
+    <div role="tablist" aria-label="Results" id="tabs">
+      <button role="tab" id="t-preview" aria-controls="p-preview" aria-selected="true">Preview</button>
+      <button role="tab" id="t-tokens" aria-controls="p-tokens" aria-selected="false" tabindex="-1">Tokens &amp; brief</button>
+      <button role="tab" id="t-vocab" aria-controls="p-vocab" aria-selected="false" tabindex="-1">Qloo vocabulary</button>
+      <button role="tab" id="t-critic" aria-controls="p-critic" aria-selected="false" tabindex="-1">Critic</button>
+      <button role="tab" id="t-bench" aria-controls="p-bench" aria-selected="false" tabindex="-1">Benchmark</button>
+    </div>
+    <div role="tabpanel" id="p-preview" aria-labelledby="t-preview"></div>
+    <div role="tabpanel" id="p-tokens" aria-labelledby="t-tokens" hidden></div>
+    <div role="tabpanel" id="p-vocab" aria-labelledby="t-vocab" hidden></div>
+    <div role="tabpanel" id="p-critic" aria-labelledby="t-critic" hidden></div>
+    <div role="tabpanel" id="p-bench" aria-labelledby="t-bench" hidden></div>
+  </div>
+</section>
 
-<h2>API first</h2>
-<p class="mut">This page is a thin client. Everything below is the same service exposed as REST and as an MCP tool (<code>generate_dossier</code> at <code>/mcp</code>, Streamable HTTP).</p>
-<pre id="curl"></pre>
-<p class="mut"><a href="/docs">OpenAPI docs</a> · <a href="/health">health</a></p>
-
-<h2>Why it matters</h2>
-<p>Americans reported $7.2 billion in cryptocurrency investment-fraud losses in 2025, according to the FBI's IC3 (<a href="https://www.ic3.gov/AnnualReport/Reports/2025_IC3Report.pdf" rel="noopener">2025 Internet Crime Report</a>). That figure covers U.S. reports and is not attributable to creator rebrands. Cultur is due-diligence support for fans and creators, not a verdict on anyone.</p>
+<aside>
+  <div class="card pad trace" id="trace">
+    <h2>Live Qloo trace</h2>
+    <p class="mute small">Every call behind the result appears here with its measured latency.</p>
+  </div>
+  <div class="card pad" style="margin-top:16px">
+    <h2>Who did what</h2>
+    <p class="small"><b>Qloo:</b> resolves seeds, ranks decor / ambience / style tags for the audience, returns touchstones with per-seed explainability, scores your references.</p>
+    <p class="small"><b>Our code:</b> filters the tags, maps them to tokens with a published rule table (<code id="rv">qv-rules-1.0</code>; unvalidated hypotheses), and enforces WCAG AA contrast. Palette hex values are not Qloo data.</p>
+    <p class="small mute">No LLM writes the tokens or the preview.</p>
+  </div>
+</aside>
+</div>
 </main>
+
 <script>
-const $=id=>document.getElementById(id);
-$("curl").textContent=`curl -s -X POST ${location.origin}/api/dossier \\
-  -H 'content-type: application/json' \\
-  -d '{"input": "Wonderland"}'`;
-function el(tag,attrs,...kids){const e=document.createElement(tag);for(const[k,v]of Object.entries(attrs||{}))e[k]=v;for(const c of kids)e.append(c);return e}
-const fmt=s=>s.value==null?"Unavailable":String(s.value);
-function render(d){
-  const out=$("out");out.replaceChildren();
-  out.append(el("div",{className:"card"},el("strong",{},`Status: ${d.status}`),` · verification: ${d.verification} · ${d.duration_ms} ms · `,
-    el("a",{href:`/api/dossier/${d.id}`},"saved dossier")));
-  if(d.resolved_identity)out.append(el("div",{className:"card"},el("strong",{},"Resolved: "),`${d.resolved_identity.name} (${d.resolved_identity.method})`));
-  for(const a of d.ambiguity||[])out.append(el("div",{className:"card warn"},`Unconfirmed candidate: ${a.name||a.id}${a.note?" - "+a.note:""}`));
-  const g=el("div",{className:"grid"});
-  for(const[k,s]of Object.entries(d.scores)){
-    g.append(el("div",{className:"card score"},el("div",{className:"n"},k.replaceAll("_"," ")),el("div",{className:"v"},fmt(s)),
-      el("div",{className:"n"},`${s.band} · ${s.status.replaceAll("_"," ")}`)));
-  }
-  out.append(el("h2",{},"Scores"),el("p",{className:"mut"},"The trust score measures how much sourced evidence supports integrity. A low value can mean little evidence was found, not wrongdoing. Unavailable means the evidence did not support a value."),g);
-  out.append(el("h2",{},"Findings"));
-  for(const r of d.plain_english_report)out.append(el("div",{className:"card"},r.text,el("div",{className:"cite"},r.evidence.length?`Evidence: ${r.evidence.join(", ")}`:"No evidence cited")));
-  const fp=d.fingerprint||{};
-  if(fp.entities&&Object.keys(fp.entities).length){
-    out.append(el("h2",{},"Cultural fingerprint (Qloo)"));
-    for(const[c,items]of Object.entries(fp.entities))out.append(el("div",{className:"card"},el("strong",{},c+": "),...items.slice(0,8).map(i=>el("span",{className:"tag"},i.name||i.id))));
-    if(fp.tags?.length)out.append(el("div",{className:"card"},el("strong",{},"tags: "),...fp.tags.slice(0,12).map(t=>el("span",{className:"tag"},t.name||t.id))));
-  }
-  if(d.rebrand_matches?.length){
-    out.append(el("h2",{},"Possible rebrand leads"));
-    for(const m of d.rebrand_matches)out.append(el("div",{className:"card"},el("strong",{},m.names[0]),` - overlap band: ${m.band} (${m.similarity}); continuity: ${m.continuity.status}; adverse history: ${m.adverse_history_status}. `,
-      el("div",{className:"cite"},m.limitations.join(" "))));
-  }
-  if(d.caveats?.length){out.append(el("h2",{},"Coverage gaps and caveats"));const u=el("ul");for(const c of d.caveats)u.append(el("li",{},c));out.append(u)}
-  const ev=el("details",{},el("summary",{},`Evidence (${d.evidence.length})`));
-  for(const e of d.evidence)ev.append(el("div",{className:"card"},el("strong",{},e.id+" "),`${e.fact} `,el("div",{className:"cite"},`${e.source} · ${e.origin} · ${e.freshness} · ${e.ref}`)));
-  out.append(ev);
-  const tr=el("details",{},el("summary",{},"Tool trace"),el("pre",{},JSON.stringify(d.tool_trace,null,2)));out.append(tr);
-  out.append(el("details",{},el("summary",{},"Raw JSON"),el("pre",{},JSON.stringify(d,null,2))));
+"use strict";
+const $ = (s, el = document) => el.querySelector(s);
+const h = (tag, attrs, ...kids) => {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) { if (v == null || v === false) continue; if (k === "class") e.className = v; else if (k === "style") e.style.cssText = v; else if (k.startsWith("on")) e.addEventListener(k.slice(2), v); else e.setAttribute(k, v === true ? "" : v); }
+  for (const k of kids.flat()) if (k != null && k !== false) e.append(k.nodeType ? k : document.createTextNode(String(k)));
+  return e;
+};
+const fmt = (n, d = 2) => (typeof n === "number" ? n.toFixed(d) : "–");
+const STARTERS = ["fans of Slowdive, Aesop and A24", "Phoebe Bridgers, Aesop", "Travis Scott, Supreme", "Luke Combs, Yeti", "BLACKPINK, Glossier", "Norah Jones, Louis Vuitton"];
+let state = { vibe: null, busy: false };
+
+/* ---------- tabs ---------- */
+const tabs = [...document.querySelectorAll("[role=tab]")];
+function selectTab(t) {
+  for (const x of tabs) { const on = x === t; x.setAttribute("aria-selected", on); x.tabIndex = on ? 0 : -1; $("#" + x.getAttribute("aria-controls")).hidden = !on; }
+  if (t.id === "t-bench") loadBench();
 }
-$("f").addEventListener("submit",async ev=>{
-  ev.preventDefault();const b=$("go"),s=$("status");b.disabled=true;s.textContent="Analyzing… this can take up to ~30 seconds.";
-  try{
-    const r=await fetch("/api/dossier",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({input:$("q").value})});
-    const j=await r.json();
-    if(!r.ok){s.textContent=j.error?.message||"Request failed";$("out").replaceChildren();}
-    else{s.textContent="";render(j);}
-  }catch(e){s.textContent="Network error. Try again."}
-  b.disabled=false;
+tabs.forEach((t, i) => {
+  t.addEventListener("click", () => selectTab(t));
+  t.addEventListener("keydown", (e) => {
+    const j = e.key === "ArrowRight" ? (i + 1) % tabs.length : e.key === "ArrowLeft" ? (i - 1 + tabs.length) % tabs.length : e.key === "Home" ? 0 : e.key === "End" ? tabs.length - 1 : -1;
+    if (j >= 0) { e.preventDefault(); tabs[j].focus(); selectTab(tabs[j]); }
+  });
 });
+
+/* ---------- helpers ---------- */
+function copyBtn(label, getText) {
+  const note = h("span", { class: "copy-ok", "aria-live": "polite" });
+  const b = h("button", { type: "button", onclick: async () => { try { await navigator.clipboard.writeText(getText()); note.textContent = "Copied"; } catch { note.textContent = "Copy failed, select the text manually"; } setTimeout(() => (note.textContent = ""), 1800); } }, label);
+  return h("span", { class: "row" }, b, note);
+}
+function sourceBadge(s) { return h("span", { class: "badge " + (s === "rule" ? "ok" : s === "default" ? "warn" : "") }, s === "default" ? "default (no mapped evidence)" : s === "rule" ? "Qloo tags + rule" : "derived (contrast gate)"); }
+
+/* ---------- trace ---------- */
+function renderTrace(v, label) {
+  const box = $("#trace");
+  box.replaceChildren(h("h2", null, "Live Qloo trace"));
+  if (!v || !v.trace) { box.append(h("p", { class: "mute small" }, "Every call behind the result appears here with its measured latency.")); return; }
+  const t = v.timing || {};
+  box.append(h("p", { class: "small num" }, `${t.qloo_calls ?? v.trace.length} Qloo calls (${t.fresh ?? 0} fresh, ${t.cached ?? 0} cached, ${t.failed ?? 0} failed) · ${t.total_ms ?? "–"} ms server time${label ? " · " + label : ""}`));
+  box.append(h("ol", null, v.trace.map((s) => h("li", null,
+    h("span", { class: "row" }, h("b", { class: "small" }, s.step), h("span", { class: "badge " + (s.status === "ok" ? (s.freshness === "fresh" ? "ok" : "") : "bad") }, s.status === "ok" ? s.freshness : "error"), h("span", { class: "mute small num" }, `${s.ms} ms`)),
+    h("span", { class: "call mono" }, s.call.replace(/signal\.interests\.entities=[^&]+/, "signal.interests.entities=…"))))));
+}
+
+/* ---------- preview ---------- */
+function renderPreview(v) {
+  const p = $("#p-preview"); p.replaceChildren();
+  const tk = v.tokens;
+  const stage = h("div", { class: "stage" });
+  const pv = h("div", { class: "pv", role: "img", "aria-label": "Static sample page skinned with the generated tokens" });
+  for (const m of tk.css_qv.matchAll(/(--qv-[a-z-]+):\s*([^;]+);/g)) pv.style.setProperty(m[1], m[2].trim());
+  const seeds = v.seeds.map((s) => s.name);
+  const lead = (v.voice && v.voice.words[0] && v.voice.words[0].tag) || "Made for you";
+  pv.append(
+    h("nav", null, h("b", null, "Sample product"), h("span", null, "Features"), h("span", null, "Pricing"), h("span", null, "Docs")),
+    h("div", { class: "hero" },
+      h("span", { class: "eyebrow" }, lead),
+      h("h4", null, "Software that feels like it was made for you."),
+      h("p", null, `Built for people who love ${seeds.join(", ")}. This is a locked sample layout; only the skin comes from the audience.`),
+      h("span", { class: "btn pri" }, "Get started"), h("span", { class: "btn" }, "Read the docs")),
+    h("div", { class: "cards" }, ["Focus", "Flow", "Craft"].map((t, i) => h("div", { class: "tile" }, h("b", null, t), h("span", null, ["Fewer distractions, clearer hierarchy.", "Spacing and motion follow the audience.", "Contrast checked against WCAG AA."][i])))),
+    h("div", { class: "join" }, h("span", { class: "fake" }, "you@example.com"), h("span", { class: "btn pri" }, "Join the waitlist")));
+  stage.append(pv);
+  p.append(h("p", { class: "mute small" }, "A static sample: structure is fixed (shadcn-style: nav, hero, cards, form). Only these tokens change the look. Nothing here is a working form."), stage);
+  p.append(h("h3", null, "Accessibility gate (our code)"),
+    h("table", null, h("thead", null, h("tr", null, ["Pair", "Ratio", "Needs", "Result"].map((x) => h("th", null, x)))),
+      h("tbody", null, tk.palette.contrast.map((c) => h("tr", null, h("td", null, c.pair), h("td", { class: "num" }, c.ratio.toFixed(2) + ":1"), h("td", { class: "num" }, c.need + ":1"), h("td", null, h("span", { class: "badge " + (c.pass ? "ok" : "bad") }, c.pass ? c.level : "fail")))))),
+    h("p", { class: "mute small", style: "margin-top:8px" }, tk.palette.adjustments.length ? "Lightness was adjusted: " + tk.palette.adjustments.map((a) => `${a.token} ${a.from}→${a.to}`).join(", ") + "." : "No adjustment was needed."));
+  if (v.voice && v.voice.words.length) p.append(h("h3", null, "Microcopy tone (verbatim Qloo tags)"), h("div", { class: "chips", style: "margin-top:0" }, v.voice.words.map((w) => h("span", { class: "badge" }, `${w.tag} · ${fmt(w.affinity)}`))));
+}
+
+/* ---------- tokens & brief ---------- */
+function renderTokens(v) {
+  const p = $("#p-tokens"); p.replaceChildren();
+  const tk = v.tokens;
+  p.append(h("div", { class: "row" }, copyBtn("Copy agent brief", () => v.agent_brief), copyBtn("Copy shadcn CSS", () => tk.css_shadcn), copyBtn("Copy --qv CSS", () => tk.css_qv)),
+    h("pre", { tabindex: "0" }, v.agent_brief),
+    h("h3", null, "Use it from a coding agent"),
+    h("pre", { tabindex: "0" }, `claude mcp add --transport http qloovibe ${location.origin}/mcp`),
+    h("p", { class: "mute small" }, "Tools: design_brief, check_audience_fit, get_rule_table. Same service as the REST API."),
+    h("h3", null, "Receipts: every token and where it came from"),
+    h("table", null, h("thead", null, h("tr", null, ["Token", "Value", "Source", "Qloo tags that drove it (family, affinity, rule)"].map((x) => h("th", null, x)))),
+      h("tbody", null, tk.receipts.map((r) => h("tr", null, h("td", { class: "mono" }, r.token), h("td", { class: "num" }, r.value), h("td", null, sourceBadge(r.source)),
+        h("td", { class: "small" }, r.contributions.length ? r.contributions.slice().sort((a, b) => b.w - a.w).slice(0, 6).map((c) => h("div", null, `${c.tag} (${c.family}, ${fmt(c.affinity)}, ${c.rule}${c.match === "word" ? ", partial" : ""})`)) : h("span", { class: "mute" }, r.note)))))),
+    h("p", { class: "mute small", style: "margin-top:8px" }, "Every rule is a labelled hypothesis, not validated in user studies. Colour comes from rule-chosen hue, chroma and mode, then the contrast gate. Qloo supplies no colours."));
+  if (tk.unmapped_tags.length) p.append(h("p", { class: "small" }, h("b", null, "Kept tags with no rule yet: "), tk.unmapped_tags.join(", ")));
+}
+
+/* ---------- vocabulary / sanitization trace ---------- */
+const PALETTE = ["#0f766e", "#b45309", "#6d28d9", "#be123c", "#1d4ed8"];
+function renderVocab(v) {
+  const p = $("#p-vocab"); p.replaceChildren();
+  p.append(h("p", { class: "mute small" }, "Raw Qloo tags for this audience, what the published filter dropped (with the reason), and what was kept. Nothing reaches the rule table without passing this filter."));
+  for (const f of v.vocabulary.filters) {
+    const drop = new Map(f.dropped.map((d) => [d.tag, d.reason])), keep = new Map(f.kept.map((k) => [k.tag, k]));
+    p.append(h("h3", null, `${f.family[0].toUpperCase() + f.family.slice(1)} tags (${f.raw.length} returned, ${f.kept.length} kept, ${f.dropped.length} dropped)`),
+      f.raw.length ? h("table", null, h("thead", null, h("tr", null, ["Qloo tag", "Affinity", "Filter result"].map((x) => h("th", null, x)))),
+        h("tbody", null, f.raw.map((r) => { const k = keep.get(r.tag), d = drop.get(r.tag);
+          return h("tr", null, h("td", null, r.tag), h("td", { class: "num" }, fmt(r.affinity)), h("td", null, k ? h("span", { class: "badge ok" }, k.rule ? "kept → " + k.rule : "kept, no rule yet") : h("span", { class: "badge warn", title: d }, "dropped: " + (d || "")))); })))
+        : h("p", { class: "mute small" }, "Qloo returned none."));
+  }
+  const a = v.vocabulary.attribution;
+  if (a && a.length && a[0].support.length) {
+    p.append(h("h3", null, "Which seed drove each decor tag"), h("p", { class: "mute small" }, v.vocabulary.attribution_note),
+      h("div", { class: "legend" }, a[0].support.map((s, i) => h("span", null, h("b", { style: `background:${PALETTE[i % 5]}` }), s.seed))),
+      h("table", null, h("tbody", null, a.map((t) => h("tr", null, h("td", null, t.tag), h("td", { style: "width:55%" }, h("div", { class: "split", role: "img", "aria-label": t.support.map((s) => `${s.seed} ${Math.round(s.share * 100)}%`).join(", ") }, t.support.map((s, i) => h("i", { style: `width:${s.share * 100}%;background:${PALETTE[i % 5]}` })))), h("td", { class: "num small" }, t.support.map((s) => Math.round(s.share * 100) + "%").join(" / ")))))));
+  }
+  p.append(h("h3", null, "Touchstones (Qloo lookalikes with per-seed explainability)"));
+  for (const t of v.touchstones) p.append(h("details", { open: t.type === "brand" }, h("summary", null, `${t.type}s (${t.items.length})`),
+    t.items.length ? h("table", null, h("tbody", null, t.items.map((i) => h("tr", null, h("td", null, i.name), h("td", { class: "num" }, fmt(i.affinity)), h("td", { class: "small mute" }, i.why.map((w) => `${w.seed} ${Math.round(w.share * 100)}%`).join(" · ")))))) : h("p", { class: "mute small" }, "none returned")));
+  if (v.caveats.length) p.append(h("h3", null, "Caveats"), h("ul", null, v.caveats.map((c) => h("li", { class: "small" }, c))));
+  p.append(h("h3", null, "Limitations"), h("ul", null, v.limitations.map((c) => h("li", { class: "small" }, c))));
+}
+
+/* ---------- critic ---------- */
+function renderCritic() {
+  const p = $("#p-critic"); p.replaceChildren();
+  const inp = h("input", { type: "text", id: "cands", maxlength: "400", spellcheck: "false", autocomplete: "off", placeholder: "Bon Iver, Metallica, Nick Drake" });
+  const res = h("div", { id: "critres" });
+  const go = h("button", { class: "primary", type: "submit" }, "Check against this audience");
+  const form = h("form", { class: "ask", onsubmit: async (e) => {
+    e.preventDefault(); const names = inp.value.split(/[,;\n]/).map((s) => s.trim()).filter(Boolean).slice(0, 12); if (!names.length) return;
+    go.disabled = true; res.replaceChildren(h("p", { class: "mute small", role: "status" }, "Scoring with Qloo…"));
+    try {
+      const r = await fetch("/api/check", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ audience: state.vibe.audience.input, candidates: names }) });
+      const d = await r.json(); if (!r.ok) throw new Error(d.error ? d.error.message : "request failed");
+      res.replaceChildren(h("table", null, h("thead", null, h("tr", null, ["#", "Reference", "Qloo match", "Affinity", "Qloo top-10 median", "Gap", "Verdict"].map((x) => h("th", null, x)))),
+        h("tbody", null, d.results.map((x) => h("tr", null, h("td", { class: "num" }, x.rank ?? "–"), h("td", null, x.candidate), h("td", { class: "small" }, x.resolved ? `${x.resolved.name} (${x.resolved.type})` : h("span", { class: "mute" }, x.note || "not found")), h("td", { class: "num" }, fmt(x.affinity)), h("td", { class: "num" }, fmt(x.typical_top)), h("td", { class: "num" }, fmt(x.gap)), h("td", null, h("span", { class: "badge " + ({ strong: "ok", ok: "ok", weak: "warn", "off-audience": "bad" }[x.verdict] || "") }, x.verdict)))))),
+        h("p", { class: "mute small", style: "margin-top:8px" }, d.method));
+      renderTrace({ trace: d.trace, timing: d.timing }, "critic");
+    } catch (er) { res.replaceChildren(h("p", { class: "status err", role: "alert" }, er.message)); }
+    go.disabled = false;
+  } }, h("label", { class: "sr", for: "cands" }, "References to check"), inp, go);
+  p.append(h("p", { class: "mute small" }, "Before an agent ships copy or imagery that names artists, brands or films, score each against this audience. Flags are relative to what Qloo ranks highest for the same audience; Qloo affinities are compressed, so read the gap, not the raw number."), form, res);
+}
+
+/* ---------- benchmark ---------- */
+let benchLoaded = false;
+async function loadBench() {
+  const p = $("#p-bench"); if (benchLoaded) return; benchLoaded = true;
+  p.replaceChildren(h("p", { class: "mute small" }, "Loading…"));
+  try {
+    const r = await fetch("/api/benchmark");
+    if (!r.ok) { p.replaceChildren(h("p", null, "The comparison against an LLM-only vocabulary has not been run yet."), h("p", { class: "mute small" }, "It runs as a batch (script in the repo) and is stored here with its date, model and sample size. Nothing on this tab is hard-coded.")); return; }
+    const b = await r.json();
+    p.replaceChildren(h("p", { class: "small" }, `Batch run ${b.generated_at}, ${b.n_audiences} audiences, model ${b.model}, vocabulary of ${b.vocab_size} Qloo tags. ${b.method || ""}`),
+      h("table", null, h("thead", null, h("tr", null, ["Metric", "Qloo vocabulary", "LLM-only (same word list)"].map((x) => h("th", null, x)))),
+        h("tbody", null, (b.summary || []).map((m) => h("tr", null, h("td", null, m.label), h("td", { class: "num" }, m.qloo ?? "–"), h("td", { class: "num" }, m.llm ?? "–"))))),
+      h("details", null, h("summary", null, "Per audience"), h("table", null, h("thead", null, h("tr", null, ["Audience", "Qloo top words", "LLM picks (run 1)", "Overlap"].map((x) => h("th", null, x)))),
+        h("tbody", null, (b.rows || []).map((x) => h("tr", null, h("td", null, x.audience), h("td", { class: "small" }, x.qloo.join(", ")), h("td", { class: "small" }, x.llm.join(", ")), h("td", { class: "num" }, fmt(x.overlap))))))),
+      b.notes ? h("ul", null, b.notes.map((n) => h("li", { class: "small" }, n))) : null);
+  } catch { p.replaceChildren(h("p", { class: "status err" }, "Could not load the benchmark.")); benchLoaded = false; }
+}
+
+/* ---------- run ---------- */
+async function run(audience) {
+  if (state.busy) return; state.busy = true;
+  const go = $("#go"), st = $("#status"); go.disabled = true; st.className = "status";
+  const t0 = performance.now(); const tick = setInterval(() => (st.textContent = `Querying Qloo… ${((performance.now() - t0) / 1000).toFixed(1)}s`), 100);
+  try {
+    const r = await fetch("/api/vibe", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ audience }) });
+    const v = await r.json();
+    if (!r.ok) throw new Error(v.error ? v.error.message : "request failed");
+    const wall = Math.round(performance.now() - t0);
+    renderTrace(v, `${wall} ms round trip`);
+    if (v.status === "insufficient_evidence" || !v.tokens) {
+      state.vibe = null; $("#out").hidden = true;
+      st.className = "status err"; st.textContent = "No grounded result: " + (v.caveats || []).join(" "); return;
+    }
+    state.vibe = v; benchLoaded = false;
+    renderPreview(v); renderTokens(v); renderVocab(v); renderCritic();
+    $("#out").hidden = false; selectTab($("#t-preview"));
+    st.textContent = `Done in ${(wall / 1000).toFixed(1)}s · ${v.status} · ${v.seeds.map((s) => `${s.name} (${s.type.split(":").pop()})`).join(", ")}`;
+  } catch (e) { st.className = "status err"; st.textContent = e.message; }
+  finally { clearInterval(tick); go.disabled = false; state.busy = false; }
+}
+$("#ask").addEventListener("submit", (e) => { e.preventDefault(); const v = $("#aud").value.trim(); if (v) run(v); });
+$("#chips").append(...STARTERS.map((s) => h("button", { type: "button", class: "chip", onclick: () => { $("#aud").value = s; run(s); } }, s)));
+fetch("/health").then((r) => r.json()).then((d) => { const e = $("#health"); e.textContent = d.qloo_configured ? "Qloo connected" : "Qloo key missing"; e.classList.toggle("ok", !!d.qloo_configured); }).catch(() => ($("#health").textContent = "offline"));
+fetch("/api/rules").then((r) => r.json()).then((d) => ($("#rv").textContent = d.version)).catch(() => {});
+if (!/[?&]noauto/.test(location.search)) { const s = STARTERS[0]; $("#aud").value = s; run(s); }
 </script>
 </body>
 </html>

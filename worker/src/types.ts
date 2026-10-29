@@ -1,38 +1,11 @@
-export type ScoreStatus = "available" | "insufficient_evidence" | "unavailable";
-export type Origin = "observed" | "curated" | "caller_supplied" | "inferred";
-
-export interface Score {
-  value: number | null;
-  band: string;
-  status: ScoreStatus;
-  evidence: string[];
-  limitations: string[];
-}
-
-export interface Evidence {
-  id: string;
-  source: string;
-  ref: string;
-  subject: string;
-  fact: string;
-  retrieved_at: string;
-  freshness: "fresh" | "cached" | "n/a";
-  origin: Origin;
-}
-
 export interface Env {
   KV: KVNamespace;
   ASSETS: Fetcher;
+  AI?: Ai;
   QLOO_API_KEY?: string;
   QLOO_BASE_URL?: string;
-  ETH_RPC_URL?: string;
+  ADMIN_TOKEN?: string;
   RATE_LIMIT_PER_MIN?: string;
-}
-
-export interface DossierRequest {
-  input: string;
-  qloo_entity_ids?: { entity_id: string; attribution: string }[];
-  creation_tx_hash?: string;
 }
 
 export interface Store {
@@ -41,7 +14,18 @@ export interface Store {
   delete(key: string): Promise<void>;
 }
 
+export type Family = "decor" | "ambience" | "style";
+export const FAMILIES: Family[] = ["decor", "ambience", "style"];
+
 export const SCHEMA_VERSION = "1.0";
-export const SCORING_VERSION = "cultur-score-1.0";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type Dossier = Record<string, any>;
+export type Json = any;
+
+export interface TraceStep {
+  step: string;
+  call: string; // redacted, reproducible Qloo query (no credentials)
+  freshness: "fresh" | "cached";
+  status: "ok" | "error";
+  ms: number;
+  note?: string;
+}
