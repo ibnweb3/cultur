@@ -4,36 +4,650 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Turn your audience's favorite artists, brands and films into a design brief with Qloo taste data and a source for every design choice.">
-<meta name="theme-color" content="#f8f7f4">
+<meta name="theme-color" content="#121513">
 <title>QlooVibe — Design for your audience</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232b5b47'/%3E%3Cpath d='M9 10h14M9 16h9M9 22h12' stroke='white' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
 <style>
-:root{color-scheme:light;--bg:#f8f7f4;--panel:#fff;--ink:#242923;--mute:#60665e;--line:#dcded7;--soft:#f1f2ed;--accent:#2b5b47;--accent-ink:#fff;--ok:#255b35;--okbg:#edf5ec;--warn:#744b13;--warnbg:#fff7e6;--bad:#a02e2e;--badbg:#fff0ee}
-@media(prefers-color-scheme:dark){:root{color-scheme:dark;--bg:#141714;--panel:#1c201c;--ink:#edf0e8;--mute:#b3bbaf;--line:#3c443a;--soft:#262d25;--accent:#b9d5b7;--accent-ink:#192c1d;--ok:#b4dcae;--okbg:#243923;--warn:#ead0a0;--warnbg:#3b3120;--bad:#ffb5ad;--badbg:#412724}}
-*{box-sizing:border-box}html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}a{color:var(--accent);text-underline-offset:3px}button,input,textarea{font:inherit}button{cursor:pointer}button:disabled{opacity:.6;cursor:wait}button,a,summary,input,textarea,[tabindex]{outline-offset:4px}button:focus-visible,a:focus-visible,summary:focus-visible,input:focus-visible,textarea:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--accent)}[hidden]{display:none!important}::selection{background:var(--accent);color:var(--accent-ink)}
-.wrap{max-width:1220px;margin:0 auto;padding:0 28px}.top{border-bottom:1px solid var(--line);background:var(--panel)}.top .wrap{display:flex;align-items:center;gap:28px;min-height:76px;flex-wrap:wrap}.brand{color:var(--ink);text-decoration:none;font-weight:750;letter-spacing:-.04em;font-size:1.35rem}.brand small{font-size:.7rem;font-weight:500;letter-spacing:.01em;border-left:1px solid var(--line);margin-left:13px;padding-left:13px;color:var(--mute)}.top nav{display:flex;align-items:center;gap:24px;margin-left:auto;font-size:.85rem}.top nav a{color:var(--mute)}.service{font-size:.78rem;color:var(--mute)}
-main{padding-top:46px!important;padding-bottom:60px!important}.intro{max-width:760px;margin-bottom:28px}.eyebrow{font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);font-weight:700;margin:0 0 12px}h1{font-size:clamp(2rem,4.6vw,3.35rem);letter-spacing:-.045em;line-height:1.12;font-weight:650;margin:0 0 16px;text-wrap:balance}h2{font-size:1.12rem;letter-spacing:-.025em;line-height:1.3;margin:0 0 12px}h3{font-size:.95rem;margin:26px 0 10px}p{margin:0 0 12px}.intro>p:last-child{color:var(--mute);max-width:65ch}.grid{display:grid;grid-template-columns:minmax(0,1fr) 286px;gap:24px;align-items:start}.grid>*{min-width:0}.card{background:var(--panel);border:1px solid var(--line);border-radius:12px}.pad{padding:24px}.muted{color:var(--mute)}.small{font-size:.85rem}.mono,code,pre{font-family:ui-monospace,"SF Mono",Consolas,monospace;font-size:.8rem}.num{font-variant-numeric:tabular-nums}code{overflow-wrap:anywhere}.row{display:flex;align-items:center;flex-wrap:wrap;gap:10px}.space{justify-content:space-between}.stack{margin-top:20px}.label{display:block;font-size:.85rem;font-weight:650;margin:0 0 8px}.ask{display:flex;gap:10px;flex-wrap:wrap}.ask input{flex:1;min-width:0;width:100%;font-size:1rem;border:1px solid #a8afa2;border-radius:6px;padding:12px;background:var(--bg);color:var(--ink)}.input-line{display:flex;gap:10px;width:100%;align-items:stretch}.btn{border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink);padding:10px 15px;font-size:.87rem;font-weight:600;line-height:1.5;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:6px}.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}.btn:hover:not(:disabled){filter:brightness(.95)}.btn.primary:hover:not(:disabled){filter:brightness(1.12)}.examples{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:16px}.examples>span{font-size:.78rem;color:var(--mute);margin-right:2px}.examples button{font-size:.76rem;border:1px solid var(--line);border-radius:4px;padding:5px 8px;background:var(--soft);color:var(--ink)}.help{font-size:.78rem;color:var(--mute);margin:9px 0 0}.status{font-size:.88rem;margin-top:12px;min-height:1.5em}.status:empty{display:none}.status.err{color:var(--bad)}.notice{background:var(--warnbg);color:var(--warn);border-left:3px solid var(--warn);padding:14px 16px;font-size:.85rem;margin:16px 0}.notice p:last-child{margin-bottom:0}.notice ul{margin:7px 0 0;padding-left:18px}.result-head{padding:22px 24px;border-bottom:1px solid var(--line)}.result-head h2{font-size:1.2rem;margin-bottom:6px}.result-head .notice{margin-bottom:0}.badge{display:inline-block;border-radius:4px;border:1px solid var(--line);background:var(--soft);padding:2px 7px;font-size:.72rem;font-weight:500;color:var(--mute)}.badge.ok{background:var(--okbg);color:var(--ok);border-color:transparent}.badge.warn{background:var(--warnbg);color:var(--warn);border-color:transparent}.badge.bad{background:var(--badbg);color:var(--bad);border-color:transparent}
-[role=tablist]{display:flex;border-bottom:1px solid var(--line);gap:16px;padding:0 24px;overflow-x:auto}[role=tab]{font-size:.81rem;white-space:nowrap;border:0;border-bottom:2px solid transparent;background:none;color:var(--mute);padding:15px 0 12px}[role=tab][aria-selected=true]{color:var(--ink);border-bottom-color:var(--accent);font-weight:650}[role=tabpanel]{padding:24px;min-width:0}.table-scroll{overflow-x:auto;max-width:100%;margin:10px 0 16px;border:1px solid var(--line);border-radius:6px}.table-scroll:focus-visible{outline-offset:2px}table{border-collapse:collapse;font-size:.8rem;width:100%;min-width:440px}th,td{text-align:left;vertical-align:top;padding:10px 12px;border-bottom:1px solid var(--line);overflow-wrap:anywhere}th{font-size:.73rem;font-weight:650;color:var(--mute);background:var(--soft)}tr:last-child td{border-bottom:0}td .badge{white-space:normal}pre{white-space:pre-wrap;overflow-wrap:anywhere;overflow:auto;max-height:380px;border:1px solid var(--line);background:var(--soft);padding:16px;border-radius:6px;line-height:1.65;margin:12px 0 20px}.feedback{font-size:.78rem;color:var(--accent)}.feedback:empty{display:none}details{margin-top:14px}summary{cursor:pointer;font-size:.82rem;font-weight:600;color:var(--mute);padding:3px 0}details>p{margin-top:12px}.aside-copy{font-size:.82rem;color:var(--mute)}.aside-copy b{color:var(--ink)}.trace-list{list-style:none;padding:0;margin:12px 0 0}.trace-list li{border-top:1px solid var(--line);padding:10px 0;font-size:.78rem}.trace-list code{display:block;font-size:.68rem;color:var(--mute);margin-top:6px;word-break:break-all}.trace-list .step{font-weight:600;display:block;margin-bottom:4px}.trace-list .err{color:var(--bad)}.guide{display:grid;grid-template-columns:26px 1fr;gap:10px;margin-bottom:16px}.guide .number{color:var(--accent);font-size:.76rem;border:1px solid var(--line);border-radius:50%;width:24px;height:24px;display:grid;place-items:center}.guide p{font-size:.8rem;color:var(--mute);margin:0}.guide b{display:block;font-size:.82rem;margin-bottom:2px}.sources{padding-left:18px;color:var(--mute);font-size:.82rem}.sources li{margin:6px 0}.benchmark{padding:20px 24px;margin-top:24px}.benchmark>summary{font-size:.88rem;color:var(--ink)}footer{border-top:1px solid var(--line);padding-top:20px;margin-top:30px;font-size:.76rem;color:var(--mute);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}.skip{position:absolute;left:12px;top:-80px;background:var(--panel);padding:12px;z-index:10}.skip:focus{top:8px}
-/* Real audience content and usable export controls, styled by the generated tokens. */
-.specimen{background:var(--qv-bg);color:var(--qv-text);border:1px solid var(--qv-border);border-radius:var(--qv-radius);font-family:var(--qv-font-body);padding:28px;overflow:hidden}.specimen h3{font:600 1.55rem/1.25 var(--qv-font-display);margin:8px 0 12px}.specimen .caption{font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--qv-muted)}.specimen p{color:var(--qv-muted);font-size:.9rem}.specimen .spec-card{margin-top:22px;background:var(--qv-surface);border:1px solid var(--qv-border);padding:calc(var(--qv-unit)*4);border-radius:var(--qv-radius);box-shadow:var(--qv-shadow)}.specimen .spec-card h4{font:600 1rem/1.4 var(--qv-font-display);margin:0 0 8px}.specimen .spec-card p{margin:0}.specimen .export{background:var(--qv-accent);color:var(--qv-accent-text);border:1px solid var(--qv-accent);border-radius:var(--qv-radius);padding:calc(var(--qv-unit)*2.5) calc(var(--qv-unit)*4);font-size:.85rem;font-weight:600;margin-top:12px;transition:transform var(--qv-dur) var(--qv-ease)}.specimen .export:active{transform:translateY(1px)}.specimen .export:focus-visible{outline-color:var(--qv-text)}.swatches{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:10px}.swatch{padding:0;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink);text-align:left;overflow:hidden}.swatch .color{height:56px;display:block;border-bottom:1px solid var(--line)}.swatch .swatch-label{padding:9px 10px;display:block;font-size:.77rem}.swatch code{display:block;font-size:.73rem;color:var(--mute);margin-top:2px}.properties{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}.property{padding:14px;background:var(--soft);border:1px solid var(--line);border-radius:6px}.property dt{font-size:.74rem;color:var(--mute);margin-bottom:4px}.property dd{font-size:.9rem;margin:0;overflow-wrap:anywhere}.property .badge{margin-top:5px}.support{display:flex;flex-wrap:wrap;gap:6px}.support span{font-size:.76rem;background:var(--soft);padding:3px 6px;border-radius:3px}
-@media(max-width:1000px){.grid{grid-template-columns:minmax(0,1fr)}aside{display:grid;grid-template-columns:1fr 1fr;gap:16px}aside .stack{margin-top:0}.top nav{gap:16px}.service{display:none}}
-@media(max-width:600px){.wrap{padding:0 16px}main{padding-top:28px!important}.top .wrap{min-height:68px;gap:10px;padding-top:13px;padding-bottom:13px}.brand small{display:none}.top nav{gap:14px;font-size:.76rem}h1{font-size:2.15rem}.pad,[role=tabpanel],.result-head{padding:18px}[role=tablist]{padding:0 18px;gap:20px}.input-line{flex-wrap:wrap}.input-line>.btn{flex:1}.ask input{flex-basis:100%;min-width:0}aside{grid-template-columns:1fr}.specimen{padding:20px}.properties{gap:8px}.property{padding:10px}.benchmark{padding:16px}.intro{margin-bottom:24px}}
-@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation:none!important;transition:none!important}}
-.ask input{border-color:#818b7b}.specimen .feedback{color:var(--qv-muted)}.specimen textarea{background:var(--qv-surface);color:var(--qv-text);border:1px solid var(--qv-border);padding:10px}.specimen h3,.result-head p{overflow-wrap:anywhere}
+/*
+ * QlooVibe Master Stylesheet (Phase 2 Redesign)
+ * Neutral app chrome with robust system font stacks, strict WCAG AA contrast,
+ * responsive multi-column layouts, and scannable receipt tables.
+ */
+:root {
+  color-scheme: dark light;
+  --bg: #111412;
+  --panel: #181c19;
+  --panel-hover: #202622;
+  --ink: #edeff0;
+  --mute: #9ba49e;
+  --line: #2a322c;
+  --line-strong: #3e4a41;
+  --soft: #202622;
+  --soft-hover: #29312b;
+  --accent: #3eb489;
+  --accent-ink: #081a13;
+  --accent-soft: rgba(62, 180, 137, 0.12);
+  --ok: #4ade80;
+  --okbg: rgba(74, 222, 128, 0.1);
+  --warn: #fbbf24;
+  --warnbg: rgba(251, 191, 36, 0.1);
+  --bad: #f87171;
+  --badbg: rgba(248, 113, 113, 0.1);
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+  --transition-fast: 0.15s ease;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #f6f7f5;
+    --panel: #ffffff;
+    --panel-hover: #f9fbf9;
+    --ink: #121614;
+    --mute: #5a645d;
+    --line: #dbe0dc;
+    --line-strong: #b8c2bc;
+    --soft: #edf0ee;
+    --soft-hover: #e3e8e5;
+    --accent: #216e52;
+    --accent-ink: #ffffff;
+    --accent-soft: rgba(33, 110, 82, 0.08);
+    --ok: #15803d;
+    --okbg: #edf7f1;
+    --warn: #b45309;
+    --warnbg: #fef3c7;
+    --bad: #b91c1c;
+    --badbg: #fef2f2;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+a { color: var(--accent); text-decoration: none; text-underline-offset: 3px; }
+a:hover { text-decoration: underline; }
+button, input, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; border: 0; background: transparent; }
+button:disabled { opacity: 0.6; cursor: wait; }
+button, a, summary, input, textarea, [tabindex] { outline-offset: 3px; }
+button:focus-visible, a:focus-visible, summary:focus-visible, input:focus-visible, textarea:focus-visible, [tabindex]:focus-visible {
+  outline: 2px solid var(--accent);
+}
+[hidden] { display: none !important; }
+::selection { background: var(--accent); color: var(--accent-ink); }
+
+/* Layout Shell */
+.wrap { max-width: 1280px; margin: 0 auto; padding: 0 24px; width: 100%; }
+.top {
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  backdrop-filter: blur(8px);
+}
+.top .wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  min-height: 64px;
+}
+.brand {
+  color: var(--ink);
+  text-decoration: none;
+  font-weight: 750;
+  letter-spacing: -0.03em;
+  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+}
+.brand small {
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  border-left: 1px solid var(--line);
+  margin-left: 12px;
+  padding-left: 12px;
+  color: var(--mute);
+  text-transform: uppercase;
+}
+.top nav { display: flex; align-items: center; gap: 20px; font-size: 0.85rem; font-weight: 550; }
+.top nav a { color: var(--mute); transition: color var(--transition-fast); }
+.top nav a:hover { color: var(--ink); text-decoration: none; }
+.service { font-size: 0.78rem; color: var(--mute); display: flex; align-items: center; gap: 6px; }
+.service::before {
+  content: "";
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ok);
+}
+.service.down::before { background: var(--bad); }
+
+main { padding-top: 36px !important; padding-bottom: 64px !important; flex: 1; }
+.intro { max-width: 780px; margin-bottom: 32px; }
+.eyebrow {
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-weight: 700;
+  margin: 0 0 10px;
+}
+h1 {
+  font-size: clamp(2.1rem, 4vw, 3.2rem);
+  letter-spacing: -0.04em;
+  line-height: 1.12;
+  font-weight: 700;
+  margin: 0 0 14px;
+  text-wrap: balance;
+}
+h2 { font-size: 1.15rem; letter-spacing: -0.02em; line-height: 1.3; margin: 0 0 12px; font-weight: 650; }
+h3 { font-size: 0.98rem; margin: 28px 0 12px; font-weight: 650; letter-spacing: -0.01em; }
+p { margin: 0 0 12px; }
+.intro > p:last-child { color: var(--mute); font-size: 1.05rem; line-height: 1.5; max-width: 68ch; margin-bottom: 0; }
+
+.grid { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 28px; align-items: start; }
+.grid > * { min-width: 0; }
+
+/* overflow: clip keeps rounded corners without creating a scroll container, so position: sticky inside a card still works */
+.card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: clip;
+}
+.pad { padding: 24px; }
+.muted { color: var(--mute); }
+.small { font-size: 0.82rem; line-height: 1.45; }
+.mono, code, pre { font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace; font-size: 0.81rem; }
+.num { font-variant-numeric: tabular-nums; }
+code { overflow-wrap: anywhere; background: var(--soft); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--line); }
+pre code { background: transparent; padding: 0; border: 0; }
+
+.row { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+.space { justify-content: space-between; }
+.stack { margin-top: 24px; }
+.label { display: block; font-size: 0.88rem; font-weight: 650; margin: 0 0 8px; color: var(--ink); }
+
+/* Form Controls */
+.ask { display: flex; flex-direction: column; gap: 12px; }
+.ask input {
+  width: 100%;
+  font-size: 1rem;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  background: var(--bg);
+  color: var(--ink);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+.ask input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.input-line { display: flex; gap: 10px; width: 100%; align-items: stretch; }
+
+.btn {
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-md);
+  background: var(--panel);
+  color: var(--ink);
+  padding: 10px 18px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  line-height: 1.5;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+  white-space: nowrap;
+}
+.btn:active:not(:disabled) { transform: translateY(1px); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 650; }
+/* hover only where hover exists; the primary rule restates its colors so the generic hover background can never win over its label */
+@media (hover: hover) {
+  .btn:hover:not(:disabled) { background: var(--soft-hover); border-color: var(--line-strong); }
+  .btn.primary:hover:not(:disabled) { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); filter: brightness(1.08); }
+}
+
+.examples { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 16px; }
+.examples > span { font-size: 0.8rem; color: var(--mute); font-weight: 500; }
+.examples button {
+  font-size: 0.78rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 5px 10px;
+  background: var(--soft);
+  color: var(--ink);
+  transition: all var(--transition-fast);
+}
+@media (hover: hover) { .examples button:hover:not(:disabled) { background: var(--soft-hover); border-color: var(--line-strong); } }
+.help { font-size: 0.8rem; color: var(--mute); margin: 10px 0 0; }
+
+.status { font-size: 0.88rem; margin-top: 14px; min-height: 1.5em; font-weight: 500; color: var(--accent); }
+.status:empty { display: none; }
+.status.err { color: var(--bad); }
+
+.notice {
+  background: var(--warnbg);
+  color: var(--warn);
+  border-left: 4px solid var(--warn);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  padding: 14px 16px;
+  font-size: 0.85rem;
+  margin: 16px 0;
+}
+.notice p:last-child { margin-bottom: 0; }
+.notice ul { margin: 8px 0 0; padding-left: 18px; }
+
+/* Status Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 20px;
+  border: 1px solid var(--line);
+  background: var(--soft);
+  padding: 3px 10px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--mute);
+  white-space: nowrap;
+}
+.badge.ok { background: var(--okbg); color: var(--ok); border-color: transparent; }
+.badge.warn { background: var(--warnbg); color: var(--warn); border-color: transparent; }
+.badge.bad { background: var(--badbg); color: var(--bad); border-color: transparent; }
+
+/* Segmented Control Tabs */
+[role=tablist] {
+  display: flex;
+  background: var(--soft);
+  border-bottom: 1px solid var(--line);
+  padding: 6px;
+  gap: 6px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+[role=tablist]::-webkit-scrollbar { display: none; }
+[role=tab] {
+  font-size: 0.84rem;
+  font-weight: 600;
+  white-space: nowrap;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--mute);
+  padding: 10px 16px;
+  scroll-snap-align: start;
+  transition: color var(--transition-fast), background var(--transition-fast);
+  flex-shrink: 0;
+}
+@media (hover: hover) { [role=tab]:hover:not([aria-selected=true]) { color: var(--ink); background: var(--panel-hover); } }
+[role=tab][aria-selected=true] { color: var(--ink); background: var(--panel); box-shadow: var(--shadow-sm); }
+[role=tabpanel] { padding: 28px; min-width: 0; outline: none; }
+
+.result-head { padding: 24px 28px; border-bottom: 1px solid var(--line); background: var(--panel); }
+.result-head:empty { display: none; }
+.result-head h2 { font-size: 1.3rem; margin-bottom: 4px; }
+
+/* Data Tables */
+.table-scroll {
+  overflow-x: auto;
+  max-width: 100%;
+  margin: 12px 0 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--panel);
+}
+.table-scroll:focus-visible { outline-offset: 2px; }
+table { border-collapse: collapse; font-size: 0.82rem; width: 100%; min-width: 500px; }
+th, td { text-align: left; vertical-align: top; padding: 12px 14px; border-bottom: 1px solid var(--line); overflow-wrap: anywhere; }
+th { font-size: 0.74rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--mute); background: var(--soft); white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+tr:hover td { background: var(--soft-hover); }
+
+/* Receipts Table Enhancements */
+.receipts-table { min-width: 720px; }
+.receipts-table th:nth-child(1) { width: 180px; } /* Token */
+.receipts-table th:nth-child(2) { width: 110px; } /* Value */
+.receipts-table th:nth-child(3) { width: 130px; } /* Source */
+.receipts-table th:nth-child(4) { width: auto; }  /* Evidence */
+.receipt-value { font-family: ui-monospace, monospace; font-weight: 600; font-size: 0.85rem; color: var(--ink); white-space: nowrap; }
+
+/* Accordion details */
+details {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--panel);
+  margin-top: 14px;
+  overflow: hidden;
+  transition: border-color var(--transition-fast);
+}
+details[open] { border-color: var(--line-strong); }
+summary {
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-weight: 650;
+  color: var(--ink);
+  padding: 14px 18px;
+  background: var(--soft);
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  list-style: none;
+}
+summary::-webkit-details-marker { display: none; }
+summary::after {
+  content: "›";
+  font-size: 1.2rem;
+  line-height: 1;
+  transition: transform var(--transition-fast);
+  color: var(--mute);
+}
+details[open] summary::after { transform: rotate(90deg); }
+summary:hover { background: var(--soft-hover); }
+details > div, details > p, details > ul, details > .table-scroll { padding: 16px 18px; margin: 0; }
+details > .table-scroll { border: 0; border-radius: 0; border-top: 1px solid var(--line); padding: 0; margin: 0; }
+
+/* Specimen Card (Dynamic generated theme isolated here) */
+.specimen {
+  background: var(--qv-bg, var(--bg));
+  color: var(--qv-text, var(--ink));
+  border: 1px solid var(--qv-border, var(--line));
+  border-radius: var(--qv-radius, var(--radius-lg));
+  font-family: var(--qv-font-body, inherit);
+  padding: 32px;
+  overflow: hidden;
+  box-shadow: var(--qv-shadow, var(--shadow-md));
+}
+.specimen h3 { font: 700 1.6rem/1.2 var(--qv-font-display, inherit); margin: 8px 0 12px; color: var(--qv-text, var(--ink)); }
+.specimen .caption { font-size: 0.74rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--qv-muted, var(--mute)); font-weight: 650; }
+.specimen p { color: var(--qv-muted, var(--mute)); font-size: 0.95rem; }
+.specimen .spec-card {
+  margin-top: 24px;
+  background: var(--qv-surface, var(--panel));
+  border: 1px solid var(--qv-border, var(--line));
+  padding: calc(var(--qv-unit, 4px) * 5);
+  border-radius: var(--qv-radius, var(--radius-md));
+  box-shadow: var(--qv-shadow, none);
+}
+.specimen .spec-card h4 { font: 650 1.1rem/1.3 var(--qv-font-display, inherit); margin: 0 0 8px; color: var(--qv-text, var(--ink)); }
+.specimen .spec-card p { margin: 0; }
+.specimen .export {
+  background: var(--qv-accent, var(--accent));
+  color: var(--qv-accent-text, var(--accent-ink));
+  border: 1px solid var(--qv-accent, var(--accent));
+  border-radius: var(--qv-radius, var(--radius-md));
+  padding: calc(var(--qv-unit, 4px) * 3) calc(var(--qv-unit, 4px) * 5);
+  font-size: 0.88rem;
+  font-weight: 650;
+  margin-top: 16px;
+  transition: transform var(--qv-dur, 0.15s) var(--qv-ease, ease);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.specimen .export:hover { filter: brightness(1.08); }
+.specimen .export:active { transform: translateY(1px); }
+
+/* Swatches Matrix */
+.swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; margin-top: 14px; }
+.swatch {
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--panel);
+  color: var(--ink);
+  text-align: left;
+  overflow: hidden;
+  transition: transform var(--transition-fast), border-color var(--transition-fast);
+}
+@media (hover: hover) { .swatch:hover { border-color: var(--line-strong); transform: translateY(-2px); } }
+.swatch .color { height: 60px; display: block; border-bottom: 1px solid var(--line); }
+.swatch .swatch-label { padding: 10px 12px; display: block; font-size: 0.78rem; font-weight: 600; }
+.swatch code { display: block; font-size: 0.72rem; color: var(--mute); margin-top: 3px; border: 0; padding: 0; background: transparent; }
+
+.properties { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-top: 18px; }
+.property { padding: 16px; background: var(--soft); border: 1px solid var(--line); border-radius: var(--radius-md); }
+.property dt { font-size: 0.76rem; color: var(--mute); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+.property dd { font-size: 0.95rem; font-weight: 650; margin: 0; overflow-wrap: anywhere; }
+.property .badge { margin-top: 8px; }
+
+/* Side Column & Trace Log */
+.aside-copy { font-size: 0.84rem; color: var(--mute); line-height: 1.5; }
+.aside-copy b { color: var(--ink); }
+.guide { display: grid; grid-template-columns: 28px 1fr; gap: 12px; margin-bottom: 18px; align-items: start; }
+.guide .number {
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 700;
+  border: 1px solid var(--line-strong);
+  background: var(--soft);
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+}
+.guide p { font-size: 0.82rem; color: var(--mute); margin: 0; }
+.guide b { display: block; font-size: 0.86rem; color: var(--ink); margin-bottom: 2px; }
+
+.trace-list { list-style: none; padding: 0; margin: 12px 0 0; }
+.trace-list li { border-top: 1px solid var(--line); padding: 12px 0; font-size: 0.8rem; }
+.trace-list code { display: block; font-size: 0.7rem; color: var(--mute); margin-top: 6px; word-break: break-all; }
+.trace-list .step { font-weight: 650; display: block; margin-bottom: 4px; color: var(--ink); }
+.trace-list .err { color: var(--bad); }
+
+.benchmark { padding: 20px 24px; margin-top: 28px; }
+.benchmark > summary { font-size: 0.92rem; color: var(--ink); background: transparent; padding: 0; }
+
+footer {
+  border-top: 1px solid var(--line);
+  padding: 24px 0;
+  margin-top: 40px;
+  font-size: 0.8rem;
+  color: var(--mute);
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.skip { position: absolute; left: 12px; top: -80px; background: var(--panel); padding: 12px; z-index: 50; border-radius: var(--radius-sm); border: 1px solid var(--accent); }
+.skip:focus { top: 12px; }
+
+pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  overflow: auto;
+  max-height: 400px;
+  border: 1px solid var(--line);
+  background: var(--soft);
+  padding: 16px;
+  border-radius: var(--radius-md);
+  line-height: 1.6;
+  margin: 12px 0 20px;
+}
+.feedback { font-size: 0.8rem; color: var(--accent); font-weight: 600; margin-left: 8px; }
+.feedback:empty { display: none; }
+
+/* Honest Skeleton Loader: no progress is implied, it only marks where the result will appear */
+.skeleton-box {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 28px;
+  background: var(--panel);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--line);
+}
+.skeleton-line {
+  height: 16px;
+  background: linear-gradient(90deg, var(--soft) 25%, var(--soft-hover) 50%, var(--soft) 75%);
+  background-size: 200% 100%;
+  animation: skel-pulse 1.8s infinite;
+  border-radius: 4px;
+}
+@keyframes skel-pulse { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+/* Sticky Mobile Quick Action */
+.mobile-copy-bar {
+  display: none;
+  position: sticky;
+  bottom: 16px;
+  z-index: 30;
+  margin-top: 16px;
+}
+
+/* Responsive Breakpoints */
+@media (max-width: 1024px) {
+  .grid { grid-template-columns: minmax(0, 1fr); }
+  aside { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  aside .stack { margin-top: 0; }
+}
+
+@media (max-width: 680px) {
+  .wrap { padding: 0 16px; }
+  main { padding-top: 24px !important; }
+  .top .wrap { min-height: 60px; gap: 12px; }
+  .top nav { gap: 14px; margin-left: auto; }
+  .top nav a[href="#how-it-works"] { display: none; }
+  .top nav a, .service, .brand { white-space: nowrap; }
+  .brand small { display: none; }
+  h1 { font-size: 2rem; }
+  .pad, [role=tabpanel], .result-head { padding: 18px; }
+  .input-line { flex-wrap: wrap; }
+  .input-line > .btn { flex: 1; min-width: 140px; }
+  aside { grid-template-columns: 1fr; }
+  .specimen { padding: 20px; }
+  .mobile-copy-bar { display: block; }
+  .mobile-copy-bar .btn { flex: 1 1 100%; padding: 14px 18px; box-shadow: var(--shadow-md); }
+  .receipts-table th:nth-child(1) { width: 130px; }
+  .receipts-table th:nth-child(3) { width: 100px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
 </style>
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
-<header class="top"><div class="wrap"><a class="brand" href="/" aria-label="QlooVibe home">QlooVibe<small>Audience → design</small></a><nav aria-label="Resources"><a href="/docs">API docs</a><a href="#how-it-works">How it works</a></nav><span class="service" id="health" role="status">Checking service…</span></div></header>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="/" aria-label="QlooVibe home">QlooVibe<small>Audience → design</small></a>
+    <nav aria-label="Resources">
+      <a href="/docs">API docs</a>
+      <a href="#how-it-works">How it works</a>
+    </nav>
+    <span class="service" id="health" role="status">Checking service…</span>
+  </div>
+</header>
+
 <main class="wrap" id="main">
-<div class="intro"><p class="eyebrow">Start with the people</p><h1>Their taste. Your design direction.</h1><p>Name the artists, brands or films your audience loves. Get a color palette, typography and a design brief you can use in your next build, with the reasoning behind each choice.</p></div>
-<div class="grid"><section aria-label="Create a design brief">
-<div class="card pad"><form id="ask" class="ask" autocomplete="off"><div style="width:100%"><label class="label" for="aud">What does your audience love?</label><p class="small muted" id="aud-help">Add 1–5 favorites, separated by commas. Artists, brands, films, shows and books work well.</p></div><div class="input-line"><input id="aud" type="text" name="audience" maxlength="300" minlength="2" required spellcheck="false" aria-describedby="aud-help" autocomplete="off"><button class="btn primary" id="go" type="submit">Create design brief</button><button class="btn" id="cancel" type="button" hidden>Cancel</button></div></form><div class="examples" id="chips"><span>Use an example:</span></div><p class="help">A name with several meanings? Add a hint, such as <code>Slowdive (artist)</code>.</p><div class="status" id="status" role="status" aria-live="polite" aria-atomic="true"></div></div>
-<div class="card stack" id="out" hidden><div class="result-head" id="result-head"></div><div role="tablist" aria-label="Design brief" id="tabs"><button role="tab" id="t-preview" aria-controls="p-preview" aria-selected="true">Design direction</button><button role="tab" id="t-tokens" aria-controls="p-tokens" aria-selected="false" tabindex="-1">Export &amp; sources</button><button role="tab" id="t-vocab" aria-controls="p-vocab" aria-selected="false" tabindex="-1">Audience evidence</button><button role="tab" id="t-critic" aria-controls="p-critic" aria-selected="false" tabindex="-1">Check references</button></div><div role="tabpanel" id="p-preview" aria-labelledby="t-preview" tabindex="0"></div><div role="tabpanel" id="p-tokens" aria-labelledby="t-tokens" tabindex="0" hidden></div><div role="tabpanel" id="p-vocab" aria-labelledby="t-vocab" tabindex="0" hidden></div><div role="tabpanel" id="p-critic" aria-labelledby="t-critic" tabindex="0" hidden></div></div>
-</section><aside aria-label="About your brief"><div class="card pad" id="how-it-works"><h2>From favorites to a brief</h2><div class="guide"><span class="number">1</span><div><b>Find the audience</b><p>Qloo matches the names you enter and returns related taste data.</p></div></div><div class="guide"><span class="number">2</span><div><b>Make the design choices</b><p>Our <a href="/api/rules">published rules</a> translate those descriptors into colors, type and spacing.</p></div></div><div class="guide"><span class="number">3</span><div><b>Take it into your build</b><p>Copy the brief to your coding agent, download the CSS, or check a reference against the audience.</p></div></div><details><summary>What the data can tell you</summary><p class="aside-copy">Qloo provides taste relationships and descriptors, not colors or fonts. Our design mapping is a hypothesis, not a prediction of what every person will prefer. Every choice shows its source; choices without enough evidence are labeled as defaults.</p><p class="aside-copy">Text and interface contrast pairs are checked. The completed interface still needs its own accessibility review.</p><p class="aside-copy">No language model writes the design tokens. Rule version: <code id="rv">qv-rules-1.0</code>.</p></details></div><div class="card pad stack" id="trace"><h2>Request details</h2><p class="small muted">After you create a brief, see which Qloo requests succeeded, were cached, or failed.</p></div></aside></div>
-<details class="card benchmark" id="benchmark"><summary>How specific are the results? View the measured comparison</summary><div id="bench-content"></div></details>
-<footer><span>No account or tracking. Submitted audiences are sent to Qloo; briefs are stored for 7 days.</span><span>Built with Qloo taste data · <a href="/api/rules">Published design rules</a></span></footer><noscript><p class="notice">JavaScript is needed to create a brief here. You can also use the <a href="/docs">REST API</a>.</p></noscript>
+  <div class="intro">
+    <p class="eyebrow">Start with the people</p>
+    <h1>Their taste. Your design direction.</h1>
+    <p>Name the artists, brands or films your audience loves. Get a color palette, typography and a design brief you can use in your next build, with the reasoning behind each choice.</p>
+  </div>
+
+  <div class="grid">
+    <section aria-label="Create a design brief">
+      <div class="card pad">
+        <form id="ask" class="ask" autocomplete="off">
+          <div style="width:100%">
+            <label class="label" for="aud">What does your audience love?</label>
+            <p class="small muted" id="aud-help">Add 1–5 favorites, separated by commas. Artists, brands, films, shows and books work well.</p>
+          </div>
+          <div class="input-line">
+            <input id="aud" type="text" name="audience" maxlength="300" minlength="2" required spellcheck="false" aria-describedby="aud-help" autocomplete="off">
+            <button class="btn primary" id="go" type="submit">Create design brief</button>
+            <button class="btn" id="cancel" type="button" hidden>Cancel</button>
+          </div>
+        </form>
+        <div class="examples" id="chips"><span>Use an example:</span></div>
+        <p class="help">A name with several meanings? Add a hint, such as <code>Slowdive (artist)</code>.</p>
+        <div class="status" id="status" role="status" aria-live="polite" aria-atomic="true"></div>
+      </div>
+
+      <div class="card stack" id="out" hidden>
+        <div class="result-head" id="result-head"></div>
+        <div role="tablist" aria-label="Design brief" id="tabs">
+          <button role="tab" id="t-preview" aria-controls="p-preview" aria-selected="true">Design direction</button>
+          <button role="tab" id="t-tokens" aria-controls="p-tokens" aria-selected="false" tabindex="-1">Export &amp; sources</button>
+          <button role="tab" id="t-vocab" aria-controls="p-vocab" aria-selected="false" tabindex="-1">Audience evidence</button>
+          <button role="tab" id="t-critic" aria-controls="p-critic" aria-selected="false" tabindex="-1">Check references</button>
+        </div>
+        <div role="tabpanel" id="p-preview" aria-labelledby="t-preview" tabindex="0"></div>
+        <div role="tabpanel" id="p-tokens" aria-labelledby="t-tokens" tabindex="0" hidden></div>
+        <div role="tabpanel" id="p-vocab" aria-labelledby="t-vocab" tabindex="0" hidden></div>
+        <div role="tabpanel" id="p-critic" aria-labelledby="t-critic" tabindex="0" hidden></div>
+      </div>
+    </section>
+
+    <aside aria-label="About your brief">
+      <div class="card pad" id="how-it-works">
+        <h2>From favorites to a brief</h2>
+        <div class="guide">
+          <span class="number">1</span>
+          <div><b>Find the audience</b><p>Qloo matches the names you enter and returns related taste data.</p></div>
+        </div>
+        <div class="guide">
+          <span class="number">2</span>
+          <div><b>Make the design choices</b><p>Our <a href="/api/rules">published rules</a> translate those descriptors into colors, type and spacing.</p></div>
+        </div>
+        <div class="guide">
+          <span class="number">3</span>
+          <div><b>Take it into your build</b><p>Copy the brief to your coding agent, download the CSS, or check a reference against the audience.</p></div>
+        </div>
+        <details>
+          <summary>What the data can tell you</summary>
+          <p class="aside-copy">Qloo provides taste relationships and descriptors, not colors or fonts. Our design mapping is a hypothesis, not a prediction of what every person will prefer. Every choice shows its source; choices without enough evidence are labeled as defaults.</p>
+          <p class="aside-copy">Text and interface contrast pairs are checked. The completed interface still needs its own accessibility review.</p>
+          <p class="aside-copy">No language model writes the design tokens. Rule version: <code id="rv">qv-rules-1.0</code>.</p>
+        </details>
+      </div>
+
+      <div class="card pad stack" id="trace">
+        <h2>Request details</h2>
+        <p class="small muted">After you create a brief, see which Qloo requests succeeded, were cached, or failed.</p>
+      </div>
+    </aside>
+  </div>
+
+  <details class="card benchmark" id="benchmark">
+    <summary>How specific are the results? View the measured comparison</summary>
+    <div id="bench-content"></div>
+  </details>
+
+  <footer>
+    <span>No account or tracking. Submitted audiences are sent to Qloo; briefs are stored for 7 days.</span>
+    <span>Built with Qloo taste data · <a href="/api/rules">Published design rules</a></span>
+  </footer>
+  <noscript><p class="notice">JavaScript is needed to create a brief here. You can also use the <a href="/docs">REST API</a>.</p></noscript>
 </main>
+
 <script>
 "use strict";
 const $ = (s, el = document) => el.querySelector(s);
@@ -77,8 +691,9 @@ async function requestJSON(url, options = {}, controller = new AbortController()
   } finally { clearTimeout(timer); }
 }
 const post = (url, body, controller) => requestJSON(url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }, controller);
-function table(headers, rows, label) {
-  return h("div", { class: "table-scroll", tabindex: "0", role: "region", "aria-label": label }, h("table", null, h("thead", null, h("tr", null, headers.map((v) => h("th", { scope: "col" }, v)))), h("tbody", null, rows.map((row) => h("tr", null, row.map((v) => h("td", null, v)))))));
+
+function table(headers, rows, label, extraClass = "") {
+  return h("div", { class: "table-scroll " + extraClass, tabindex: "0", role: "region", "aria-label": label }, h("table", { class: extraClass }, h("thead", null, h("tr", null, headers.map((v) => h("th", { scope: "col" }, v)))), h("tbody", null, rows.map((row) => h("tr", null, row.map((v) => h("td", null, v)))))));
 }
 function notice(title, items = []) { return h("div", { class: "notice" }, h("b", null, title), items.length ? h("ul", null, items.map((s) => h("li", null, readableNote(s)))) : null); }
 function sourceBadge(s) { return h("span", { class: "badge " + (s === "rule" ? "ok" : s === "default" ? "warn" : "") }, s === "default" ? "Published default" : s === "rule" ? "Qloo data + design rule" : "Derived by our code"); }
@@ -119,37 +734,151 @@ function renderPreview(v) {
   const values = Object.fromEntries([...tk.css_qv.matchAll(/(--qv-[a-z-]+):\s*([^;]+);/g)].map((m) => [m[1], m[2].trim()]));
   const specimen = h("div", { class: "specimen" }); for (const [name, value] of Object.entries(values)) specimen.style.setProperty(name, value);
   const descriptors = (v.voice?.words || []).slice(0, 5).map((w) => w.tag);
-  specimen.append(h("span", { class: "caption" }, "Your audience, in type and color"), h("h3", null, v.seeds.map((s) => s.name).join(" · ")), h("p", null, descriptors.length ? descriptors.join(" · ") : "Explore the design choices and their sources below."), h("div", { class: "spec-card" }, h("h4", null, "A direction you can build on"), h("p", null, `A ${tk.dims.mode.value} palette with ${tk.dims.font.value} display type, ${values["--qv-radius"]} corners and a ${values["--qv-unit"]} spacing unit.`)), copyBtn("Copy design brief", () => v.agent_brief, "export"));
+  specimen.append(
+    h("span", { class: "caption" }, "Your audience, in type and color"),
+    h("h3", null, v.seeds.map((s) => s.name).join(" · ")),
+    h("p", null, descriptors.length ? descriptors.join(" · ") : "Explore the design choices and their sources below."),
+    h("div", { class: "spec-card" },
+      h("h4", null, "A direction you can build on"),
+      h("p", null, `A ${tk.dims.mode.value} palette with ${tk.dims.font.value} display type, ${values["--qv-radius"]} corners and a ${values["--qv-unit"]} spacing unit.`)
+    ),
+    copyBtn("Copy design brief", () => v.agent_brief, "export")
+  );
   p.append(specimen, h("h3", null, "Your color palette"), h("p", { class: "small muted" }, "Select any color to copy its hex value."));
   const feedback = h("p", { class: "feedback", role: "status", "aria-live": "polite" }), colorNames = { bg: "Background", surface: "Surface", text: "Text", muted: "Secondary text", accent: "Accent", accentText: "Text on accent", border: "Border" };
   p.append(h("div", { class: "swatches" }, Object.entries(tk.palette.hex).map(([key, color]) => h("button", { type: "button", class: "swatch", "aria-label": `Copy ${colorNames[key] || key} color ${color}`, onclick: async () => { try { await navigator.clipboard.writeText(color); feedback.textContent = `Copied ${color}.`; } catch { feedback.textContent = `Copy this color: ${color}`; } } }, h("span", { class: "color", style: `background:${color}`, "aria-hidden": "true" }), h("span", { class: "swatch-label" }, colorNames[key] || key, h("code", null, color))))), feedback);
   const properties = [["Display type", tk.dims.font.value, "font"], ["Corner radius", values["--qv-radius"], "radius"], ["Spacing unit", values["--qv-unit"], "density"], ["Motion duration", values["--qv-dur"], "motion"]];
   p.append(h("dl", { class: "properties" }, properties.map(([label, value, dim]) => h("div", { class: "property" }, h("dt", null, label), h("dd", null, value, h("br"), sourceBadge(tk.dims[dim].source))))), h("h3", null, "Contrast checks"), h("p", { class: "small muted" }, "Measured against WCAG AA thresholds. These checks cover the listed color pairs, not the accessibility of a finished page."), table(["Color pair", "Contrast", "Required", "Result"], tk.palette.contrast.map((c) => [c.pair, `${fmt(c.ratio, 2)}:1`, `${c.need}:1`, h("span", { class: "badge " + (c.pass ? "ok" : "bad") }, c.pass ? c.level : "Needs attention")]), "Palette contrast checks"));
   if (tk.palette.adjustments.length) p.append(h("p", { class: "small muted" }, `${tk.palette.adjustments.length} color lightness adjustment(s) were applied to meet the contrast thresholds.`));
+
+  /* Mobile sticky action bar (hidden on wider screens) */
+  p.append(h("div", { class: "mobile-copy-bar" }, copyBtn("Copy design brief", () => v.agent_brief, "btn primary")));
 }
+
 function renderTokens(v) {
   const p = $("#p-tokens"), tk = v.tokens; p.replaceChildren();
-  p.append(h("h2", null, "Take this direction into your build"), h("p", { class: "small muted" }, "Give the design brief to your coding agent, or use the CSS variables in your project. Downloads contain this audience's actual generated values."), h("div", { class: "row" }, copyBtn("Copy design brief", () => v.agent_brief), downloadBtn("Download brief (.md)", "qloovibe-brief.md", () => v.agent_brief, "text/markdown;charset=utf-8")), h("pre", { tabindex: "0", "aria-label": "Design brief" }, v.agent_brief), h("h3", null, "CSS variables"), h("div", { class: "row" }, copyBtn("Copy CSS", () => tk.css_qv), downloadBtn("Download CSS", "qloovibe.css", () => tk.css_qv, "text/css;charset=utf-8")), h("pre", { tabindex: "0", "aria-label": "Generated CSS" }, tk.css_qv),
+  p.append(
+    h("h2", null, "Take this direction into your build"),
+    h("p", { class: "small muted" }, "Give the design brief to your coding agent, or use the CSS variables in your project. Downloads contain this audience's actual generated values."),
+    h("div", { class: "row" }, copyBtn("Copy design brief", () => v.agent_brief), downloadBtn("Download brief (.md)", "qloovibe-brief.md", () => v.agent_brief, "text/markdown;charset=utf-8")),
+    h("pre", { tabindex: "0", "aria-label": "Design brief" }, v.agent_brief),
+    h("h3", null, "CSS variables"),
+    h("div", { class: "row" }, copyBtn("Copy CSS", () => tk.css_qv), downloadBtn("Download CSS", "qloovibe.css", () => tk.css_qv, "text/css;charset=utf-8")),
+    h("pre", { tabindex: "0", "aria-label": "Generated CSS" }, tk.css_qv),
     h("details", null, h("summary", null, "Using shadcn/ui? Get compatible variables"), h("p", { class: "small muted" }, "Apply these variables after your theme styles. Check your components in the chosen color mode."), copyBtn("Copy shadcn CSS", () => tk.css_shadcn), h("pre", { tabindex: "0" }, tk.css_shadcn)),
     h("details", null, h("summary", null, "Connect a coding agent with MCP"), h("p", { class: "small muted" }, "For Claude Code, run:"), h("pre", { tabindex: "0" }, `claude mcp add --transport http qloovibe ${location.origin}/mcp`), copyBtn("Copy MCP command", () => `claude mcp add --transport http qloovibe ${location.origin}/mcp`), h("p", { class: "small muted" }, "Available tools: design_brief, check_audience_fit, get_rule_table. Other clients can use the same /mcp endpoint.")),
-    h("h3", null, "Why each choice was made"), h("p", { class: "small muted" }, "Qloo supplies descriptors. Our published rules translate them into design choices. A default means there was too little mapped evidence for that choice."), table(["Design token", "Value", "Source", "Evidence"], tk.receipts.map((r) => [h("code", null, r.token), r.value, sourceBadge(r.source), h("div", { class: "small" }, r.note, ...r.contributions.slice().sort((a, b) => b.w - a.w).map((c) => h("p", null, `${c.tag} · ${c.family} · affinity ${fmt(c.affinity)} · ${c.rule}${c.match === "word" ? " (partial word match)" : ""}`)))]), "Design choice sources"), h("p", { class: "small muted" }, `Mapping version ${tk.rule_table_version}. These design rules are hypotheses and have not been validated in user studies.`));
+    h("h3", null, "Why each choice was made"),
+    h("p", { class: "small muted" }, "Qloo supplies descriptors. Our published rules translate them into design choices. A default means there was too little mapped evidence for that choice.")
+  );
+
+  /* Compact receipt table: top 3 source tags per token, the rest behind a toggle */
+  const receiptRows = tk.receipts.map((r) => {
+    const sorted = r.contributions.slice().sort((a, b) => b.w - a.w);
+    const topContribs = sorted.slice(0, 3);
+    const hiddenContribs = sorted.slice(3);
+
+    const contribList = topContribs.map((c) =>
+      h("p", { style: "margin:0 0 4px" }, `${c.tag} · ${c.family} · affinity ${fmt(c.affinity)} · ${c.rule}${c.match === "word" ? " (partial word match)" : ""}`)
+    );
+
+    let expandDetails = null;
+    if (hiddenContribs.length > 0) {
+      expandDetails = h("details", { style: "margin-top:6px;border:0;background:transparent;" },
+        h("summary", { style: "padding:2px 0;font-size:0.75rem;background:transparent;" }, `Show ${hiddenContribs.length} more source tags`),
+        h("div", { style: "padding:6px 0 0;" },
+          hiddenContribs.map((c) =>
+            h("p", { style: "margin:0 0 4px;font-size:0.75rem" }, `${c.tag} · ${c.family} · affinity ${fmt(c.affinity)} · ${c.rule}${c.match === "word" ? " (partial word match)" : ""}`)
+          )
+        )
+      );
+    }
+
+    return [
+      h("code", null, r.token),
+      h("span", { class: "receipt-value" }, r.value),
+      sourceBadge(r.source),
+      h("div", { class: "small" }, r.note, contribList, expandDetails)
+    ];
+  });
+
+  p.append(
+    table(["Design token", "Value", "Source", "Evidence"], receiptRows, "Design choice sources", "receipts-table"),
+    h("p", { class: "small muted" }, `Mapping version ${tk.rule_table_version}. These design rules are hypotheses and have not been validated in user studies.`)
+  );
+
   if (tk.unmapped_tags.length) p.append(h("p", { class: "small muted" }, "Descriptors without a design rule: " + tk.unmapped_tags.join(", ") + "."));
 }
+
 function renderVocab(v) {
-  const p = $("#p-vocab"); p.replaceChildren(h("h2", null, "What Qloo found"), h("p", { class: "small muted" }, "Check these matches first. A similarly named artist or brand may describe a different audience."), table(["You entered", "Matched to", "Type", "Match"], v.seeds.map((s) => [s.query, s.name, s.type.split(":").pop().replaceAll("_", " "), h("span", { class: "badge " + (s.match === "exact" ? "ok" : "warn") }, s.match === "exact" ? "Exact" : s.match === "prefix" ? "Name starts with your input" : "Closest result — review")]), "Audience name matches"));
+  const p = $("#p-vocab"); p.replaceChildren(
+    h("h2", null, "What Qloo found"),
+    h("p", { class: "small muted" }, "Check these matches first. A similarly named artist or brand may describe a different audience."),
+    table(["You entered", "Matched to", "Type", "Match"], v.seeds.map((s) => [s.query, s.name, s.type.split(":").pop().replaceAll("_", " "), h("span", { class: "badge " + (s.match === "exact" ? "ok" : "warn") }, s.match === "exact" ? "Exact" : s.match === "prefix" ? "Name starts with your input" : "Closest result — review")]), "Audience name matches")
+  );
+
   if (v.unresolved?.length) p.append(notice("These favorites were not included", v.unresolved));
-  p.append(h("h3", null, "Descriptors behind the direction"), h("p", { class: "small muted" }, "Affinity is Qloo's relationship score, not a percentage or a probability. We filter out nonvisual descriptions and keep up to eight per family."));
+
+  p.append(
+    h("h3", null, "Descriptors behind the direction"),
+    h("p", { class: "small muted" }, "Affinity is Qloo's relationship score, not a percentage or a probability. We filter out nonvisual descriptions and keep up to eight per family.")
+  );
+
+  /* One collapsible block per descriptor family */
   for (const f of v.vocabulary.filters) {
     const drop = new Map(f.dropped.map((d) => [d.tag, d.reason])), keep = new Map(f.kept.map((k) => [k.tag, k]));
-    p.append(h("details", { open: f.family === "decor" }, h("summary", null, `${f.family[0].toUpperCase() + f.family.slice(1)} · ${f.kept.length} kept of ${f.raw.length}`), f.raw.length ? table(["Qloo descriptor", "Affinity", "Used?"], f.raw.map((r) => { const k = keep.get(r.tag); return [r.tag, fmt(r.affinity), k ? h("span", { class: "badge " + (k.rule ? "ok" : "warn") }, k.rule ? "Kept · " + k.rule : "Kept · no design rule") : "Excluded · " + (drop.get(r.tag) || "not used")]; }), f.family + " descriptors") : h("p", { class: "small muted" }, "No descriptors were returned for this family.")));
+
+    const filterTable = f.raw.length
+      ? table(["Qloo descriptor", "Affinity", "Used?"], f.raw.map((r) => {
+          const k = keep.get(r.tag);
+          return [r.tag, fmt(r.affinity), k ? h("span", { class: "badge " + (k.rule ? "ok" : "warn") }, k.rule ? "Kept · " + k.rule : "Kept · no design rule") : "Excluded · " + (drop.get(r.tag) || "not used")];
+        }), f.family + " descriptors")
+      : h("p", { class: "small muted" }, "No descriptors were returned for this family.");
+
+    p.append(
+      h("details", { open: f.family === "decor" },
+        h("summary", null, `${f.family[0].toUpperCase() + f.family.slice(1)} (${f.kept.length} kept of ${f.raw.length})`),
+        filterTable
+      )
+    );
   }
+
   const attribution = v.vocabulary.attribution || [];
-  if (attribution.some((t) => t.support?.length)) p.append(h("h3", null, "How each favorite relates to the decor words"), h("p", { class: "small muted" }, v.vocabulary.attribution_note), table(["Descriptor", "Relative support from each favorite"], attribution.map((t) => [t.tag, h("div", { class: "support" }, t.support.map((s) => h("span", null, `${s.seed}: ${Number.isFinite(s.share) ? Math.round(s.share * 100) + "%" : "share unavailable"}`)))]), "Per-favorite descriptor support"), h("p", { class: "small muted" }, "Shares compare the returned scores and may differ slightly from 100% due to rounding. Missing data is not treated as zero support."));
-  p.append(h("h3", null, "Related references"), h("p", { class: "small muted" }, "Artists, brands and films related to this audience. Use these as creative references; their names and identities are not design assets."));
+  if (attribution.some((t) => t.support?.length)) {
+    p.append(
+      h("h3", null, "How each favorite relates to the decor words"),
+      h("p", { class: "small muted" }, v.vocabulary.attribution_note),
+      table(["Descriptor", "Relative support from each favorite"], attribution.map((t) => [t.tag, h("div", { class: "support" }, t.support.map((s) => h("span", null, `${s.seed}: ${Number.isFinite(s.share) ? Math.round(s.share * 100) + "%" : "share unavailable"}`)))]), "Per-favorite descriptor support"),
+      h("p", { class: "small muted" }, "Shares compare the returned scores and may differ slightly from 100% due to rounding. Missing data is not treated as zero support.")
+    );
+  }
+
+  p.append(
+    h("h3", null, "Related references"),
+    h("p", { class: "small muted" }, "Artists, brands and films related to this audience. Use these as creative references; their names and identities are not design assets.")
+  );
+
   const typeNames = { brand: "Brands", artist: "Artists", movie: "Films" };
-  for (const t of v.touchstones) p.append(h("details", { open: t.type === "brand" }, h("summary", null, `${typeNames[t.type] || t.type} · ${t.items.length}`), t.items.length ? table(["Reference", "Affinity", "Reported seed relationship"], t.items.map((i) => [i.name, fmt(i.affinity), i.why?.length ? i.why.map((w) => `${w.seed}: ${fmt(w.share)}`).join(" · ") : "Not returned"]), "Related " + (typeNames[t.type] || t.type)) : h("p", { class: "small muted" }, "No related references were returned.")));
-  if (v.limitations?.length) p.append(h("details", null, h("summary", null, "Limitations of this direction"), h("ul", { class: "sources" }, v.limitations.map((s) => h("li", null, s)))));
+  for (const t of v.touchstones) {
+    p.append(
+      h("details", { open: t.type === "brand" },
+        h("summary", null, `${typeNames[t.type] || t.type} (${t.items.length})`),
+        t.items.length
+          ? table(["Reference", "Affinity", "Reported seed relationship"], t.items.map((i) => [i.name, fmt(i.affinity), i.why?.length ? i.why.map((w) => `${w.seed}: ${fmt(w.share)}`).join(" · ") : "Not returned"]), "Related " + (typeNames[t.type] || t.type))
+          : h("p", { class: "small muted" }, "No related references were returned.")
+      )
+    );
+  }
+
+  if (v.limitations?.length) {
+    p.append(
+      h("details", null,
+        h("summary", null, "Limitations of this direction"),
+        h("ul", { class: "sources" }, v.limitations.map((s) => h("li", null, s)))
+      )
+    );
+  }
 }
+
 function renderCritic(v) {
   const p = $("#p-critic"); p.replaceChildren();
   const inp = h("input", { type: "text", id: "cands", maxlength: "750", required: true, spellcheck: "false", autocomplete: "off", "aria-describedby": "cand-help" });
@@ -174,6 +903,7 @@ function renderCritic(v) {
   } }, h("label", { class: "label", for: "cands", style: "width:100%" }, "Which references are you considering?"), h("div", { class: "input-line" }, inp, go));
   p.append(h("h2", null, "Will these references fit your audience?"), h("p", { class: "small muted" }, `Check artists, brands or films against the audience used in this brief: ${v.seeds.map((s) => s.name).join(", ")}.`), form, h("p", { class: "help", id: "cand-help" }, "Add up to 12 names, separated by commas. For example: Bon Iver, Metallica, Nick Drake."), status, res);
 }
+
 let benchLoaded = false, benchBusy = false;
 async function loadBench() {
   if (benchLoaded || benchBusy) return; benchBusy = true;
@@ -187,18 +917,45 @@ async function loadBench() {
   finally { benchBusy = false; p.setAttribute("aria-busy", "false"); }
 }
 $("#benchmark").addEventListener("toggle", () => { if ($("#benchmark").open) loadBench(); });
+
 function setBusy(busy) { $("#go").disabled = busy; $("#go").textContent = busy ? "Creating brief…" : "Create design brief"; $("#aud").disabled = busy; $("#cancel").hidden = !busy; document.querySelectorAll("#chips button").forEach((b) => b.disabled = busy); $("#ask").setAttribute("aria-busy", String(busy)); }
+
+/* Skeleton while a cold Qloo request runs. It marks where the result will appear and implies no progress.
+   Everything from the previous audience is cleared so no stale result can be read while waiting. */
+function renderSkeletonLoader() {
+  for (const id of ["#result-head", "#p-tokens", "#p-vocab", "#p-critic"]) $(id).replaceChildren();
+  const p = $("#p-preview");
+  p.replaceChildren(
+    h("div", { class: "skeleton-box", "aria-hidden": "true" },
+      h("div", { class: "skeleton-line", style: "width: 40%; height: 24px;" }),
+      h("div", { class: "skeleton-line", style: "width: 70%; height: 16px;" }),
+      h("div", { class: "skeleton-line", style: "width: 100%; height: 120px; border-radius: 12px; margin-top: 12px;" }),
+      h("div", { class: "skeleton-line", style: "width: 50%; height: 20px; margin-top: 16px;" }),
+      h("div", { class: "skeleton-line", style: "width: 100%; height: 80px;" })
+    )
+  );
+  selectTab($("#t-preview"));
+  $("#out").hidden = false;
+}
+
 async function run(audience) {
   if (state.request) return;
-  state.critic?.abort(); state.critic = null; state.vibe = null; $("#out").hidden = true;
+  state.critic?.abort(); state.critic = null; state.vibe = null;
   const controller = new AbortController(); state.request = controller; setBusy(true);
   const st = $("#status"), t0 = performance.now(); st.className = "status"; st.textContent = "Finding this audience in Qloo. This usually takes a few seconds…";
   $("#trace").replaceChildren(h("h2", null, "Request details"), h("p", { class: "small muted" }, "Requests will appear when this brief finishes."));
   const timer = setInterval(() => { const seconds = Math.round((performance.now() - t0) / 1000); st.textContent = seconds < 12 ? `Building your brief with Qloo data… ${seconds}s` : `Still waiting for the audience data… ${seconds}s. You can cancel and try again.`; }, 1000);
   try {
     const seeds = parseNames(audience, 5);
+    renderSkeletonLoader();
     const v = await post("/api/vibe", { audience, seeds }, controller); clearInterval(timer); renderTrace(v);
-    if (v.status === "insufficient_evidence" || !v.tokens) { st.className = "status err"; st.textContent = "We couldn't create a supported design direction. " + ((v.caveats || []).map(readableNote).join(" ") || "Try a more specific artist, brand or film name."); return; }
+    if (v.status === "insufficient_evidence" || !v.tokens) {
+      $("#out").hidden = true;
+      const reasons = (v.caveats || []).map(readableNote).map((s) => (/[.!?]$/.test(s) ? s : s + "."));
+      st.className = "status err";
+      st.textContent = "We couldn't create a supported design direction. " + (reasons.join(" ") || "Try a more specific artist, brand or film name.");
+      return;
+    }
     state.vibe = v;
     setContent($("#result-head"), h("div", { class: "row space" }, h("h2", null, "Your design direction"), h("span", { class: "badge " + (v.status === "partial" ? "warn" : "ok") }, v.status === "partial" ? "Some evidence is limited" : "Brief ready")), h("p", { class: "small muted" }, "Based on: " + v.seeds.map((s) => `${s.name} (${s.type.split(":").pop().replaceAll("_", " ")})`).join(", ") + "."), v.caveats?.length ? notice("Before you use this direction", v.caveats) : null);
     renderPreview(v); renderTokens(v); renderVocab(v); renderCritic(v); selectTab($("#t-preview")); $("#out").hidden = false;
@@ -206,11 +963,12 @@ async function run(audience) {
   } catch (e) { state.vibe = null; $("#out").hidden = true; st.className = controller.signal.aborted && /^Request canceled/.test(e.message) ? "status" : "status err"; st.textContent = e.name === "TypeError" ? "We couldn't display the returned brief. Please try again." : e.message; renderTrace(null); }
   finally { clearInterval(timer); state.request = null; setBusy(false); }
 }
+
 $("#ask").addEventListener("submit", (e) => { e.preventDefault(); const audience = $("#aud").value.trim(); if (audience.length < 2) { $("#status").className = "status err"; $("#status").textContent = "Enter at least one favorite, using two or more characters."; $("#aud").focus(); return; } run(audience); });
 $("#cancel").addEventListener("click", () => state.request?.abort());
 $("#chips").append(...STARTERS.map((s) => h("button", { type: "button", onclick: () => { $("#aud").value = s; $("#aud").focus(); } }, s)));
 $("#aud-help").append(' Put names containing commas in double quotes.');
-requestJSON("/health").then((d) => { const e = $("#health"); e.textContent = d.qloo_configured ? "Qloo configured" : "Generation unavailable"; e.title = d.qloo_configured ? "The service has a Qloo API key. Availability is checked when you request a brief." : "The service needs a Qloo API key before it can create a brief."; if (!d.qloo_configured && !state.request && !state.vibe) { $("#status").className = "status err"; $("#status").textContent = "Design generation is temporarily unavailable while the service is configured. Please try again later."; } }).catch(() => { $("#health").textContent = "Service unreachable"; });
+requestJSON("/health").then((d) => { const e = $("#health"); e.textContent = d.qloo_configured ? "Qloo configured" : "Generation unavailable"; e.className = d.qloo_configured ? "service" : "service down"; e.title = d.qloo_configured ? "The service has a Qloo API key. Availability is checked when you request a brief." : "The service needs a Qloo API key before it can create a brief."; if (!d.qloo_configured && !state.request && !state.vibe) { $("#status").className = "status err"; $("#status").textContent = "Design generation is temporarily unavailable while the service is configured. Please try again later."; } }).catch(() => { $("#health").textContent = "Service unreachable"; $("#health").className = "service down"; });
 requestJSON("/api/rules").then((d) => { if (d.version) $("#rv").textContent = d.version; }).catch(() => {});
 </script>
 </body>

@@ -169,7 +169,8 @@ describe("consumer page flows (real inline script, synthetic responses)", () => 
     const ui = harness(() => ++attempt === 1 ? response(vibe) : response({ error: { message: "Provider down" } }, 503));
     await ui.app.run("Slowdive, Aesop");
     const next = ui.app.run("Metallica");
-    expect(ui.el("out").hidden).toBe(true);
+    // while loading, only a text-free skeleton is visible: nothing from the previous audience can be read in any tab
+    for (const id of ["result-head", "p-preview", "p-tokens", "p-vocab", "p-critic"]) expect(ui.el(id).textContent).toBe("");
     expect(ui.app.state.vibe).toBeNull();
     await next;
     expect(ui.el("out").hidden).toBe(true);
