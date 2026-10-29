@@ -13,19 +13,40 @@ const MAX_SEEDS = 5;
 
 export interface Seed { query: string; entity_id: string; name: string; type: string; match: "exact" | "prefix" | "closest"; popularity: number | null }
 
-/** "fans of A24 films, Slowdive and Aesop skincare" -> ["A24", "Slowdive", "Aesop"]. Optional "(artist)" type hints are kept. */
+/** Explicit lists use commas, semicolons or newlines; quote names containing those delimiters. */
 export function parseSeeds(audience: string): string[] {
-  const s = audience.replace(/\s+/g, " ").trim();
+  const s = audience.trim();
   if (!s) throw new InvalidInput("audience is empty");
-  if (s.length > 300) throw new InvalidInput("audience is too long (max 300 characters)");
-  const body = s.replace(/^.*?\b(?:fans of|lovers of|people who (?:like|love)|who (?:like|love)|audience of|audience:)\s+/i, "");
+  if (audience.length > 300) throw new InvalidInput("audience is too long (max 300 characters)");
+  const body = s.replace(/^(?:(?:fans of|lovers of|people who (?:like|love)|who (?:like|love)|audience of)\s+|audience:\s*)/i, "");
+  const quotes: Record<string, string> = { '"': '"', "'": "'", "“": "”", "‘": "’" };
   const out: string[] = [];
-  for (let part of body.split(/\s*(?:,|;|\band\b|&|\+|\n)\s*/i)) {
-    part = part.replace(/\s+(?:films?|movies?|skincare|music|brand|band|songs?|series|fans?)$/i, "").trim();
-    if (part.length > 60) throw new InvalidInput("Each audience name must be 60 characters or fewer. Separate names with commas.");
-    if (part.length >= 2 && part.length <= 60 && !out.some((o) => o.toLowerCase() === part.toLowerCase())) out.push(part);
+  let part = "", tail = "", closeQuote: string | undefined, quoted = false;
+  const add = () => {
+    if (quoted && !/^\s*(?:\(\w+\))?\s*$/.test(tail)) throw new InvalidInput("Separate audience names with commas, semicolons or newlines after a closing quote.");
+    const name = (part + tail).trim();
+    if (name.length < 2 || name.length > 60) throw new InvalidInput("Each audience name must be between 2 and 60 characters. Separate names with commas, semicolons or newlines.");
+    if (!out.some((o) => o.toLowerCase() === name.toLowerCase())) out.push(name);
+    part = ""; tail = ""; quoted = false;
+  };
+  for (let i = 0; i < body.length; i++) {
+    const c = body[i]!;
+    if (closeQuote) {
+      if (c === closeQuote) {
+        if (body[i + 1] === closeQuote) { part += c; i++; }
+        else closeQuote = undefined;
+      } else part += c;
+    } else if (c === "," || c === ";" || c === "\n" || c === "\r") {
+      // Ignore blank lines, including the newline after a comma and the LF in CRLF.
+      if ((c === "\n" || c === "\r") && !part.trim() && !quoted) continue;
+      add();
+    } else if (!quoted && !part.trim() && quotes[c]) {
+      part = ""; quoted = true; closeQuote = quotes[c];
+    } else if (quoted) tail += c;
+    else part += c;
   }
-  if (!out.length) throw new InvalidInput("no seeds found; name 1-5 things the audience loves, e.g. \"Slowdive, Aesop, A24\"");
+  if (closeQuote) throw new InvalidInput("Close the quote around each audience name.");
+  add();
   if (out.length > MAX_SEEDS) throw new InvalidInput("Use up to 5 audience references so every name can be included.");
   return out;
 }
@@ -59,7 +80,12 @@ function chooseSeed(query: string, results: Json[]): Seed | null {
     ?? pick(ok, "closest");
 }
 
-interface Deps { store: Store; q: QlooClient; now?: () => number }
+/** Proposes audience names from free text (a project description or design.md). Only the names come from the model; Qloo verifies them and supplies all vocabulary. */
+export type SuggestFn = (project: string) => Promise<{ names: string[]; model: string }>;
+interface Deps { store: Store; q: QlooClient; now?: () => number; suggest?: SuggestFn }
+export interface AudienceReq { audience?: string; seeds?: string[]; project?: string }
+interface Audience { names: string[]; seeds: Seed[]; unresolved: string[]; unavailable: string[]; source: "named" | "model_suggested"; suggested: string[]; caveats: string[]; input: string }
+export const MAX_PROJECT = 8000, MIN_PROJECT = 20;
 interface Ctx { trace: TraceStep[]; fresh: boolean; now: () => number }
 
 async function timed(ctx: Ctx, step: string, run: () => Promise<QResult>, note?: string): Promise<QResult> {
@@ -82,18 +108,53 @@ export class Service {
     return { seeds: rs.flatMap((r) => (r.seed ? [r.seed] : [])), unresolved: rs.filter((r) => !r.seed).map((r) => r.n), unavailable: rs.filter((r) => r.unavailable).map((r) => r.n) };
   }
 
-  async generate(req: { audience?: string; seeds?: string[]; fresh?: boolean }) {
-    const names = requestedSeeds(req);
+
+  /** Names the user gave win. Free text (`project`, or a long sentence that Qloo cannot match as one name) goes through the suggester, and only names Qloo matches exactly are kept. */
+  private async audienceFor(ctx: Ctx, req: AudienceReq): Promise<Audience> {
+    const hasNamed = req.seeds !== undefined || !!req.audience?.trim();
+    let project = hasNamed ? undefined : req.project?.trim();
+    if (project !== undefined && (project.length < MIN_PROJECT || project.length > MAX_PROJECT)) throw new InvalidInput(`project must be ${MIN_PROJECT}-${MAX_PROJECT} characters.`);
+    const names = hasNamed || !project ? requestedSeeds(req) : [];
+    const prose = req.seeds === undefined && names.length === 1 && names[0]!.split(/\s+/).length >= 6 && !!this.d.suggest;
+    const named = names.length ? await this.resolveAll(ctx, names) : { seeds: [], unresolved: [], unavailable: [] };
+    if (prose && !named.seeds.some((x) => x.match !== "closest")) project = req.audience!.trim();
+    if (!project) return { names, ...named, source: "named", suggested: [], caveats: [], input: req.audience ?? names.join(", ") };
+
+    const input = project.length > 140 ? `${project.slice(0, 137).replace(/\s+\S*$/, "")}...` : project;
+    const none = (caveat: string): Audience => ({ names: [], seeds: [], unresolved: [], unavailable: [], source: "model_suggested", suggested: [], caveats: [caveat], input });
+    if (!this.d.suggest) return none("Describing a project needs the language model, which is not configured here. Pass audience names (seeds) instead.");
+    const t0 = ctx.now();
+    let proposed: string[] = [];
+    try {
+      const r = await this.d.suggest(project);
+      proposed = [...new Map(r.names.map((n) => [n.toLowerCase(), n])).values()].slice(0, 8);
+      ctx.trace.push({ step: "suggest audience names from project text", call: `Workers AI ${r.model} (names only)`, freshness: "fresh", status: "ok", ms: ctx.now() - t0 });
+    } catch (e) {
+      ctx.trace.push({ step: "suggest audience names from project text", call: "Workers AI", freshness: "fresh", status: "error", ms: ctx.now() - t0, note: "language model unavailable" });
+      return none("The language model that turns a project description into audience names was unavailable. Pass audience names (seeds) instead.");
+    }
+    if (!proposed.length) return none("The language model returned no usable audience names. Pass audience names (seeds) instead.");
+    const r = await this.resolveAll(ctx, proposed);
+    const exact = r.seeds.filter((x) => x.match !== "closest").slice(0, MAX_SEEDS);
+    const kept = new Set(exact.map((x) => x.query));
+    return {
+      names: proposed, seeds: exact, unresolved: proposed.filter((n) => !kept.has(n)), unavailable: r.unavailable, source: "model_suggested", suggested: proposed, input,
+      caveats: ["Audience names were chosen by a language model from your project text and then checked against Qloo; names Qloo did not match exactly were dropped. All design vocabulary comes from Qloo, not the model. If the names look wrong, pass your own seeds."],
+    };
+  }
+
+  async generate(req: AudienceReq & { fresh?: boolean }) {
     const ctx = this.ctx(!!req.fresh);
     const started = ctx.now();
-    const caveats: string[] = [];
-    const base = {
-      id: crypto.randomUUID().replace(/-/g, "").slice(0, 12), schema_version: SCHEMA_VERSION, rule_table_version: RULE_TABLE_VERSION,
-      created_at: new Date().toISOString(), audience: { input: req.audience ?? names.join(", "), seeds_requested: names },
-    };
-    if (!this.d.q.configured) return this.finish({ ...base, status: "insufficient_evidence", seeds: [], unresolved: names, caveats: ["QLOO_API_KEY is not configured; QlooVibe produces no design vocabulary without Qloo."] }, ctx, started);
-
-    const { seeds, unresolved, unavailable } = await this.resolveAll(ctx, names);
+    const stamp = { id: crypto.randomUUID().replace(/-/g, "").slice(0, 12), schema_version: SCHEMA_VERSION, rule_table_version: RULE_TABLE_VERSION, created_at: new Date().toISOString() };
+    if (!this.d.q.configured) {
+      const names = req.project && req.seeds === undefined && !req.audience?.trim() ? [] : requestedSeeds(req);
+      return this.finish({ ...stamp, audience: { input: req.audience ?? names.join(", "), seeds_requested: names, source: "named" }, status: "insufficient_evidence", seeds: [], unresolved: names, caveats: ["QLOO_API_KEY is not configured; QlooVibe produces no design vocabulary without Qloo."] }, ctx, started);
+    }
+    const aud = await this.audienceFor(ctx, req);
+    const { names, seeds, unresolved, unavailable } = aud;
+    const caveats: string[] = [...aud.caveats];
+    const base = { ...stamp, audience: { input: aud.input, seeds_requested: names, source: aud.source, ...(aud.source === "model_suggested" ? { suggested_seeds: aud.suggested } : {}) } };
     const notFound = unresolved.filter((n) => !unavailable.includes(n));
     if (notFound.length) caveats.push(`Not found in Qloo: ${notFound.join(", ")}`);
     if (unavailable.length) caveats.push(`Qloo could not check these audience names: ${unavailable.join(", ")}. Try again.`);
@@ -172,23 +233,23 @@ export class Service {
   async get(id: string) { const s = await this.d.store.get(`vibe:${id}`); return s ? JSON.parse(s) : null; }
 
   /** Critic mode: score candidate references against an audience with Qloo. Flags are relative to what Qloo ranks highest for the same audience. */
-  async check(req: { audience?: string; seeds?: string[]; candidates: string[]; fresh?: boolean }) {
-    const names = requestedSeeds(req);
+  async check(req: AudienceReq & { candidates: string[]; fresh?: boolean }) {
     if (!Array.isArray(req.candidates) || !req.candidates.length || req.candidates.length > 12 || req.candidates.some((c) => typeof c !== "string" || c.trim().length < 2 || c.length > 60)) {
       throw new InvalidInput("Provide 1-12 reference names, each between 2 and 60 characters.");
     }
     const cands = [...new Set(req.candidates.map((c) => c.trim()))];
     const ctx = this.ctx(!!req.fresh); const started = ctx.now();
     if (!this.d.q.configured) return { status: "insufficient_evidence", caveats: ["QLOO_API_KEY is not configured."], results: [], trace: [] };
-    const [{ seeds, unresolved, unavailable }, candRes] = await Promise.all([
-      this.resolveAll(ctx, names),
+    const [aud, candRes] = await Promise.all([
+      this.audienceFor(ctx, req),
       Promise.all(cands.map(async (c) => {
         const r = await timed(ctx, `resolve candidate "${c}"`, () => this.d.q.search(c.replace(/\s*\(\w+\)\s*$/, ""), 8, ctx.fresh));
         return { c, seed: r.ok ? chooseSeed(c, entitiesOf(r.data)) : null, unavailable: !r.ok };
       })),
     ]);
-    if (!seeds.length) return { status: "insufficient_evidence", caveats: ["No audience seed resolved in Qloo."], unresolved, results: [], trace: ctx.trace };
-    const caveats: string[] = [];
+    const { seeds, unresolved, unavailable } = aud;
+    if (!seeds.length) return { status: "insufficient_evidence", caveats: [...aud.caveats, "No audience seed resolved in Qloo."], unresolved, results: [], trace: ctx.trace };
+    const caveats: string[] = [...aud.caveats];
     if (unresolved.length) caveats.push(`Audience names excluded from this check: ${unresolved.join(", ")}.${unavailable.length ? " Some names could not be checked because Qloo was unavailable; try again." : " Try a more specific name."}`);
     if (seeds.some((s) => s.match === "closest")) caveats.push("Some audience names matched the closest available Qloo entity. Check the resolved audience names.");
     const ids = seeds.map((s) => s.entity_id);

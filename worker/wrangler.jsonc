@@ -2,6 +2,12 @@
   "name": "qloovibe",
   "main": "src/index.ts",
   "compatibility_date": "2026-10-01",
+  "observability": {
+    "enabled": true,
+    "redact_query_string": true,
+    "logs": { "enabled": true, "invocation_logs": false, "head_sampling_rate": 1 },
+    "traces": { "enabled": true, "head_sampling_rate": 0.1 }
+  },
   "assets": { "directory": "./public", "binding": "ASSETS", "run_worker_first": true },
   "kv_namespaces": [{ "binding": "KV", "id": "54245ee6f25b43dda8a30cb60abb66fe" }],
   "ai": { "binding": "AI" },

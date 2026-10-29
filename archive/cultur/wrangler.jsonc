@@ -1,0 +1,16 @@
+{
+  "name": "cultur-archive-local",
+  "main": "worker-src/index.ts",
+  "compatibility_date": "2026-10-29",
+  "assets": { "directory": "./worker-public", "binding": "ASSETS", "run_worker_first": true },
+  // Local development placeholder, not a production namespace.
+  "kv_namespaces": [{ "binding": "KV", "id": "00000000000000000000000000000000", "remote": false }],
+  "workers_dev": false,
+  "preview_urls": false,
+  "observability": { "enabled": true, "traces": { "enabled": true } },
+  "vars": {
+    "QLOO_BASE_URL": "https://hackathon.api.qloo.com",
+    "ETH_RPC_URL": "https://ethereum-rpc.publicnode.com",
+    "RATE_LIMIT_PER_MIN": "10"
+  }
+}

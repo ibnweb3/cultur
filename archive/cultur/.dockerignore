@@ -1,0 +1,13 @@
+node_modules/
+.wrangler/
+.venv/
+**/.venv/
+**/__pycache__/
+**/.pytest_cache/
+**/*.db
+**/*.sqlite*
+**/.env
+**/.dev.vars
+worker-src/
+worker-test/
+worker-public/

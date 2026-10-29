@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import worker, { limited } from "../src/index";
+import worker, { limited } from "../worker-src/index";
 import { FakeQloo } from "./helpers";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

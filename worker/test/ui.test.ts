@@ -2,6 +2,7 @@
 // these are flow regressions, not a substitute for browser layout/accessibility testing.
 import { describe, expect, it, vi } from "vitest";
 import { makeSvc } from "./helpers";
+import { parseSeeds } from "../src/vibe";
 
 // The Worker intentionally has no Node typings. Vitest supplies these built-in modules.
 const runtimeModules = ["node:fs", "node:vm"];
@@ -101,7 +102,7 @@ type RequestOptions = { method?: string; body?: string; signal?: AbortSignal };
 type Responder = (url: string, options: RequestOptions) => Promise<Response> | Response;
 const response = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
 
-function harness(responder: Responder = () => response({})) {
+function harness(responder: Responder = () => response({}), settings: { origin?: string; health?: Responder } = {}) {
   const document = new TestDocument(), clipboard = vi.fn(async (_text: string) => {});
   const pendingTimers = new Map<number, { callback: () => void; delay: number }>(); let nextTimer = 0;
   const timer = (callback: () => void, delay = 0) => { pendingTimers.set(++nextTimer, { callback, delay }); return nextTimer; };
@@ -111,12 +112,12 @@ function harness(responder: Responder = () => response({})) {
     revokeObjectURL: vi.fn((_url: string) => {}),
   };
   const fetch = vi.fn(async (url: string, options: RequestOptions = {}) => {
-    if (url === "/health") return response({ qloo_configured: true });
+    if (url === "/health") return settings.health ? settings.health(url, options) : response({ qloo_configured: true });
     if (url === "/api/rules") return response({ version: "qv-rules-test" });
     return responder(url, options);
   });
   const app = runInNewContext(script + "\n;({ run, loadBench, parseNames, state });", {
-    document, fetch, navigator: { clipboard: { writeText: clipboard } }, location: { origin: "https://qloovibe.test" },
+    document, fetch, navigator: { clipboard: { writeText: clipboard } }, location: new URL(settings.origin ?? "https://qloovibe.test"),
     AbortController, Error, TypeError, Blob, URL: objectURLs, performance,
     setTimeout: timer, setInterval: timer, clearTimeout: (id: number) => pendingTimers.delete(id), clearInterval: (id: number) => pendingTimers.delete(id),
   });
@@ -135,6 +136,27 @@ const button = (root: Element, label: string) => {
 };
 
 describe("consumer page flows (real inline script, synthetic responses)", () => {
+  it("explains how to start the Worker when a local static server returns HTML for the API", async () => {
+    const html = (status: number) => new Response("<!doctype html><title>Error response</title><p>File not found</p>", { status, headers: { "content-type": "text/html; charset=utf-8" } });
+    const ui = harness(() => html(501), { origin: "http://localhost:8799", health: () => html(404) });
+    await vi.waitFor(() => expect(ui.el("health").textContent).toBe("Worker server required"));
+    expect(ui.el("status").textContent).toContain("npm run dev");
+    expect(ui.el("status").textContent).toContain("http://localhost:8787");
+    await ui.app.run("Slowdive");
+    expect(ui.el("status").textContent).toContain("static files without the API");
+    expect(ui.el("out").hidden).toBe(true);
+    expect(ui.el("go").disabled).toBe(false);
+    expect(ui.el("aud").disabled).toBe(false);
+  });
+
+  it("keeps production HTML failures generic instead of suggesting a local development command", async () => {
+    const ui = harness(() => new Response("<!doctype html><title>Unavailable</title>", { status: 404, headers: { "content-type": "text/html" } }));
+    await ui.app.run("Slowdive");
+    expect(ui.el("status").textContent).toContain("unreadable response");
+    expect(ui.el("status").textContent).not.toContain("npm run dev");
+    expect(ui.el("out").hidden).toBe(true);
+  });
+
   it("opens without generating an audience and example buttons only fill the input", async () => {
     const ui = harness();
     expect(ui.posts()).toHaveLength(0);
@@ -269,10 +291,26 @@ describe("consumer page flows (real inline script, synthetic responses)", () => 
     const ui = harness(() => response({ status: "insufficient_evidence", caveats: ["Synthetic fixture has no audience data."] }));
     const input = 'Salt & Stone, Pride and Prejudice, "Earth, Wind & Fire", SALT & STONE';
     expect([...ui.app.parseNames(input, 5)]).toEqual(["Salt & Stone", "Pride and Prejudice", "Earth, Wind & Fire"]);
+    expect([...ui.app.parseNames('fans of Slowdive, “Earth, Wind & Fire”, Pride and Prejudice', 5, true)]).toEqual(["Slowdive", "Earth, Wind & Fire", "Pride and Prejudice"]);
     await ui.app.run(input);
     expect(JSON.parse(ui.posts()[0]![1]!.body!).seeds).toEqual(["Salt & Stone", "Pride and Prejudice", "Earth, Wind & Fire"]);
-    expect(() => ui.app.parseNames('"Earth, Wind & Fire', 5)).toThrow(/Close the double quote/);
+    expect(() => ui.app.parseNames('"Earth, Wind & Fire', 5)).toThrow(/Close the quote/);
     expect(ui.el("out").hidden).toBe(true);
+  });
+
+  it("parses audience punctuation and quoted names consistently with the API", () => {
+    const ui = harness();
+    for (const input of [
+      'fans of Slowdive, “Earth, Wind & Fire”, Salt & Stone',
+      "people who love Florence + the Machine;Pride and Prejudice\r\nA24",
+      "audience: ‘Earth, Wind & Fire’ (artist), D'Angelo",
+      '"Say ""Hello""", Aesop',
+    ]) expect([...ui.app.parseNames(input, 5, true)]).toEqual(parseSeeds(input));
+    for (const input of ['Slowdive,,A24', '"Slowdive" and A24', '“Slowdive, A24', 'Slowdive,']) {
+      expect(() => ui.app.parseNames(input, 5, true)).toThrow();
+      expect(() => parseSeeds(input)).toThrow();
+    }
+    expect([...ui.app.parseNames("Fans of Film", 12)]).toEqual(["Fans of Film"]);
   });
 
   it("distinguishes an absent comparison from a server error and retries either", async () => {

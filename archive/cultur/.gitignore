@@ -1,0 +1,10 @@
+node_modules/
+.wrangler/
+.dev.vars
+.env
+.venv/
+python-reference/.venv/
+.pytest_cache/
+python-reference/.pytest_cache/
+__pycache__/
+python-reference/data/

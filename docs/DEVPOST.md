@@ -6,7 +6,7 @@
 
 ## What it does
 
-Vibecoding tools such as Claude Code, Cursor and v0 fall back to generic themes because they guess what an audience likes. QlooVibe is an MCP server and REST API that asks Qloo what a specific audience loves ("fans of Slowdive, Aesop and A24") and returns design direction an agent can apply:
+Vibecoding tools such as Claude Code, Cursor and v0 fall back to generic themes because they guess what an audience likes. QlooVibe is an MCP server and REST API that asks Qloo what a specific audience loves ("fans of Slowdive, Aesop, A24") and returns design direction an agent can apply:
 
 - ranked decor, ambience and style vocabulary for the audience, with every dropped tag and the reason it was dropped;
 - touchstone brands, artists and films with per-seed explainability;

@@ -1,8 +1,8 @@
 // SYNTHETIC test fixtures. Not real Qloo data; never shown in the product.
-import { Chain } from "../src/chain";
-import { QlooClient } from "../src/qloo";
-import { Service } from "../src/service";
-import type { Store } from "../src/types";
+import { Chain } from "../worker-src/chain";
+import { QlooClient } from "../worker-src/qloo";
+import { Service } from "../worker-src/service";
+import type { Store } from "../worker-src/types";
 
 export class MemStore implements Store {
   m = new Map<string, string>();

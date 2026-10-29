@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import * as s from "../src/scoring";
-import { namehash } from "../src/chain";
+import * as s from "../worker-src/scoring";
+import { namehash } from "../worker-src/chain";
 
 const none = { value: null, band: "n/a", status: "insufficient_evidence" as const, evidence: [], limitations: [] };
 
@@ -64,7 +64,7 @@ describe("ENS namehash", () => {
   });
 });
 
-import { Chain } from "../src/chain";
+import { Chain } from "../worker-src/chain";
 describe("RPC failover", () => {
   it("tries the next endpoint on rate limits and errors, but not on reverts", async () => {
     const seen: string[] = [];

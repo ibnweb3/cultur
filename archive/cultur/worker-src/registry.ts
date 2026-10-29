@@ -1,4 +1,4 @@
-import data from "../../registry/cases.json";
+import data from "../registry/cases.json";
 
 export interface Case {
   id: string;

@@ -1,0 +1,26 @@
+{
+  "name": "cultur-archive",
+  "private": true,
+  "type": "module",
+  "version": "1.0.0",
+  "license": "MIT",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "dev": "wrangler dev --local --ip 127.0.0.1 --port 8789",
+    "build": "wrangler deploy --dry-run --outdir .wrangler/build",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "types": "wrangler types --env-interface ArchiveBindings --include-runtime false --strict-vars false"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.32.2",
+    "@noble/hashes": "2.4.0",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "5.20261028.1",
+    "typescript": "7.0.2",
+    "vitest": "5.0.5",
+    "wrangler": "4.154.0"
+  }
+}

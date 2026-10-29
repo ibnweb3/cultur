@@ -1,11 +1,7 @@
-export interface Env {
-  KV: KVNamespace;
-  ASSETS: Fetcher;
-  AI?: Ai;
+export interface Env extends Pick<CloudflareBindings, "KV" | "ASSETS">,
+  Partial<Pick<CloudflareBindings, "AI" | "QLOO_BASE_URL" | "RATE_LIMIT_PER_MIN">> {
   QLOO_API_KEY?: string;
-  QLOO_BASE_URL?: string;
   ADMIN_TOKEN?: string;
-  RATE_LIMIT_PER_MIN?: string;
 }
 
 export interface Store {

@@ -1,0 +1,7 @@
+{
+  "name": "qloovibe",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix worker run dev -- --local"
+  }
+}

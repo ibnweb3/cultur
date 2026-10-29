@@ -1,7 +1,7 @@
 // Synthetic Qloo fixtures. Clearly fake data used only by tests; never shown by the app and never real Qloo output.
 import { QlooClient } from "../src/qloo";
 import type { Json, Store } from "../src/types";
-import { Service } from "../src/vibe";
+import { Service, type SuggestFn } from "../src/vibe";
 
 export class MemStore implements Store {
   m = new Map<string, string>();
@@ -71,8 +71,8 @@ export class FakeQloo {
   };
 }
 
-export function makeSvc(f = new FakeQloo(), o: { key?: string | undefined; store?: MemStore } = {}) {
+export function makeSvc(f = new FakeQloo(), o: { key?: string | undefined; store?: MemStore; suggest?: SuggestFn } = {}) {
   const store = o.store ?? new MemStore();
   const q = new QlooClient({ apiKey: "key" in o ? o.key : "test-key", baseUrl: "https://qloo.test", store, fetchFn: f.fetch as typeof fetch, retryScale: 0, maxRetries: 1 });
-  return { svc: new Service({ store, q }), store, f };
+  return { svc: new Service({ store, q, ...(o.suggest ? { suggest: o.suggest } : {}) }), store, f };
 }

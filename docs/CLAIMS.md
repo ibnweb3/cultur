@@ -12,10 +12,12 @@ Every sentence in the README, the Devpost text and the demo must fit this ledger
 - Palette values are derived by our code from rule-chosen hue, chroma and mode and pass WCAG AA for the seven gated pairs (unit-tested over 64 palette combinations): text and accent on page and card surfaces, plus text on the accent. This is not an accessibility certification for a finished interface.
 - Per-seed decor shares come from separate Qloo queries and are unavailable if any seed's score is missing; missing evidence is not treated as zero support.
 - The rule table is ours, public at `/api/rules`, versioned, and every rule is a hypothesis.
+- When given a project description or design.md (`project`), a language model proposes audience names only; each name is checked against Qloo and only exact or prefix matches are kept. All design vocabulary still comes from Qloo, and the response says `audience.source: "model_suggested"` and lists the proposed names. If the model, or Qloo, is unavailable, no tokens are produced.
 - Benchmark numbers exactly as stored by `scripts/benchmark.mjs` (n=12, one model, one temperature, closed vocabulary pooled from Qloo output).
 
 ## Not allowed
 
+- "No AI is involved" or "Qloo is the only intelligence": a language model picks the starting names when the user supplies a description instead of names. Say so.
 - "Qloo generates colours / hex codes / CSS / design systems." It does not.
 - "Colours come from brand affinities / images." Tested: no audience signal (p = 0.22 to 0.70).
 - "Per-tag explainability weights from Qloo." Qloo returns explainability for entity results only.
@@ -29,6 +31,7 @@ Every sentence in the README, the Devpost text and the demo must fit this ledger
 
 ## Known weaknesses to state when asked
 
+- With a project description, the choice of starting names is the model's, so it reflects the model's idea of the audience (for example Lagos students); Qloo verifies the names exist and supplies the taste data, but does not judge the choice. Users can pass their own seeds.
 - Space and music tags applied to interfaces is an analogy.
 - The token mapping is unvalidated; the benchmark shows specificity and repeatability, not design quality.
 - Some kept tags have no rule yet (listed in the output); some seeds resolve to the closest entity (flagged).

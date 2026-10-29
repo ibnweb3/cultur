@@ -1,9 +1,11 @@
 import json
+import os
 import re
 from functools import lru_cache
 from pathlib import Path
 
-PATH = Path(__file__).resolve().parents[2] / "registry" / "cases.json"
+PATH = Path(os.environ.get("CULTUR_REGISTRY_PATH") or
+            Path(__file__).resolve().parents[2] / "registry" / "cases.json")
 
 
 def norm(s: str) -> str:

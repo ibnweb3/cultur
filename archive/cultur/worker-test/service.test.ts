@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { InvalidInput, classify } from "../src/service";
+import { InvalidInput, classify } from "../worker-src/service";
 import { FakeQloo, MemStore, makeSvc } from "./helpers";
 
 describe("classify", () => {

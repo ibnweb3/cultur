@@ -23,7 +23,7 @@ The web app starts with your audience input. Its preview shows the generated col
 
 ```bash
 curl -s -X POST https://qloovibe.ibnweb3lab.workers.dev/api/vibe \
-  -H 'content-type: application/json' -d '{"audience": "fans of Slowdive, Aesop and A24"}'
+  -H 'content-type: application/json' -d '{"audience": "fans of Slowdive, Aesop, A24"}'
 
 curl -s -X POST https://qloovibe.ibnweb3lab.workers.dev/api/check \
   -H 'content-type: application/json' \
@@ -35,6 +35,8 @@ claude mcp add --transport http qloovibe https://qloovibe.ibnweb3lab.workers.dev
 ```
 
 MCP tools: `design_brief(audience)` returns a markdown brief (CSS variables for a shadcn-style component set, touchstones, tone words) plus the full receipts; `check_audience_fit(audience, candidates)` scores references; `get_rule_table()` returns the mapping. Status codes: 200 (including `partial` and `insufficient_evidence`), 422 invalid input, 404 expired brief, 429 rate limit.
+
+Separate audience names with commas, semicolons or newlines. Names containing `and`, `&` or `+` stay intact, such as `Pride and Prejudice` and `Salt & Stone`. Put names containing commas in straight or curly double quotes: `Slowdive, “Earth, Wind & Fire”`. API clients can supply `seeds: ["Slowdive", "Earth, Wind & Fire"]` to preserve each name exactly.
 
 ## Measured, not claimed
 
@@ -68,11 +70,26 @@ Read it carefully: the word list is pooled from Qloo's output, which is the easi
 
 ## Run it yourself
 
+For local development, run these commands from the project root:
+
+```bash
+npm --prefix worker ci
+cp .env.example worker/.dev.vars
+```
+
+Add your Qloo key as `QLOO_API_KEY` in `worker/.dev.vars` (PowerShell users can use `Copy-Item .env.example worker/.dev.vars`). This file is ignored by Git. Then start the complete app:
+
+```bash
+npm run dev
+```
+
+Open `http://localhost:8787`. Wrangler serves both the frontend and API; a static file server serving `worker/public` cannot create briefs, check references or serve API docs. KV data stays in the local `.wrangler` development state. Sample audience requests still call Qloo; Workers AI is used only when explicitly running the benchmark and can call the remote AI service.
+
+Run the checks with `npm --prefix worker test` and `npm --prefix worker run typecheck`. To deploy to your own Cloudflare account:
+
 ```bash
 cd worker
-npm install
-npm test                                      # synthetic fixtures clearly labelled
-npx wrangler kv namespace create QLOOVIBE_KV  # put the id in wrangler.jsonc
+npx wrangler kv namespace create KV           # replace the KV id in wrangler.jsonc with your namespace id
 npx wrangler secret put QLOO_API_KEY          # your Qloo key; never committed
 npx wrangler secret put ADMIN_TOKEN           # only needed for the benchmark script
 npx wrangler deploy

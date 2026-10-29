@@ -591,8 +591,8 @@ pre {
     <div class="brief-input">
       <form id="ask" class="ask" autocomplete="off">
         <label class="label" for="aud">Tell us what your audience loves.</label>
-        <div class="input-line"><span class="input-spark" aria-hidden="true">✳</span><input id="aud" type="text" name="audience" maxlength="300" minlength="2" required spellcheck="false" aria-describedby="aud-help" autocomplete="off" placeholder="e.g. Slowdive, Aesop, A24"><button class="btn primary" id="go" type="submit">Create design brief</button><button class="btn" id="cancel" type="button" hidden>Cancel</button></div>
-        <p class="small muted" id="aud-help">Add 1–5 artists, brands, films, shows or books, separated by commas.</p>
+        <div class="input-line"><span class="input-spark" aria-hidden="true">✳</span><input id="aud" type="text" name="audience" maxlength="300" minlength="2" required spellcheck="false" aria-describedby="aud-help" autocomplete="off" placeholder="e.g. Slowdive, Aesop, A24 — or describe your project"><button class="btn primary" id="go" type="submit">Create design brief</button><button class="btn" id="cancel" type="button" hidden>Cancel</button></div>
+        <p class="small muted" id="aud-help">Add 1–5 artists, brands, films, shows or books, separated by commas, or describe your project in a sentence.</p>
       </form>
       <div class="examples" id="chips"><span>Or borrow a little inspiration</span></div>
       <div class="input-foot"><p class="help">Be specific. Add a hint like <code>Slowdive (artist)</code> when a name has several meanings.</p><span class="privacy-note"><span aria-hidden="true">◈</span> No account needed</span></div>
@@ -638,12 +638,21 @@ tabs.forEach((t, i) => {
   t.addEventListener("click", () => selectTab(t));
   t.addEventListener("keydown", (e) => { const j = e.key === "ArrowRight" ? (i + 1) % tabs.length : e.key === "ArrowLeft" ? (i - 1 + tabs.length) % tabs.length : e.key === "Home" ? 0 : e.key === "End" ? tabs.length - 1 : -1; if (j >= 0) { e.preventDefault(); tabs[j].focus(); selectTab(tabs[j]); } });
 });
+const LOCAL_WORKER_HELP = "This preview serves static files without the API. From the project directory, run npm run dev and open http://localhost:8787.";
+function unreadableResponse(response) {
+  const local = ["localhost", "127.0.0.1", "[::1]"].includes(location.hostname) || location.protocol === "file:";
+  const html = (response.headers.get("content-type") || "").includes("text/html");
+  const missingLocalAPI = local && html && (response.ok || [404, 405, 501].includes(response.status));
+  const error = new Error(missingLocalAPI ? LOCAL_WORKER_HELP : "The service returned an unreadable response. Please try again.");
+  if (missingLocalAPI) error.code = "local_worker_required";
+  return error;
+}
 async function requestJSON(url, options = {}, controller = new AbortController()) {
   let timedOut = false;
   const timer = setTimeout(() => { timedOut = true; controller.abort(); }, 60000);
   try {
     const r = await fetch(url, { ...options, signal: controller.signal });
-    let d; try { d = await r.json(); } catch (e) { if (e.name === "AbortError") throw e; throw new Error("The service returned an unreadable response. Please try again."); }
+    let d; try { d = await r.json(); } catch (e) { if (e.name === "AbortError") throw e; throw unreadableResponse(r); }
     if (!d || typeof d !== "object" || Array.isArray(d)) throw new Error("The service returned an unreadable response. Please try again.");
     if (!r.ok) {
       const message = r.status === 429 ? "You've made several requests. Wait a minute, then try again." : r.status >= 500 ? "The service is having trouble responding. Please try again shortly." : d.error?.message || "This request could not be completed. Please try again.";
@@ -663,18 +672,33 @@ function table(headers, rows, label, extraClass = "") {
 }
 function notice(title, items = []) { return h("div", { class: "notice" }, h("b", null, title), items.length ? h("ul", null, items.map((s) => h("li", null, readableNote(s)))) : null); }
 function sourceBadge(s) { return h("span", { class: "badge " + (s === "rule" ? "ok" : s === "default" ? "warn" : "") }, s === "default" ? "Published default" : s === "rule" ? "Qloo data + design rule" : "Derived by our code"); }
-function parseNames(text, max) {
-  const parts = []; let part = "", quoted = false;
-  for (let i = 0; i < text.length; i++) {
-    const char = text[i];
-    if (char === '"') { if (quoted && text[i + 1] === '"') { part += '"'; i++; } else quoted = !quoted; }
-    else if (!quoted && /[,;\n]/.test(char)) { if (part.trim()) parts.push(part.trim()); part = ""; }
+function parseNames(text, max, audience = false) {
+  const body = audience ? text.trim().replace(/^(?:(?:fans of|lovers of|people who (?:like|love)|who (?:like|love)|audience of)\s+|audience:\s*)/i, "") : text.trim();
+  const quotes = { '"': '"', "'": "'", "“": "”", "‘": "’" }, names = [];
+  const invalid = () => new Error(`Enter 1–${max} names, each between 2 and 60 characters, separated by commas. Put names containing commas in double quotes.`);
+  let part = "", tail = "", closeQuote, quoted = false;
+  const add = () => {
+    if (quoted && !/^\s*(?:\(\w+\))?\s*$/.test(tail)) throw new Error("Separate names with commas, semicolons or newlines after a closing quote.");
+    const name = (part + tail).trim();
+    if (name.length < 2 || name.length > 60) throw invalid();
+    if (!names.some((other) => other.toLowerCase() === name.toLowerCase())) names.push(name);
+    part = ""; tail = ""; quoted = false;
+  };
+  for (let i = 0; i < body.length; i++) {
+    const char = body[i];
+    if (closeQuote) {
+      if (char === closeQuote) { if (body[i + 1] === closeQuote) { part += char; i++; } else closeQuote = undefined; }
+      else part += char;
+    } else if (/[,;\r\n]/.test(char)) {
+      if ((char === "\n" || char === "\r") && !part.trim() && !quoted) continue;
+      add();
+    } else if (!quoted && !part.trim() && quotes[char]) { part = ""; quoted = true; closeQuote = quotes[char]; }
+    else if (quoted) tail += char;
     else part += char;
   }
-  if (quoted) throw new Error('Close the double quote around the name, then try again.');
-  if (part.trim()) parts.push(part.trim());
-  const names = parts.filter((s, i) => parts.findIndex((other) => other.toLowerCase() === s.toLowerCase()) === i);
-  if (!names.length || names.length > max || names.some((s) => s.length < 2 || s.length > 60)) throw new Error(`Enter 1–${max} names, each between 2 and 60 characters, separated by commas. Put names containing commas in double quotes.`);
+  if (closeQuote) throw new Error("Close the quote around the name, then try again.");
+  add();
+  if (names.length > max) throw invalid();
   return names;
 }
 function download(filename, contents, type) { const url = URL.createObjectURL(new Blob([contents], { type })); const a = h("a", { href: url, download: filename }); document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000); }
@@ -912,9 +936,10 @@ async function run(audience) {
   $("#trace").replaceChildren(h("h2", null, "Request details"), h("p", { class: "small muted" }, "Requests will appear when this brief finishes."));
   const timer = setInterval(() => { const seconds = Math.round((performance.now() - t0) / 1000); st.textContent = seconds < 12 ? `Building your brief with Qloo data… ${seconds}s` : `Still waiting for the audience data… ${seconds}s. You can cancel and try again.`; }, 1000);
   try {
-    const seeds = parseNames(audience, 5);
+    const seeds = parseNames(audience, 5, true);
     renderSkeletonLoader();
-    const v = await post("/api/vibe", { audience, seeds }, controller); clearInterval(timer); renderTrace(v);
+    const describing = seeds.length === 1 && seeds[0].split(/\s+/).length >= 6 && audience.trim().length >= 20;
+    const v = await post("/api/vibe", describing ? { project: audience.trim() } : { audience, seeds }, controller); clearInterval(timer); renderTrace(v);
     if (v.status === "insufficient_evidence" || !v.tokens) {
       $("#out").hidden = true;
       const reasons = (v.caveats || []).map(readableNote).map((s) => (/[.!?]$/.test(s) ? s : s + "."));
@@ -925,7 +950,7 @@ async function run(audience) {
     state.vibe = v;
     setContent($("#result-head"), h("div", { class: "row space" }, h("h2", null, "Your design direction"), h("span", { class: "badge " + (v.status === "partial" ? "warn" : "ok") }, v.status === "partial" ? "Some evidence is limited" : "Brief ready")), h("p", { class: "small muted" }, "Based on: " + v.seeds.map((s) => `${s.name} (${s.type.split(":").pop().replaceAll("_", " ")})`).join(", ") + "."), v.caveats?.length ? notice("Before you use this direction", v.caveats) : null);
     renderPreview(v); renderTokens(v); renderVocab(v); renderCritic(v); selectTab($("#t-preview")); $("#out").hidden = false;
-    st.textContent = `Brief ready in ${((performance.now() - t0) / 1000).toFixed(1)}s. Explore the direction below.`;
+    st.textContent = `Brief ready in ${((performance.now() - t0) / 1000).toFixed(1)}s. Explore the direction below.` + (v.audience && v.audience.source === "model_suggested" && v.seeds && v.seeds.length ? ` Audience names suggested from your description and verified in Qloo: ${v.seeds.map((x) => x.name).join(", ")}.` : "");
   } catch (e) { state.vibe = null; $("#out").hidden = true; st.className = controller.signal.aborted && /^Request canceled/.test(e.message) ? "status" : "status err"; st.textContent = e.name === "TypeError" ? "We couldn't display the returned brief. Please try again." : e.message; renderTrace(null); }
   finally { clearInterval(timer); state.request = null; setBusy(false); }
 }
@@ -934,7 +959,7 @@ $("#ask").addEventListener("submit", (e) => { e.preventDefault(); const audience
 $("#cancel").addEventListener("click", () => state.request?.abort());
 $("#chips").append(...STARTERS.map((s) => h("button", { type: "button", onclick: () => { $("#aud").value = s; $("#aud").focus(); } }, s)));
 $("#aud-help").append(' Put names containing commas in double quotes.');
-requestJSON("/health").then((d) => { const e = $("#health"); e.textContent = d.qloo_configured ? "Qloo configured" : "Generation unavailable"; e.className = d.qloo_configured ? "service" : "service down"; e.title = d.qloo_configured ? "The service has a Qloo API key. Availability is checked when you request a brief." : "The service needs a Qloo API key before it can create a brief."; if (!d.qloo_configured && !state.request && !state.vibe) { $("#status").className = "status err"; $("#status").textContent = "Design generation is temporarily unavailable while the service is configured. Please try again later."; } }).catch(() => { $("#health").textContent = "Service unreachable"; $("#health").className = "service down"; });
+requestJSON("/health").then((d) => { const e = $("#health"); e.textContent = d.qloo_configured ? "Qloo configured" : "Generation unavailable"; e.className = d.qloo_configured ? "service" : "service down"; e.title = d.qloo_configured ? "The service has a Qloo API key. Availability is checked when you request a brief." : "The service needs a Qloo API key before it can create a brief."; if (!d.qloo_configured && !state.request && !state.vibe) { $("#status").className = "status err"; $("#status").textContent = "Design generation is temporarily unavailable while the service is configured. Please try again later."; } }).catch((error) => { const e = $("#health"); e.textContent = error.code === "local_worker_required" ? "Worker server required" : "Service unreachable"; e.className = "service down"; if (error.code === "local_worker_required" && !state.request && !state.vibe) { $("#status").className = "status err"; $("#status").textContent = error.message; } });
 requestJSON("/api/rules").then((d) => { if (d.version) $("#rv").textContent = d.version; }).catch(() => {});
 </script>
 <script src="/studio.js" defer></script>
