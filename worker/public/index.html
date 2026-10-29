@@ -936,9 +936,11 @@ async function run(audience) {
   $("#trace").replaceChildren(h("h2", null, "Request details"), h("p", { class: "small muted" }, "Requests will appear when this brief finishes."));
   const timer = setInterval(() => { const seconds = Math.round((performance.now() - t0) / 1000); st.textContent = seconds < 12 ? `Building your brief with Qloo data… ${seconds}s` : `Still waiting for the audience data… ${seconds}s. You can cancel and try again.`; }, 1000);
   try {
-    const seeds = parseNames(audience, 5, true);
+    const words = (s) => s.trim().split(/\s+/).length;
+    let seeds = [];
+    try { seeds = parseNames(audience, 5, true); } catch (e) { if (!(words(audience) >= 6 && audience.trim().length >= 20)) throw e; }
+    const describing = audience.trim().length >= 20 && words(audience) >= 6 && (!seeds.length || seeds.some((s) => words(s) >= 6));
     renderSkeletonLoader();
-    const describing = seeds.length === 1 && seeds[0].split(/\s+/).length >= 6 && audience.trim().length >= 20;
     const v = await post("/api/vibe", describing ? { project: audience.trim() } : { audience, seeds }, controller); clearInterval(timer); renderTrace(v);
     if (v.status === "insufficient_evidence" || !v.tokens) {
       $("#out").hidden = true;
