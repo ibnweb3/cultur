@@ -43,6 +43,7 @@ Every sentence in the README, the Devpost text and the demo must fit this ledger
 ## Known weaknesses to state when asked
 
 - The build test is small (7 projects, one model, one run) and the baseline's marker count varied between runs of the same test (3, 1, 1, then 0 of 7). A false positive (pink gradients flagged as blue-violet) was found by inspection and fixed after the first runs; the stored numbers are from the final run. It shows the loop works, not how much it helps in general.
+- The stored build-test numbers were produced before a later audit change that reports an unverifiable direction when the code has no comparable palette or font styling; the benchmark pages all had styles, so their results are unaffected.
 - The audit does not see layout, imagery or whether copy is good; it checks colours, fonts and listed markers.
 
 - With a project description, the choice of starting names is the model's, so it reflects the model's idea of the audience (for example Lagos students); Qloo verifies the names exist and supplies the taste data, but does not judge the choice. Users can pass their own seeds.

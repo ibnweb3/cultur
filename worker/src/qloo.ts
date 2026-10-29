@@ -72,7 +72,10 @@ export class QlooClient {
     if (!fresh) {
       try {
         const hit = await this.o.store.get(key);
-        if (hit) { const j = JSON.parse(hit); return { ok: true, data: j.d, freshness: "cached", status: 200, ref, fetchedAt: j.t }; }
+        if (hit) {
+          const j = JSON.parse(hit);
+          if (j && j.d && typeof j.d === "object" && Number.isFinite(j.t)) return { ok: true, data: j.d, freshness: "cached", status: 200, ref, fetchedAt: j.t };
+        }
       } catch { /* cache miss */ }
     }
     const f = this.o.fetchFn ?? fetch;
@@ -97,8 +100,8 @@ export class QlooClient {
           }
           break;
         }
-        if (status === 404) return { ok: true, data: { results: [] }, freshness: "fresh", status, ref, fetchedAt: now() }; // documented "No results"
-        if (status >= 400) return { ok: false, status, error: `HTTP ${status}`, ref, freshness: "fresh", fetchedAt: now() };
+        if (status === 404) { await r.body?.cancel(); return { ok: true, data: { results: [] }, freshness: "fresh", status, ref, fetchedAt: now() }; } // documented "No results"
+        if (status >= 400) { await r.body?.cancel(); return { ok: false, status, error: `HTTP ${status}`, ref, freshness: "fresh", fetchedAt: now() }; }
         let data: J;
         try { data = await r.json(); } catch { return { ok: false, status, error: "malformed JSON from provider", ref, freshness: "fresh", fetchedAt: now() }; }
         if (data === null || typeof data !== "object") return { ok: false, status, error: "unexpected response type", ref, freshness: "fresh", fetchedAt: now() };

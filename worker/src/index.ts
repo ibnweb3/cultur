@@ -27,6 +27,37 @@ const json = (body: unknown, status = 200, headers: Record<string, string> = {})
   new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json; charset=utf-8", ...CORS, ...headers } });
 const err = (status: number, code: string, message: string, headers: Record<string, string> = {}) => json({ error: { code, message } }, status, headers);
 
+class RequestBodyError extends Error {
+  constructor(readonly status: number, readonly code: string, message: string) { super(message); }
+}
+
+// Check streamed bytes as well as Content-Length: chunked requests must obey
+// the same bounds before the Worker buffers or parses user-supplied JSON.
+async function readBody(req: Request, maxBytes: number): Promise<string> {
+  const tooLarge = () => new RequestBodyError(413, "too_large", "This request is too large. Shorten the submitted text and try again.");
+  if (Number(req.headers.get("content-length")) > maxBytes) throw tooLarge();
+  if (!req.body) return "";
+  const reader = req.body.getReader();
+  const decoder = new TextDecoder();
+  let size = 0, body = "";
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      size += value.byteLength;
+      if (size > maxBytes) { await reader.cancel(); throw tooLarge(); }
+      body += decoder.decode(value, { stream: true });
+    }
+    return body + decoder.decode();
+  } finally { reader.releaseLock(); }
+}
+
+async function readJson(req: Request, maxBytes = 128_000): Promise<Json> {
+  const body = await readBody(req, maxBytes);
+  try { return JSON.parse(body); }
+  catch { throw new RequestBodyError(422, "invalid_input", "Request body must be valid JSON"); }
+}
+
 // Best-effort per-isolate limiter (the free plan has no shared counter); documented in the README.
 const hits = new Map<string, number[]>();
 export function limited(ip: string, perMin: number, now = Date.now()): boolean {
@@ -163,7 +194,7 @@ const AUDIENCE_PROPERTIES = {
   source_name: { type: "string", maxLength: 120, description: "Optional .md, .markdown or .txt filename only; no directory paths." },
   fresh: { type: "boolean", description: "Bypass the 6-hour provider cache. Default false." },
 };
-const RESULT_RESPONSES = { "200": { description: "Inspect status: complete, partial, or insufficient_evidence. Partial data is disclosed in caveats, unresolved, and per-result notes." }, "422": { description: "Invalid JSON or input outside the documented bounds" }, "429": { description: "Rate limited; Retry-After specifies seconds to wait" }, "500": { description: "Unexpected server error" } };
+const RESULT_RESPONSES = { "200": { description: "Inspect status: complete, partial, or insufficient_evidence. Partial data is disclosed in caveats, unresolved, and per-result notes." }, "413": { description: "Request payload too large" }, "422": { description: "Invalid JSON or input outside the documented bounds" }, "429": { description: "Rate limited; Retry-After specifies seconds to wait" }, "500": { description: "Unexpected server error" } };
 const OPENAPI = {
   openapi: "3.1.0",
   info: { title: "QlooVibe", version: "1.0", description: "Audience-grounded design direction for coding agents, from Qloo taste data. Qloo supplies ranked tags and entities; tokens come from a published rule table. MCP (Streamable HTTP) is served at /mcp." },
@@ -179,7 +210,7 @@ const OPENAPI = {
 };
 function docs(origin: string): string {
   const base = origin.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><title>API reference · QlooVibe</title>
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"><title>API reference · QlooVibe</title>
 <style>@font-face{font-family:"Figtree";src:url(/fonts/figtree-latin.woff2) format("woff2");font-weight:300 900;font-display:swap}*{box-sizing:border-box}body{margin:0;background:#121413;color:#e9e7e0;font:16px/1.65 "Figtree",system-ui,-apple-system,"Segoe UI",sans-serif}main{max-width:850px;margin:auto;padding:28px 24px 72px}nav{display:flex;flex-wrap:wrap;justify-content:space-between;gap:16px;padding-bottom:24px;border-bottom:1px solid #2a2e2b}a{color:#86b8a3;text-underline-offset:3px}a:focus-visible{outline:3px solid #86b8a3;outline-offset:4px}h1,h2,h3{line-height:1.2;letter-spacing:-.035em}h1{font-size:clamp(2rem,6vw,3rem);margin:42px 0 16px}h2{font-size:1.4rem;margin:0 0 14px}h3{font-size:1.05rem;margin:24px 0 8px}p{margin:10px 0 16px}section{padding:30px 0;border-bottom:1px solid #2a2e2b}.intro{max-width:66ch;color:#9da197}code{font: .9em ui-monospace,SFMono-Regular,Consolas,monospace;overflow-wrap:anywhere}pre{overflow:auto;padding:18px;border:1px solid #2a2e2b;border-radius:5px;background:#1a1d1b;white-space:pre;font-size:.88rem;line-height:1.6}pre code{font:inherit;overflow-wrap:normal}.endpoint{display:block;font-size:1.05rem;letter-spacing:0}.method{color:#86b8a3}.label{font-size:.8rem;color:#9da197;margin-bottom:4px}dl{margin:16px 0}dt{font-weight:650;margin-top:14px}dd{margin:4px 0 14px;color:#9da197}ul{padding-left:22px}.note{padding-left:16px;border-left:3px solid #86b8a3;color:#9da197}@media(max-width:500px){main{padding:20px 18px 48px}pre{padding:13px;font-size:.8rem}}</style></head><body><main>
 <nav aria-label="Documentation navigation"><a href="/">← Back to QlooVibe</a><a href="/openapi.json">OpenAPI specification (JSON)</a></nav>
 <header><h1>API reference</h1><p class="intro">Use the same audience research, design tokens and reference checks as the web app. Public endpoints need no account or API key.</p><p class="note">Qloo supplies taste data. QlooVibe maps it to design tokens using a <a href="/api/rules">published rule table</a>. The mapping is a design hypothesis, not a prediction of how people will respond to an interface.</p></header>
@@ -192,10 +223,10 @@ function docs(origin: string): string {
   -H 'content-type: application/json' \\
   --data '{"audience":"Slowdive, Aesop","candidates":["Bon Iver","Metallica"]}'</code></pre>
 <p>Uses the same audience fields and optional <code>fresh</code> flag. <code>candidates</code> is required: an array of 1–12 nonblank names, each 2–60 characters. Duplicate names are checked once.</p><p>Each result includes the resolved name, affinity, comparison baseline, gap and verdict: <code>strong</code>, <code>ok</code>, <code>weak</code>, <code>off-audience</code> or <code>unknown</code>. The baseline is the median of Qloo’s top references for that audience and entity type, up to 10 results. Verdict thresholds are heuristic. Missing data stays unknown; it is never a zero score.</p></section>
-<section aria-labelledby="audit"><h2 id="audit"><code class="endpoint"><span class="method">POST</span> /api/audit</code></h2><p>After your agent builds the UI, send its code and the chosen direction's brief. The audit runs plain code checks: no model and no Qloo call.</p><p class="label">curl · Bash</p><pre><code>curl -sS -X POST '${base}/api/audit' \
-  -H 'content-type: application/json' \
+<section aria-labelledby="audit"><h2 id="audit"><code class="endpoint"><span class="method">POST</span> /api/audit</code></h2><p>After your agent builds the UI, send its code and the chosen direction's brief. The audit runs plain code checks: no model and no Qloo call.</p><p class="label">curl · Bash</p><pre><code>curl -sS -X POST '${base}/api/audit' \\
+  -H 'content-type: application/json' \\
   --data '{"code":"body{font-family:Inter;color:#123456}","reference":"--qv-text:#211813; --qv-font-body: Figtree, sans-serif;"}'</code></pre>
-<p><code>code</code> is up to 200,000 characters. <code>reference</code> is the direction's <code>agent_brief</code>, <code>css_qv</code> or <code>css_shadcn</code>. The result has <code>status</code> (<code>pass</code> or <code>needs_changes</code>), per-check results and findings with a suggested fix. Checks: colours outside the direction's palette, fonts outside its pair, starter-template fonts, Tailwind default colour classes, purple gradients, generic filler copy, low use of the direction's variables and scattered corner radii. The marker lists are published in <code>/api/rules</code> under <code>audit</code>.</p><p>A pass means the code follows the chosen direction. It does not measure design quality, layout or whether an audience will like the page.</p></section>
+<p><code>code</code> is up to 200,000 characters. <code>reference</code> is the direction's <code>agent_brief</code>, <code>css_qv</code> or <code>css_shadcn</code>. The result has <code>status</code> (<code>pass</code> or <code>needs_changes</code>), per-check results and findings with a suggested fix. Checks: colours outside the direction's palette, fonts outside its pair, starter-template fonts, Tailwind default colour classes, purple gradients, generic filler copy, low use of the direction's variables and scattered corner radii. The marker lists are published in <code>/api/rules</code> under <code>audit</code>.</p><p>A pass means no failures were found in the checks that could run. Read warnings and any <code>not_applicable</code> results. It does not measure design quality, layout or whether an audience will like the page.</p></section>
 <section aria-labelledby="responses"><h2 id="responses">Read the response status</h2><p>An HTTP <code>200</code> means the request was processed. Always inspect the JSON <code>status</code> and any caveats before using the result.</p><dl><dt><code>complete</code></dt><dd>Enough data was returned for the requested result. Read the evidence and any default token labels.</dd><dt><code>partial</code></dt><dd>Some data or names could not be included, or an entity matched only the closest available name. Inspect <code>unresolved</code>, <code>caveats</code> and individual result notes.</dd><dt><code>insufficient_evidence</code></dt><dd>No supported design direction or fit verdict could be produced. A brief has no tokens in this state. Try more specific names, or retry if the provider was unavailable.</dd></dl>
 <p><code>422</code> means invalid JSON or input outside the limits above. <code>429</code> means too many requests: wait the number of seconds in the <code>Retry-After</code> header. <code>500</code> means an unexpected server error; retry later. Error bodies use <code>{"error":{"code":"…","message":"…"}}</code>.</p><p>Provider work has a 25-second deadline. Requests can return partial or insufficient evidence when the provider is slow or unavailable.</p></section>
 <section aria-labelledby="mcp"><h2 id="mcp">Connect an MCP client</h2><p>Use the <code>design_project</code> MCP prompt to guide your coding agent through reading Markdown, comparing styles and applying your choice. The resource <code>qloovibe://workflow/project-design</code> describes the same workflow. For direct file access, use the local stdio bridge described in the repository’s <code>docs/MCP.md</code>. The stateless Streamable HTTP endpoint is <code>${base}/mcp</code>. For Claude Code:</p><pre><code>claude mcp add --transport http qloovibe ${base}/mcp</code></pre>
@@ -270,16 +301,15 @@ export default {
       }
       if (p === "/api/benchmark" && req.method === "PUT") {
         if (!isAdmin(req, env)) return err(401, "unauthorized", "Admin token required");
-        const body = await req.text();
+        const body = await readBody(req, 2_500_000);
         if (body.length > 400000) return err(413, "too_large", "Benchmark payload too large");
-        JSON.parse(body);
+        try { JSON.parse(body); } catch { return err(422, "invalid_input", "Request body must be valid JSON"); }
         await env.KV.put("benchmark:v1", body);
         return json({ ok: true });
       }
       if (p === "/api/audit" && req.method === "POST") {
         if (requestLimited(req, env)) return err(429, "rate_limited", "Too many requests; retry in a minute.", { "retry-after": "60" });
-        let body: Json;
-        try { body = await req.json(); } catch { return err(422, "invalid_input", "Request body must be JSON"); }
+        const body = await readJson(req, 1_500_000);
         const okText = (v: unknown, max: number) => typeof v === "string" && v.trim().length >= 20 && v.length <= max;
         if (!okText(body?.code, MAX_CODE) || !okText(body?.reference, MAX_REFERENCE)) return err(422, "invalid_input", `Provide "code" (20-${MAX_CODE} characters of CSS/HTML/JSX) and "reference" (the direction's agent_brief, css_qv or css_shadcn, 20-${MAX_REFERENCE} characters).`);
         return json(auditUi(body.code, body.reference));
@@ -287,8 +317,8 @@ export default {
       if (p === "/api/admin/build-bench" && req.method === "POST") {
         if (!isAdmin(req, env)) return err(401, "unauthorized", "Admin token required");
         if (!env.AI) return json({ error: "Workers AI binding not configured" });
-        const b = await req.json() as Json;
-        if (typeof b.project !== "string" || b.project.trim().length < MIN_PROJECT || b.project.length > MAX_PROJECT) return err(422, "invalid_input", "project required");
+        const b = await readJson(req);
+        if (typeof b?.project !== "string" || b.project.trim().length < MIN_PROJECT || b.project.length > MAX_PROJECT) return err(422, "invalid_input", "project required");
         const brief = await makeService(env, undefined, req.signal).generate({ project: b.project.trim() });
         const direction = brief.directions?.[0];
         if (!direction) return json({ error: "no direction", status: brief.status });
@@ -296,9 +326,12 @@ export default {
       }
       if (p === "/api/admin/llm-pick" && req.method === "POST") {
         if (!isAdmin(req, env)) return err(401, "unauthorized", "Admin token required");
-        return json(await llmPick(env, await req.json()));
+        const body = await readJson(req);
+        if (!body || typeof body !== "object" || Array.isArray(body)) return err(422, "invalid_input", "Request body must be a JSON object");
+        return json(await llmPick(env, body));
       }
       if (p === "/mcp") {
+        if (req.method === "POST") req = new Request(req, { body: await readBody(req, 1_500_000) });
         const transport = new WebStandardStreamableHTTPServerTransport({ sessionIdGenerator: undefined, enableJsonResponse: true });
         let rateLimited = false;
         await mcpServer(makeService(env, undefined, req.signal), req, env, () => { rateLimited = true; }).connect(transport);
@@ -310,8 +343,7 @@ export default {
       }
       if ((p === "/api/vibe" || p === "/api/check") && req.method === "POST") {
         if (requestLimited(req, env)) return err(429, "rate_limited", "Too many requests; retry in a minute.", { "retry-after": "60" });
-        let body: Json;
-        try { body = await req.json(); } catch { return err(422, "invalid_input", "Request body must be JSON"); }
+        const body = await readJson(req);
         try {
           const svc = makeService(env, undefined, req.signal);
           if (p === "/api/vibe") {
@@ -332,6 +364,7 @@ export default {
       if (p.startsWith("/api/")) return err(404, "not_found", "Unknown route");
       return await env.ASSETS.fetch(req);
     } catch (error) {
+      if (error instanceof RequestBodyError) return err(error.status, error.code, error.message);
       const requestId = logUnexpected(error, req, env, "fetch");
       return err(500, "internal_error", "Unexpected server error", { "x-request-id": requestId });
     }

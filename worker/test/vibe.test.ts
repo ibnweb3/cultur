@@ -139,6 +139,32 @@ describe("generate", () => {
     expect(v.unresolved).toEqual(["Zorblax"]);
     expect(v.status).toBe("partial");
   });
+  it("discloses prefix audience matches as partial and counts duplicate entities once", async () => {
+    const approximate = await makeSvc().svc.generate({ seeds: ["Slow (artist)", "Aesop"] });
+    expect(approximate.status).toBe("partial");
+    expect(approximate.seeds[0]).toMatchObject({ name: "Slowdive", match: "prefix" });
+    expect(approximate.caveats.join(" ")).toContain("approximate matches");
+    const duplicate = await makeSvc().svc.generate({ seeds: ["Slowdive", "Slowdive (artist)", "Aesop"] });
+    expect(duplicate.seeds.map((s: Json) => s.name)).toEqual(["Slowdive", "Aesop"]);
+    expect(duplicate.unresolved).toEqual([]);
+  });
+  it("ignores malformed provider cards and explainability instead of exporting undefined content", async () => {
+    const f = new FakeQloo(), fetch = f.fetch;
+    f.fetch = async (input) => {
+      const u = new URL(String(input));
+      if (u.pathname === "/v2/insights" && u.searchParams.get("filter.type") !== "urn:tag") return new Response(JSON.stringify({ results: { entities: [
+        { entity_id: "missing-name" },
+        { name: "Missing ID" },
+        { name: "Valid reference", entity_id: "valid", query: { affinity: 0.8, explainability: { "signal.interests.entities": { warning: "unavailable" } } } },
+      ] } }));
+      return fetch(input);
+    };
+    const v = await makeSvc(f).svc.generate({ seeds: ["Slowdive", "Aesop"] });
+    expect(v.directions.length).toBeGreaterThan(0);
+    expect(v.touchstones.every((group: Json) => group.items.length === 1)).toBe(true);
+    expect(v.touchstones[0].items[0]).toMatchObject({ name: "Valid reference", why: [] });
+    expect(v.agent_brief).not.toContain("undefined");
+  });
   it("reports unresolved seeds and returns partial when a family is missing", async () => {
     const f = new FakeQloo(); f.opts.noAmbience = true;
     const v = await makeSvc(f).svc.generate({ audience: "Slowdive, Zorblax" });
@@ -181,6 +207,24 @@ describe("critic", () => {
   });
   it("rejects an empty candidate list", async () => {
     await expect(makeSvc().svc.check({ audience: "Slowdive", candidates: [] })).rejects.toThrow(InvalidInput);
+  });
+  it("discloses approximate candidate matches and deduplicates case variants", async () => {
+    const r = await makeSvc().svc.check({ audience: "Slowdive", candidates: ["Bon", "bon"] });
+    expect(r.results).toHaveLength(1);
+    expect(r.status).toBe("partial");
+    expect(r.results[0].resolved).toMatchObject({ name: "Bon Iver", match: "prefix" });
+    expect(r.results[0].note).toContain("Approximate match");
+  });
+  it("does not give a fit verdict for non-finite provider affinity", async () => {
+    const f = new FakeQloo(), fetch = f.fetch;
+    f.fetch = async (input) => {
+      const u = new URL(String(input));
+      if (u.searchParams.has("filter.entities")) return new Response('{"results":{"entities":[{"name":"Bon Iver","entity_id":"A3","query":{"affinity":1e999}}]}}');
+      return fetch(input);
+    };
+    const r = await makeSvc(f).svc.check({ audience: "Slowdive", candidates: ["Bon Iver"] });
+    expect(r.status).toBe("insufficient_evidence");
+    expect(r.results[0]).toMatchObject({ affinity: null, gap: null, verdict: "unknown" });
   });
   it.each([[0.1, 0.3, 0.7, 0.9], [0.1, 0.5, 0.9]])("uses the statistical median of the reference affinities %j", async (...affinities) => {
     const f = new FakeQloo();

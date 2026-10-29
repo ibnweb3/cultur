@@ -40,6 +40,13 @@ describe("audit_ui", () => {
     expect(a.findings.filter((f) => f.severity === "fail")).toEqual([]);
     expect(a.limits).toContain("does not judge design quality");
   });
+  it.each(["aaaaaaaaaaaaaaaaaaaa", "<div>Meet the neighbourhood artists</div>"])("cannot certify a direction from unstyled input: %s", (code) => {
+    const result = auditUi(code, REF);
+    expect(result.status).toBe("needs_changes");
+    expect(result.findings.some((finding) => finding.id === "unverifiable_direction")).toBe(true);
+    expect(result.checks.find((check) => check.id === "palette")?.result).toBe("not_applicable");
+    expect(result.checks.find((check) => check.id === "fonts")?.result).toBe("not_applicable");
+  });
   it("flags off-palette colours, wrong fonts, template markers and scattered radii", () => {
     const a = auditUi(SLOP, REF);
     expect(a.status).toBe("needs_changes");

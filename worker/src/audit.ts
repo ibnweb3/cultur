@@ -89,12 +89,15 @@ export function auditUi(code: string, reference: string): AuditResult {
   const findings: AuditFinding[] = [];
   const checks: AuditResult["checks"] = [];
   const hasPalette = ref.palette.length > 0, hasFonts = ref.fonts.length > 0;
+  const varColorUses = (src.match(/var\(\s*--(?:qv-(?:bg|surface|border|text|muted|accent|accent-text)|background|foreground|card|primary|secondary|muted|accent|border|ring|popover)[\w-]*\s*\)/g) || []).length;
+  const semanticColorClasses = /\b(?:bg|text|border|ring|fill|stroke)-(?:background|foreground|card|primary|secondary|muted|accent|border|ring|popover)(?:-foreground)?\b/.test(src);
 
   // 1. Colour literals outside the direction's palette.
   const literals = colorsIn(src).filter((c) => !isNeutralEdge(c));
   const off = literals.filter((c) => !ref.palette.some((p) => dist(p, c) <= 14));
   const offUnique = [...new Set(off.map(norm))];
-  if (hasPalette) {
+  const canCheckPalette = hasPalette && (literals.length > 0 || varColorUses > 0 || semanticColorClasses);
+  if (canCheckPalette) {
     const bad = offUnique.length > 0 && off.length / Math.max(1, literals.length) > 0.15;
     checks.push({ id: "palette", label: "Colours come from the direction's palette", result: bad ? "fail" : offUnique.length ? "warn" : "pass" });
     if (offUnique.length) findings.push({
@@ -110,8 +113,9 @@ export function auditUi(code: string, reference: string): AuditResult {
   const styled = used.filter((f) => !GENERIC_FAMILIES.has(f));
   const wrongFonts = hasFonts ? styled.filter((f) => !ref.fonts.includes(f)) : [];
   const defaultFonts = styled.filter((f) => DEFAULT_FONTS.includes(f) && !ref.fonts.includes(f));
-  const tailwindFont = /\bfont-(?:sans|serif|mono)\b/.test(src) && !used.length;
-  if (hasFonts) {
+  const fontVariables = /font-family\s*:\s*var\(\s*--(?:qv-font-(?:display|body)|font-(?:display|sans|serif|mono))\b/.test(src);
+  const canCheckFonts = hasFonts && (used.length > 0 || fontVariables);
+  if (canCheckFonts) {
     checks.push({ id: "fonts", label: "Fonts match the direction's pair", result: wrongFonts.length ? "fail" : "pass" });
     if (wrongFonts.length) findings.push({
       id: "wrong_fonts", severity: "fail",
@@ -125,10 +129,14 @@ export function auditUi(code: string, reference: string): AuditResult {
     message: `Common starter-template fonts are in use: ${defaultFonts.join(", ")}.`,
     examples: defaultFonts, fix: "Swap for the direction's named fonts.",
   });
-  void tailwindFont;
+  if (!canCheckPalette && !canCheckFonts) findings.push({
+    id: "unverifiable_direction", severity: "fail",
+    message: "There is no comparable palette or font styling to check against this direction.",
+    examples: [],
+    fix: "Include the generated CSS or component styles and the selected direction's CSS export or complete implementation brief. Plain copy and unstyled markup cannot verify a direction.",
+  });
 
   // 3. Raw colour literals versus token usage.
-  const varColorUses = (src.match(/var\(\s*--(?:qv-(?:bg|surface|border|text|muted|accent|accent-text)|background|foreground|card|primary|secondary|muted|accent|border|ring|popover)[\w-]*\s*\)/g) || []).length;
   const totalColorUse = varColorUses + literals.length;
   const share = totalColorUse ? Math.round((varColorUses / totalColorUse) * 100) : null;
   if (hasPalette && share !== null && totalColorUse >= 8) {

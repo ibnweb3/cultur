@@ -118,7 +118,15 @@ export class Service {
       const r = await timed(ctx, `resolve "${n}"`, () => this.d.q.search(base, 8, ctx.fresh));
       return { n, seed: r.ok ? chooseSeed(n, entitiesOf(r.data)) : null, unavailable: !r.ok };
     }));
-    return { seeds: rs.flatMap((r) => (r.seed ? [r.seed] : [])), unresolved: rs.filter((r) => !r.seed).map((r) => r.n), unavailable: rs.filter((r) => r.unavailable).map((r) => r.n) };
+    const unique = new Map<string, Seed>();
+    const matchOrder = { exact: 0, prefix: 1, closest: 2 };
+    for (const { seed } of rs) {
+      if (!seed) continue;
+      const previous = unique.get(seed.entity_id);
+      if (!previous || matchOrder[seed.match] < matchOrder[previous.match]) unique.set(seed.entity_id, seed);
+    }
+    const seeds = [...unique.values()];
+    return { seeds, unresolved: rs.filter((r) => !r.seed).map((r) => r.n), unavailable: rs.filter((r) => r.unavailable).map((r) => r.n) };
   }
 
 
@@ -179,7 +187,7 @@ export class Service {
     const notFound = unresolved.filter((n) => !unavailable.includes(n));
     if (notFound.length) caveats.push(`Not found in Qloo: ${notFound.join(", ")}`);
     if (unavailable.length) caveats.push(`Qloo could not check these audience names: ${unavailable.join(", ")}. Try again.`);
-    if (seeds.some((s) => s.match === "closest")) caveats.push("Some seeds matched only the closest Qloo entity; check the resolved names.");
+    if (seeds.some((s) => s.match !== "exact")) caveats.push("Some audience names were approximate matches. Check the resolved names before using this direction.");
     if (!seeds.length) return this.finish({ ...base, status: "insufficient_evidence", seeds, unresolved, caveats: [...caveats, "No seed resolved to a Qloo entity, so there is no grounded vocabulary."] }, ctx, started);
     const ids = seeds.map((s) => s.entity_id);
 
@@ -192,7 +200,7 @@ export class Service {
 
     const rawBy = {} as Record<Family, { name: string; affinity: number }[]>;
     FAMILIES.forEach((f, i) => {
-      rawBy[f] = joint[i]!.ok ? tagsOf(joint[i]!.data).filter((t) => t.name && typeof t.query?.affinity === "number").map((t) => ({ name: String(t.name), affinity: t.query.affinity as number })) : [];
+      rawBy[f] = joint[i]!.ok ? tagsOf(joint[i]!.data).filter((t) => typeof t.name === "string" && t.name.trim() && isFiniteNumber(t.query?.affinity)).map((t) => ({ name: t.name as string, affinity: t.query.affinity as number })) : [];
     });
     if (!rawBy.decor.length) {
       return this.finish({ ...base, status: "insufficient_evidence", seeds, unresolved, caveats: [...caveats, "Qloo returned no decor vocabulary for this audience; no tokens are produced from defaults or from a model's guess."] }, ctx, started);
@@ -218,7 +226,7 @@ export class Service {
     if (tokens.unmapped_tags.length) caveats.push(`${tokens.unmapped_tags.length} kept tag(s) have no rule yet: ${tokens.unmapped_tags.join(", ")}`);
 
     // Per-seed attribution for decor tags: derived from separate per-seed Qloo queries (Qloo gives no per-tag explainability).
-    const seedLists = seeds.length > 1 ? seeds.map((s, i) => ({ seed: s.name, map: new Map(perSeed[i]!.ok ? tagsOf(perSeed[i]!.data).map((t) => [String(t.name).trim(), t.query?.affinity as number] as const) : []) })) : [];
+    const seedLists = seeds.length > 1 ? seeds.map((s, i) => ({ seed: s.name, map: new Map(perSeed[i]!.ok ? tagsOf(perSeed[i]!.data).filter((t) => typeof t.name === "string" && t.name.trim() && isFiniteNumber(t.query?.affinity)).map((t) => [t.name.trim(), t.query.affinity as number] as const) : []) })) : [];
     const attribution = kept.filter((k) => k.family === "decor").map((k) => {
       const support = seedLists.map((s) => ({ seed: s.seed, affinity: s.map.get(k.name) ?? null }));
       const tot = support.reduce((a, b) => a + (b.affinity ?? 0), 0);
@@ -229,14 +237,17 @@ export class Service {
     const names2 = new Map(seeds.map((s) => [s.entity_id, s.name]));
     const touchstones = (["brand", "artist", "movie"] as const).map((t, i) => ({
       type: t,
-      items: anchors[i]!.ok ? entitiesOf(anchors[i]!.data).map((e) => ({
-        name: String(e.name), entity_id: entId(e), affinity: round(e.query?.affinity), popularity: round(e.popularity),
-        why: ((e.query?.explainability?.["signal.interests.entities"] ?? []) as Json[]).map((x) => ({ seed: names2.get(x.entity_id) ?? x.entity_id, share: round(x.score) })),
-      })) : [],
+      items: anchors[i]!.ok ? entitiesOf(anchors[i]!.data).filter((e) => typeof e.name === "string" && e.name.trim() && typeof entId(e) === "string" && entId(e)!.trim()).map((e) => {
+        const explanation = e.query?.explainability?.["signal.interests.entities"];
+        return {
+          name: e.name.trim(), entity_id: entId(e), affinity: round(e.query?.affinity), popularity: round(e.popularity),
+          why: (Array.isArray(explanation) ? explanation : []).filter((x) => x && typeof x.entity_id === "string" && isFiniteNumber(x.score)).map((x) => ({ seed: names2.get(x.entity_id) ?? x.entity_id, share: round(x.score) })),
+        };
+      }) : [],
     }));
 
     const failed = ctx.trace.filter((t) => t.status === "error").length;
-    const partial = failed > 0 || unresolved.length > 0 || seeds.some((s) => s.match === "closest") || !rawBy.ambience.length || !rawBy.style.length;
+    const partial = failed > 0 || unresolved.length > 0 || seeds.some((s) => s.match !== "exact") || !rawBy.ambience.length || !rawBy.style.length;
     if (directionDrafts.length < 3) caveats.push(`The returned evidence supports ${directionDrafts.length} distinct design direction${directionDrafts.length === 1 ? "" : "s"}; no extra options were invented to fill three slots.`);
     const directions = directionDrafts.map((direction) => ({ ...direction, agent_brief: agentBrief(base.audience.input, seeds, direction.tokens, touchstones, voice.words.map((w) => w.tag), direction, context) }));
     return this.finish({
@@ -261,7 +272,7 @@ export class Service {
     if (!Array.isArray(req.candidates) || !req.candidates.length || req.candidates.length > 12 || req.candidates.some((c) => typeof c !== "string" || c.trim().length < 2 || c.length > 60)) {
       throw new InvalidInput("Provide 1-12 reference names, each between 2 and 60 characters.");
     }
-    const cands = [...new Set(req.candidates.map((c) => c.trim()))];
+    const cands = [...new Map(req.candidates.map((c) => [c.trim().toLowerCase(), c.trim()])).values()];
     const ctx = this.ctx(!!req.fresh); const started = ctx.now();
     if (!this.d.q.configured) return { status: "insufficient_evidence", caveats: ["QLOO_API_KEY is not configured."], results: [], trace: [] };
     const [aud, candRes] = await Promise.all([
@@ -275,7 +286,7 @@ export class Service {
     if (!seeds.length) return { status: "insufficient_evidence", caveats: [...aud.caveats, "No audience seed resolved in Qloo."], unresolved, results: [], trace: ctx.trace };
     const caveats: string[] = [...aud.caveats];
     if (unresolved.length) caveats.push(`Audience names excluded from this check: ${unresolved.join(", ")}.${unavailable.length ? " Some names could not be checked because Qloo was unavailable; try again." : " Try a more specific name."}`);
-    if (seeds.some((s) => s.match === "closest")) caveats.push("Some audience names matched the closest available Qloo entity. Check the resolved audience names.");
+    if (seeds.some((s) => s.match !== "exact")) caveats.push("Some audience names were approximate matches. Check the resolved audience names.");
     const ids = seeds.map((s) => s.entity_id);
     const byType = new Map<string, Seed[]>();
     for (const r of candRes) if (r.seed) byType.set(r.seed.type, [...(byType.get(r.seed.type) ?? []), r.seed]);
@@ -285,9 +296,9 @@ export class Service {
         timed(ctx, `score ${type.split(":").pop()} candidates`, () => this.d.q.entityInsights(ids, type, list.length + 2, { only: list.map((x) => x.entity_id) }, ctx.fresh)),
         timed(ctx, `${type.split(":").pop()} reference (what Qloo ranks highest)`, () => this.d.q.entityInsights(ids, type, 10, {}, ctx.fresh)),
       ]);
-      if (only.ok) for (const e of entitiesOf(only.data)) if (typeof e.query?.affinity === "number") scored.set(entId(e)!, e.query.affinity);
+      if (only.ok) for (const e of entitiesOf(only.data)) if (isFiniteNumber(e.query?.affinity)) scored.set(entId(e)!, e.query.affinity);
       if (top.ok) {
-        const a = entitiesOf(top.data).map((e) => e.query?.affinity).filter((x): x is number => typeof x === "number").sort((x, y) => x - y);
+        const a = entitiesOf(top.data).map((e) => e.query?.affinity).filter(isFiniteNumber).sort((x, y) => x - y);
         if (a.length) typical.set(type, (a[Math.floor((a.length - 1) / 2)]! + a[Math.floor(a.length / 2)]!) / 2);
       }
     }));
@@ -297,7 +308,7 @@ export class Service {
       const gap = aff != null && typ != null ? round(typ - aff) : null;
       const verdict = gap == null ? "unknown" : gap <= 0.05 ? "strong" : gap <= 0.1 ? "ok" : gap <= 0.18 ? "weak" : "off-audience";
       const notes = [
-        ...(seed.match === "closest" ? [`Closest available match: ${seed.name}. Confirm this is the intended reference.`] : []),
+        ...(seed.match !== "exact" ? [`Approximate match: ${seed.name}. Confirm this is the intended reference.`] : []),
         ...(aff == null ? ["Qloo returned no affinity for this entity."] : []),
         ...(typ == null ? ["A comparison baseline was unavailable, so fit could not be determined."] : []),
       ];
@@ -308,7 +319,7 @@ export class Service {
     const failed = ctx.trace.filter((t) => t.status === "error").length;
     if (failed) caveats.push("Some Qloo requests failed. Results with unavailable data have not been given a fit verdict.");
     const hasVerdict = out.some((r) => r.verdict !== "unknown");
-    const partial = failed > 0 || unresolved.length > 0 || out.some((r) => r.verdict === "unknown" || r.resolved?.match === "closest") || seeds.some((s) => s.match === "closest");
+    const partial = failed > 0 || unresolved.length > 0 || out.some((r) => r.verdict === "unknown" || (r.resolved && r.resolved.match !== "exact")) || seeds.some((s) => s.match !== "exact");
     return {
       status: hasVerdict ? (partial ? "partial" : "complete") : "insufficient_evidence", audience_seeds: seeds.map((s) => s.name), unresolved, results: out, caveats,
       method: "verdict compares a candidate's Qloo affinity with the median affinity of the top-10 Qloo ranks for the same audience and type: gap <= .05 strong, <= .10 ok, <= .18 weak, else off-audience. Thresholds are a heuristic; Qloo affinities are compressed, so read rank and gap, not the raw number.",
@@ -317,7 +328,8 @@ export class Service {
   }
 }
 
-const round = (n: unknown) => (typeof n === "number" ? Math.round(n * 1000) / 1000 : null);
+const isFiniteNumber = (n: unknown): n is number => typeof n === "number" && Number.isFinite(n);
+const round = (n: unknown) => (isFiniteNumber(n) ? Math.round(n * 1000) / 1000 : null);
 
 const LIMITS = [
   "Qloo supplies ranked taste tags and entities. It does not supply colours, fonts or CSS: every token comes from the published rule table (GET /api/rules), which is our hypothesis and not validated in user studies.",
@@ -343,7 +355,7 @@ function agentBrief(audience: string, seeds: Seed[], t: Tokens, touch: { type: s
     `- Contrast gate: ${t.palette.gate} (all AA pairs ${t.palette.contrast.every((c) => c.pass) ? "pass" : "NOT all passing"}).`,
     ...(direction ? [`- Font pair: ${direction.fonts.display.name} headings + ${direction.fonts.body.name} body. ${direction.fonts.note}`, `- Apply fonts: body { font-family: var(--qv-font-body, var(--font-sans)); } h1, h2, h3, h4, h5, h6 { font-family: var(--qv-font-display, var(--font-display)); }`, `- Font loading: ${direction.fonts.loading_guidance}`] : []),
     `- Microcopy tone words from Qloo (verbatim): ${voice.join(", ") || "n/a"}.`,
-    `- Touchstones this audience loves (use for tone and imagery references, not logos): brands ${top("brand") || "n/a"}; artists ${top("artist") || "n/a"}; films ${top("movie") || "n/a"}.`,
+    `- Qloo-ranked audience references (use for tone and imagery references, not logos): brands ${top("brand") || "n/a"}; artists ${top("artist") || "n/a"}; films ${top("movie") || "n/a"}.`,
     `- Before shipping copy or imagery that names artists, brands or films, call check_audience_fit to score each against this audience.`,
     ``,
     `## Avoid generic defaults (QlooVibe rules, not Qloo data)`,

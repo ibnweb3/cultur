@@ -9,6 +9,8 @@ captures/
 .pytest_cache/
 .wrangler-out/
 worker/node_modules/
+/node_modules/
+.audit/
 worker/.wrangler/
 worker/.dev.vars
 .codex-pass.md

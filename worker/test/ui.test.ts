@@ -56,6 +56,7 @@ class Element {
     return this.dispatch("click");
   }
   focus() { this.document.activeElement = this; }
+  scrollIntoView() {}
   select() { this.selected = true; }
   remove() { if (this.parentElement) this.parentElement.children = this.parentElement.children.filter((node) => node !== this); }
   querySelector(selector: string) { return this.querySelectorAll(selector)[0] ?? null; }
@@ -220,14 +221,29 @@ describe("consumer page flows (real inline script, synthetic responses)", () => 
     expect(ui.posts()).toHaveLength(0);
   });
 
+  it("rejects binary or incorrectly encoded files while keeping reviewed project text", async () => {
+    const ui = harness();
+    const reviewed = "An independent bookshop website with local events.";
+    ui.el("project").value = reviewed;
+    for (const text of ["Binary project content\u0000must not be submitted", "Invalidly decoded project \ufffd content"]) {
+      await ui.app.readProjectFile({ name: "project.txt", size: text.length, text: async () => text });
+      expect(ui.el("status").textContent).toContain("UTF-8 text");
+      expect(ui.el("project").value).toBe(reviewed);
+      expect(ui.el("go").disabled).toBe(false);
+      expect(ui.posts()).toHaveLength(0);
+    }
+  });
+
   it("explains missing AI configuration and keeps direct audience mode usable", async () => {
     const ui = harness(() => response({ status: "insufficient_evidence", caveats: [] }), { health: () => response({ qloo_configured: true, ai_configured: false }) });
-    await vi.waitFor(() => expect(ui.el("configuration-warning").textContent).toContain("Workers AI"));
+    await vi.waitFor(() => expect(ui.el("configuration-warning").textContent).toContain("Use audience references"));
     expect(ui.el("configuration-warning").hidden).toBe(false);
+    expect(ui.el("go").disabled).toBe(true);
     await ui.app.run("A useful website for an independent bookshop.");
     expect(ui.posts()).toHaveLength(0);
     await ui.el("mode-audience").click();
     expect(ui.el("configuration-warning").hidden).toBe(true);
+    expect(ui.el("go").disabled).toBe(false);
     ui.el("aud").value = "Slowdive, Aesop";
     await ui.el("ask").dispatch("submit");
     expect(JSON.parse(ui.posts()[0]![1]!.body!).seeds).toEqual(["Slowdive", "Aesop"]);
@@ -269,8 +285,7 @@ describe("consumer page flows (real inline script, synthetic responses)", () => 
     expect(ui.clipboard).toHaveBeenLastCalledWith(selected.tokens.css_qv);
     await button(ui.el("p-tokens"), "Copy design brief").click();
     expect(ui.clipboard).toHaveBeenLastCalledWith(selected.agent_brief);
-    const mobile = ui.el("p-preview").querySelector("[class=mobile-copy-bar]")!;
-    await button(mobile, "Copy design brief").click();
+    await button(ui.el("p-preview"), "Copy design brief").click();
     expect(ui.clipboard).toHaveBeenLastCalledWith(selected.agent_brief);
     await button(ui.el("p-tokens"), "Download CSS").click();
     await button(ui.el("p-tokens"), "Download brief (.md)").click();
@@ -285,8 +300,9 @@ describe("consumer page flows (real inline script, synthetic responses)", () => 
     const ui = harness(() => ++attempt === 1 ? response(vibe) : response({ error: { message: "Provider down" } }, 503));
     await ui.app.run("Slowdive, Aesop", "audience");
     const next = ui.app.run("Metallica", "audience");
-    // while loading, only a text-free skeleton is visible: nothing from the previous audience can be read in any tab
-    for (const id of ["result-head", "p-preview", "p-tokens", "p-vocab", "p-critic"]) expect(ui.el(id).textContent).toBe("");
+    // No previous audience content or imitation result is shown while waiting.
+    for (const id of ["result-head", "p-preview", "p-tokens", "p-vocab", "p-critic", "p-audit"]) expect(ui.el(id).textContent).toBe("");
+    expect(ui.el("t-audit").disabled).toBe(true);
     expect(ui.app.state.vibe).toBeNull();
     await next;
     expect(ui.el("out").hidden).toBe(true);
@@ -295,6 +311,88 @@ describe("consumer page flows (real inline script, synthetic responses)", () => 
     expect(ui.el("aud").disabled).toBe(false);
     expect(ui.el("cancel").hidden).toBe(true);
     expect(ui.el("chips").querySelectorAll("button").every((node) => !node.disabled)).toBe(true);
+  });
+
+  it("keeps a usable brief when replacement input fails validation", async () => {
+    const vibe = await fixture(), ui = harness(() => response(vibe));
+    await ui.app.run("Slowdive, Aesop", "audience");
+    const preview = ui.el("p-preview").textContent;
+    await ui.app.run("Slowdive,,Aesop", "audience");
+    expect(ui.posts()).toHaveLength(1);
+    expect(ui.el("out").hidden).toBe(false);
+    expect(ui.el("p-preview").textContent).toBe(preview);
+    expect(ui.app.state.vibe).not.toBeNull();
+    expect(ui.document.activeElement).toBe(ui.el("aud"));
+    await ui.app.run("Too short", "project");
+    expect(ui.posts()).toHaveLength(1);
+    expect(ui.el("out").hidden).toBe(false);
+    expect(ui.el("p-preview").textContent).toBe(preview);
+    expect(ui.document.activeElement).toBe(ui.el("project"));
+  });
+
+  it("blocks generation while known unavailable and leaves the inputs usable", async () => {
+    const ui = harness(() => response({}), { health: () => response({ qloo_configured: false, ai_configured: true }) });
+    await vi.waitFor(() => expect(ui.el("configuration-warning").hidden).toBe(false));
+    expect(ui.el("go").disabled).toBe(true);
+    expect(ui.el("project").disabled).toBe(false);
+    await ui.app.run("An independent bookshop for curious local readers.");
+    expect(ui.posts()).toHaveLength(0);
+    expect(ui.el("status").textContent).toContain("temporarily unavailable");
+    expect(ui.el("cancel").hidden).toBe(true);
+  });
+
+  it("retains reviewed audit code and cancels the previous direction's audit on selection", async () => {
+    const vibe = await fixture(); let auditSignal: AbortSignal | undefined;
+    const ui = harness((url, options) => {
+      if (url === "/api/vibe") return response(vibe);
+      auditSignal = options.signal;
+      return new Promise((_resolve, reject) => options.signal!.addEventListener("abort", () => {
+        const error = new Error("Aborted"); error.name = "AbortError"; reject(error);
+      }));
+    });
+    await ui.app.run("Slowdive, Aesop", "audience");
+    const code = "body { background: #ffffff; color: #111111; }";
+    ui.el("audit-code").value = code;
+    const pending = ui.el("p-audit").querySelector("form")!.dispatch("submit");
+    expect(auditSignal?.aborted).toBe(false);
+    const next = vibe.directions[1];
+    await ui.el("direction-picker").querySelectorAll("button").find((node) => node.getAttribute("data-direction-id") === next.id)!.click();
+    await pending;
+    expect(auditSignal?.aborted).toBe(true);
+    expect(ui.app.state.audit).toBeNull();
+    expect(ui.el("audit-code").value).toBe(code);
+    expect(ui.el("audit-code").disabled).toBe(false);
+    expect(ui.el("p-audit").textContent).toContain(next.name);
+    expect(ui.el("audit-res").textContent).toBe("");
+  });
+
+  it("cancels a running audit, prevents duplicate submission and keeps the reviewed code", async () => {
+    const vibe = await fixture();
+    const ui = harness((url, options) => url === "/api/vibe" ? response(vibe) : new Promise((_resolve, reject) => options.signal!.addEventListener("abort", () => {
+      const error = new Error("Aborted"); error.name = "AbortError"; reject(error);
+    })));
+    await ui.app.run("Slowdive, Aesop", "audience");
+    ui.el("audit-code").value = "body { background: #ffffff; color: #111111; }";
+    const form = ui.el("p-audit").querySelector("form")!;
+    const pending = form.dispatch("submit");
+    await form.dispatch("submit");
+    expect(ui.posts().filter(([url]) => url === "/api/audit")).toHaveLength(1);
+    await button(ui.el("p-audit"), "Cancel audit").click(); await pending;
+    expect(ui.el("p-audit").textContent).toContain("canceled");
+    expect(ui.el("audit-code").value).toContain("background: #ffffff");
+    expect(ui.el("audit-code").disabled).toBe(false);
+    expect(button(ui.el("p-audit"), "Audit my build").disabled).toBe(false);
+  });
+
+  it("does not certify unexamined audit checks as following the direction", async () => {
+    const vibe = await fixture();
+    const ui = harness((url) => url === "/api/vibe" ? response(vibe) : response({ status: "pass", summary: "No failures found in this snippet.", checks: [{ result: "not_applicable", label: "No font declarations in this snippet" }], findings: [], limits: "Checks only the submitted code." }));
+    await ui.app.run("Slowdive, Aesop", "audience");
+    ui.el("audit-code").value = "<main><p>An independent bookshop.</p></main>";
+    await ui.el("p-audit").querySelector("form")!.dispatch("submit");
+    expect(ui.el("audit-res").textContent).toContain("No failures found");
+    expect(ui.el("audit-res").textContent).toContain("Not checked");
+    expect(ui.el("audit-res").textContent).not.toContain("Follows this direction");
   });
 
   it("cancels an outstanding request and returns the form to an editable state", async () => {
@@ -369,6 +467,32 @@ describe("consumer page flows (real inline script, synthetic responses)", () => 
     expect(ui.el("critres").textContent).toContain("could not match");
     expect(ui.el("cands").disabled).toBe(false);
     expect(button(ui.el("p-critic"), "Check references").disabled).toBe(false);
+  });
+
+  it("lets people cancel an outstanding reference check and edit their references", async () => {
+    const vibe = await fixture();
+    const ui = harness((url, options) => url === "/api/vibe" ? response(vibe) : new Promise((_resolve, reject) => options.signal!.addEventListener("abort", () => {
+      const error = new Error("Aborted"); error.name = "AbortError"; reject(error);
+    })));
+    await ui.app.run("Slowdive, Aesop", "audience");
+    ui.el("cands").value = "Bon Iver";
+    const pending = ui.el("p-critic").querySelector("form")!.dispatch("submit");
+    await button(ui.el("p-critic"), "Cancel check").click(); await pending;
+    expect(ui.el("p-critic").textContent).toContain("canceled");
+    expect(ui.el("cands").value).toBe("Bon Iver");
+    expect(ui.el("cands").disabled).toBe(false);
+    expect(ui.app.state.critic).toBeNull();
+  });
+
+  it("preserves names containing commas when editing the proposed audience", async () => {
+    const base = await fixture();
+    const vibe = { ...base, audience: { ...base.audience, source: "model_suggested" }, seeds: base.seeds.map((seed: { query: string }, i: number) => i ? seed : { ...seed, query: "Earth, Wind & Fire" }) };
+    const ui = harness(() => response(vibe));
+    await ui.app.run("An independent record shop with local listening events.");
+    await button(ui.el("result-head"), "Not right? Edit these names").click();
+    expect(ui.app.state.mode).toBe("audience");
+    expect([...ui.app.parseNames(ui.el("aud").value, 5, true)]).toEqual(vibe.seeds.map((seed: { query: string }) => seed.query));
+    expect(ui.document.activeElement).toBe(ui.el("aud"));
   });
 
   it("rejects excess reference names instead of silently truncating them", async () => {

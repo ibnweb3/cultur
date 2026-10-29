@@ -58,6 +58,19 @@ describe("api", () => {
     }
     expect((await call(e, "/api/vibe", { method: "POST", body: "nope" })).status).toBe(422);
   });
+  it("rejects oversized streamed bodies before parsing or provider calls", async () => {
+    const provider = new FakeQloo();
+    vi.stubGlobal("fetch", provider.fetch);
+    const e = env();
+    for (const path of ["/api/vibe", "/api/check"]) {
+      const response = await call(e, path, { method: "POST", body: JSON.stringify({ project: "x".repeat(128_001) }) });
+      expect(response.status).toBe(413);
+      expect(await response.json()).toMatchObject({ error: { code: "too_large" } });
+    }
+    const mcp = await call(e, "/mcp", { method: "POST", body: "x".repeat(1_500_001) });
+    expect(mcp.status).toBe(413);
+    expect(provider.calls).toEqual([]);
+  });
   it("generates, stores and retrieves a brief", async () => {
     vi.stubGlobal("fetch", new FakeQloo().fetch);
     const e = env();
@@ -84,6 +97,8 @@ describe("api", () => {
     const ok = await call(e, "/api/benchmark", { method: "PUT", headers: { authorization: "Bearer admin-secret" }, body: JSON.stringify({ n: 1 }) });
     expect(ok.status).toBe(200);
     expect(((await (await call(e, "/api/benchmark")).json()) as { n: number }).n).toBe(1);
+    const invalid = await call(e, "/api/benchmark", { method: "PUT", headers: { authorization: "Bearer admin-secret" }, body: "invalid JSON" });
+    expect(invalid.status).toBe(422);
   });
   it("rate limits", () => {
     for (let i = 0; i < 3; i++) expect(limited("1.1.1.1", 3, 1000 + i)).toBe(false);
