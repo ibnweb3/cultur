@@ -76,6 +76,25 @@ describe("token compilation", () => {
     expect(t.css_qv).toContain("--qv-radius");
     expect(t.css_shadcn).toContain("--primary-foreground");
   });
+  it("exports the checked palette consistently for page, card and interactive component colours", () => {
+    const t = compileTokens(kept([["Botanical", 0.84], ["Cozy", 0.8]]));
+    const css = Object.fromEntries([...t.css_shadcn.matchAll(/(--[a-z-]+):\s*([^;]+);/g)].map((m) => [m[1], m[2]]));
+    expect(css["--background"]).toBe(t.palette.hex.bg);
+    expect(css["--foreground"]).toBe(t.palette.hex.text);
+    expect(css["--primary"]).toBe(t.palette.hex.accent);
+    expect(css["--primary-foreground"]).toBe(t.palette.hex.accentText);
+    for (const role of ["card", "popover", "secondary", "muted", "accent"]) {
+      expect(css[`--${role}`]).toBe(t.palette.hex.surface);
+      expect(contrast(css[`--${role}-foreground`]!, css[`--${role}`]!)).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+  it("accounts for every exported variable and labels fixed body typography honestly", () => {
+    const t = compileTokens(kept([["Vintage", 0.9]]));
+    const receipted = new Set(t.receipts.flatMap((r) => r.token.match(/--[a-z-]+/g) ?? []));
+    for (const match of (t.css_qv + t.css_shadcn).matchAll(/(--[a-z-]+):/g)) expect(receipted.has(match[1]!)).toBe(true);
+    expect(t.receipts.find((r) => r.token === "--qv-font-body")).toMatchObject({ source: "default", contributions: [] });
+    expect(t.receipts.filter((r) => r.source === "default").every((r) => /default|fixed/i.test(r.note))).toBe(true);
+  });
 });
 
 describe("accessibility gate", () => {
@@ -83,6 +102,9 @@ describe("accessibility gate", () => {
     for (const mode of ["light", "dark"] as const) for (const hue of [0, 45, 90, 145, 215, 260, 300, 340]) for (const chroma of [0.005, 0.05, 0.12, 0.2]) {
       const p = buildPalette({ mode, hue, chroma });
       for (const row of p.contrast) expect(row.pass, `${mode} ${hue} ${chroma} ${row.pair} ${row.ratio}`).toBe(true);
+      expect(contrast(p.hex.text, p.hex.surface)).toBeGreaterThanOrEqual(4.5);
+      expect(contrast(p.hex.muted, p.hex.surface)).toBeGreaterThanOrEqual(4.5);
+      expect(contrast(p.hex.accent, p.hex.surface)).toBeGreaterThanOrEqual(3);
     }
   });
   it("computes contrast like WCAG", () => {

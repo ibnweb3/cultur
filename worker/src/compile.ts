@@ -1,5 +1,5 @@
 // Token compiler: kept Qloo design tags -> rule table -> design tokens, with a receipt for every token.
-import { buildPalette, toOklchCss, type Palette } from "./color";
+import { buildPalette, type Palette } from "./color";
 import { DEFAULTS, RULES, RULE_TABLE_VERSION, matchRule, nonVisualReason, type Dim } from "./rules";
 import type { Family } from "./types";
 
@@ -124,23 +124,32 @@ export function compileTokens(kept: KeptTag[]): Tokens {
   --qv-ease: ${ease};
   --qv-shadow: ${shadow};
 }`;
+  // Keep both exports identical to the exact sRGB colours checked by the contrast gate.
+  // These are complete CSS colours for modern shadcn/ui theme variables.
   const css_shadcn = `:root {
-  --background: ${toOklchCss(p.oklch.bg)};
-  --foreground: ${toOklchCss(p.oklch.text)};
-  --card: ${toOklchCss(p.oklch.surface)};
-  --card-foreground: ${toOklchCss(p.oklch.text)};
-  --primary: ${toOklchCss(p.oklch.accent)};
-  --primary-foreground: ${toOklchCss(p.oklch.accentText)};
-  --muted-foreground: ${toOklchCss(p.oklch.muted)};
-  --border: ${toOklchCss(p.oklch.border)};
-  --input: ${toOklchCss(p.oklch.border)};
-  --ring: ${toOklchCss(p.oklch.accent)};
+  --background: ${p.hex.bg};
+  --foreground: ${p.hex.text};
+  --card: ${p.hex.surface};
+  --card-foreground: ${p.hex.text};
+  --popover: ${p.hex.surface};
+  --popover-foreground: ${p.hex.text};
+  --primary: ${p.hex.accent};
+  --primary-foreground: ${p.hex.accentText};
+  --secondary: ${p.hex.surface};
+  --secondary-foreground: ${p.hex.text};
+  --muted: ${p.hex.surface};
+  --muted-foreground: ${p.hex.muted};
+  --accent: ${p.hex.surface};
+  --accent-foreground: ${p.hex.text};
+  --border: ${p.hex.border};
+  --input: ${p.hex.border};
+  --ring: ${p.hex.accent};
   --radius: ${(radius / 16).toFixed(3)}rem;
 }`;
 
   const dr = (d: Dim) => dims[d];
   const receipts: Receipt[] = [
-    { token: "--qv-radius", value: `${radius}px`, source: dr("radius").source, contributions: dr("radius").contributions, note: "weighted mean of rule values" },
+    { token: "--qv-radius / --radius", value: `${radius}px`, source: dr("radius").source, contributions: dr("radius").contributions, note: "weighted mean of rule values; shadcn radius is converted to rem at a 16px root size" },
     { token: "--qv-unit", value: `${unit}px`, source: dr("density").source, contributions: dr("density").contributions, note: "4px base x density multiplier" },
     { token: "--qv-font-display", value: font, source: dr("font").source, contributions: dr("font").contributions, note: "heaviest-weighted font family; body text stays sans for readability" },
     { token: "--qv-dur / --qv-ease", value: `${dur}ms`, source: dr("motion").source, contributions: dr("motion").contributions, note: "<=160ms uses the snappy curve" },
@@ -150,6 +159,26 @@ export function compileTokens(kept: KeptTag[]): Tokens {
     { token: "palette chroma", value: String(dr("chroma").value), source: dr("chroma").source, contributions: dr("chroma").contributions, note: "weighted mean (OKLCH chroma)" },
     ...p.adjustments.map((a): Receipt => ({ token: `contrast gate: ${a.token}`, value: `L ${a.from} -> ${a.to}`, source: "derived", contributions: [], note: a.reason })),
   ];
+  for (const receipt of receipts) {
+    if (receipt.source === "default") receipt.note = `Published default: too little mapped evidence to reach weight ${MIN_EVIDENCE}. ${receipt.note}`;
+  }
+  const paletteInputs = (["mode", "hue", "chroma"] as Dim[]);
+  const paletteContributions = paletteInputs.flatMap((dim) => dr(dim).contributions);
+  const paletteDefaults = paletteInputs.filter((dim) => dr(dim).source === "default");
+  const paletteNote = `Derived from mode, hue and chroma, gamut-mapped to sRGB and contrast-checked.${paletteDefaults.length ? ` Published defaults used for ${paletteDefaults.join(", ")}.` : ""} Qloo does not supply colours.`;
+  const aliases: Record<keyof Palette["hex"], string> = {
+    bg: "--qv-bg / --background",
+    surface: "--qv-surface / --card / --popover / --secondary / --muted / --accent",
+    border: "--qv-border / --border / --input",
+    text: "--qv-text / --foreground / --card-foreground / --popover-foreground / --secondary-foreground / --accent-foreground",
+    muted: "--qv-muted / --muted-foreground",
+    accent: "--qv-accent / --primary / --ring",
+    accentText: "--qv-accent-text / --primary-foreground",
+  };
+  for (const key of Object.keys(aliases) as (keyof Palette["hex"])[]) {
+    receipts.push({ token: aliases[key], value: p.hex[key], source: "derived", contributions: paletteContributions, note: paletteNote });
+  }
+  receipts.push({ token: "--qv-font-body", value: "sans", source: "default", contributions: [], note: "Fixed system sans-serif stack for readable body text; not inferred from the audience." });
   return {
     rule_table_version: RULE_TABLE_VERSION,
     dims: Object.fromEntries((Object.keys(dims) as Dim[]).map((d) => [d, { value: dims[d].value, source: dims[d].source }])) as Tokens["dims"],

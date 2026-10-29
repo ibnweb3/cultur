@@ -11,17 +11,17 @@ Vibecoding tools such as Claude Code, Cursor and v0 fall back to generic themes 
 - ranked decor, ambience and style vocabulary for the audience, with every dropped tag and the reason it was dropped;
 - touchstone brands, artists and films with per-seed explainability;
 - microcopy tone words, verbatim from Qloo;
-- design tokens (CSS variables for a shadcn-style component set), with a receipt for each: which Qloo tags drove it, their affinity, and which rule mapped it;
+- design tokens (CSS variables for a shadcn-style component set), with a receipt for each: source, relevant Qloo tags and affinity, mapping rule, or an explicit default or fixed-value note;
 - a WCAG AA contrast gate on the palette;
 - a critic tool that scores the artists, brands or films an agent plans to name in copy against the same audience and flags off-audience picks.
 
 ## How Qloo is used
 
-`/search` resolves seeds; `/v2/insights` with `filter.type=urn:tag` returns ranked decor, ambience and style tags; entity insights with explainability return touchstones; `filter.entities` scores candidate references. Without fresh Qloo grounding the service returns no vocabulary and no tokens: no defaults, no model guess.
+`/search` resolves seeds; `/v2/insights` with `filter.type=urn:tag` returns ranked decor, ambience and style tags; entity insights with explainability return touchstones; `filter.entities` scores candidate references. Without available Qloo decor data or enough mapped evidence for any design choice, the service returns no tokens. Supported briefs label individual defaults, and cached Qloo responses are identified in the request trace. No model guesses the tokens.
 
 ## What we are honest about
 
-Qloo supplies no colours or CSS. The mapping from tags to tokens is our published rule table (`/api/rules`), made of labelled hypotheses. We tested extracting colour from Qloo's images and venue photos; it did not separate audiences (p between 0.22 and 0.70), so we removed it. Space and music tags applied to interfaces is an analogy.
+Qloo supplies no colours or CSS. The mapping from tags to tokens is our published rule table (`/api/rules`), made of labelled hypotheses. We tested extracting colour from Qloo's images and venue photos; it did not separate audiences (p between 0.22 and 0.70), so we removed it. Space and music tags applied to interfaces is an analogy. Contrast checks cover seven color pairs; a finished interface still needs its own accessibility review.
 
 ## Measured
 
@@ -29,7 +29,7 @@ Qloo supplies no colours or CSS. The mapping from tags to tokens is our publishe
 
 ## Built with
 
-Cloudflare Workers and KV (free plan), the official MCP SDK, Workers AI (benchmark only), TypeScript, 33 tests. No LLM writes the tokens or the preview. Public repo, MIT licence.
+Cloudflare Workers and KV (free plan), the official MCP SDK, Workers AI (benchmark only), TypeScript and automated tests. No LLM writes the tokens or the preview. The web preview shows the actual generated design choices with working copy and download controls. Public repo, MIT licence.
 
 ## Try it
 

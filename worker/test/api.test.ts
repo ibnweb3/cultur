@@ -26,12 +26,31 @@ describe("api", () => {
     expect(await (await call(e, "/")).text()).toContain("ui");
     expect((await call(e, "/api/nope")).status).toBe(404);
   });
+  it("serves useful documentation without external assets or script execution", async () => {
+    const response = await call(env(), "/docs");
+    expect(response.status).toBe(200);
+    expect(response.headers.get("content-type")).toContain("text/html");
+    const html = await response.text();
+    expect(html).toContain('href="/"');
+    expect(html).toContain('href="/openapi.json"');
+    expect(html).toContain("https://qv.test/api/vibe");
+    expect(html).toContain("claude mcp add --transport http qloovibe https://qv.test/mcp");
+    expect(html).toContain("insufficient_evidence");
+    expect(html).toContain("Retry-After");
+    expect(html).not.toMatch(/<script|<link[^>]*stylesheet|<iframe/);
+  });
   it("validates input", async () => {
     const e = env();
     expect((await post(e, "/api/vibe", {})).status).toBe(422);
     expect((await post(e, "/api/vibe", { audience: "x".repeat(301) })).status).toBe(422);
     expect((await post(e, "/api/vibe", { seeds: ["a", "b", "c", "d", "e", "f"] })).status).toBe(422);
     expect((await post(e, "/api/check", { audience: "Slowdive" })).status).toBe(422);
+    for (const body of [{ seeds: [" "] }, { audience: "   " }, { audience: "Slowdive", fresh: "yes" }, { seeds: [] }]) {
+      expect((await post(e, "/api/vibe", body)).status).toBe(422);
+    }
+    for (const candidates of [[], [" "], ["x".repeat(61)], Array.from({ length: 13 }, () => "Bon Iver")]) {
+      expect((await post(e, "/api/check", { audience: "Slowdive", candidates })).status).toBe(422);
+    }
     expect((await call(e, "/api/vibe", { method: "POST", body: "nope" })).status).toBe(422);
   });
   it("generates, stores and retrieves a brief", async () => {

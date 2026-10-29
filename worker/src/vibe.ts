@@ -8,9 +8,8 @@ import { FAMILIES, SCHEMA_VERSION, type Family, type Json, type Store, type Trac
 export class InvalidInput extends Error {}
 
 const SEED_TYPES = ["urn:entity:brand", "urn:entity:artist", "urn:entity:movie", "urn:entity:tv_show", "urn:entity:book", "urn:entity:videogame", "urn:entity:podcast", "urn:entity:person"];
-const SHORT: Record<string, string> = { brand: "urn:entity:brand", artist: "urn:entity:artist", movie: "urn:entity:movie", film: "urn:entity:movie", tv: "urn:entity:tv_show", show: "urn:entity:tv_show", book: "urn:entity:book", game: "urn:entity:videogame", podcast: "urn:entity:podcast" };
+const SHORT: Record<string, string> = { brand: "urn:entity:brand", artist: "urn:entity:artist", movie: "urn:entity:movie", film: "urn:entity:movie", tv: "urn:entity:tv_show", show: "urn:entity:tv_show", tv_show: "urn:entity:tv_show", book: "urn:entity:book", game: "urn:entity:videogame", videogame: "urn:entity:videogame", podcast: "urn:entity:podcast", person: "urn:entity:person" };
 const MAX_SEEDS = 5;
-const BUDGET_MS = 25000;
 
 export interface Seed { query: string; entity_id: string; name: string; type: string; match: "exact" | "prefix" | "closest"; popularity: number | null }
 
@@ -23,17 +22,30 @@ export function parseSeeds(audience: string): string[] {
   const out: string[] = [];
   for (let part of body.split(/\s*(?:,|;|\band\b|&|\+|\n)\s*/i)) {
     part = part.replace(/\s+(?:films?|movies?|skincare|music|brand|band|songs?|series|fans?)$/i, "").trim();
+    if (part.length > 60) throw new InvalidInput("Each audience name must be 60 characters or fewer. Separate names with commas.");
     if (part.length >= 2 && part.length <= 60 && !out.some((o) => o.toLowerCase() === part.toLowerCase())) out.push(part);
   }
   if (!out.length) throw new InvalidInput("no seeds found; name 1-5 things the audience loves, e.g. \"Slowdive, Aesop, A24\"");
-  return out.slice(0, MAX_SEEDS);
+  if (out.length > MAX_SEEDS) throw new InvalidInput("Use up to 5 audience references so every name can be included.");
+  return out;
+}
+
+function requestedSeeds(req: { audience?: string; seeds?: string[] }): string[] {
+  if (req.seeds !== undefined) {
+    if (!Array.isArray(req.seeds) || !req.seeds.length || req.seeds.length > MAX_SEEDS || req.seeds.some((s) => typeof s !== "string" || s.trim().length < 2 || s.length > 60)) {
+      throw new InvalidInput("Provide 1-5 audience names, each between 2 and 60 characters.");
+    }
+    const seen = new Set<string>();
+    return req.seeds.map((s) => s.trim()).filter((s) => { const key = s.toLowerCase(); if (seen.has(key)) return false; seen.add(key); return true; });
+  }
+  return parseSeeds(String(req.audience ?? ""));
 }
 
 function chooseSeed(query: string, results: Json[]): Seed | null {
   const m = query.match(/^(.*?)\s*\((\w+)\)\s*$/);
   const name = (m ? m[1]! : query).trim().toLowerCase();
   const hint = m ? SHORT[m[2]!.toLowerCase()] : undefined;
-  const ok = results.filter((r) => SEED_TYPES.includes(etype(r) ?? "") && (!hint || etype(r) === hint));
+  const ok = results.filter((r) => typeof entId(r) === "string" && entId(r)!.length > 0 && typeof r.name === "string" && r.name.trim() && SEED_TYPES.includes(etype(r) ?? "") && (!hint || etype(r) === hint));
   // same-name collisions: brands and artists first, then screen/print media, then the rest; popularity breaks ties inside a tier
   const tier = (r: Json) => { const i = SEED_TYPES.indexOf(etype(r) ?? ""); return i < 2 ? 0 : i < 5 ? 1 : 2; };
   const rank = (r: Json) => tier(r) * 10 - (r.popularity ?? 0);
@@ -61,18 +73,17 @@ export class Service {
   constructor(private d: Deps) {}
   private ctx(fresh: boolean): Ctx { return { trace: [], fresh, now: this.d.now ?? (() => Date.now()) }; }
 
-  private async resolveAll(ctx: Ctx, names: string[]): Promise<{ seeds: Seed[]; unresolved: string[] }> {
+  private async resolveAll(ctx: Ctx, names: string[]): Promise<{ seeds: Seed[]; unresolved: string[]; unavailable: string[] }> {
     const rs = await Promise.all(names.map(async (n) => {
       const base = n.replace(/\s*\(\w+\)\s*$/, "");
       const r = await timed(ctx, `resolve "${n}"`, () => this.d.q.search(base, 8, ctx.fresh));
-      return { n, seed: r.ok ? chooseSeed(n, entitiesOf(r.data)) : null };
+      return { n, seed: r.ok ? chooseSeed(n, entitiesOf(r.data)) : null, unavailable: !r.ok };
     }));
-    return { seeds: rs.flatMap((r) => (r.seed ? [r.seed] : [])), unresolved: rs.filter((r) => !r.seed).map((r) => r.n) };
+    return { seeds: rs.flatMap((r) => (r.seed ? [r.seed] : [])), unresolved: rs.filter((r) => !r.seed).map((r) => r.n), unavailable: rs.filter((r) => r.unavailable).map((r) => r.n) };
   }
 
   async generate(req: { audience?: string; seeds?: string[]; fresh?: boolean }) {
-    const names = req.seeds?.length ? req.seeds.map((s) => String(s).trim()).filter(Boolean).slice(0, MAX_SEEDS) : parseSeeds(String(req.audience ?? ""));
-    if (!names.length) throw new InvalidInput("provide an audience string or 1-5 seeds");
+    const names = requestedSeeds(req);
     const ctx = this.ctx(!!req.fresh);
     const started = ctx.now();
     const caveats: string[] = [];
@@ -82,8 +93,10 @@ export class Service {
     };
     if (!this.d.q.configured) return this.finish({ ...base, status: "insufficient_evidence", seeds: [], unresolved: names, caveats: ["QLOO_API_KEY is not configured; QlooVibe produces no design vocabulary without Qloo."] }, ctx, started);
 
-    const { seeds, unresolved } = await this.resolveAll(ctx, names);
-    if (unresolved.length) caveats.push(`Not found in Qloo: ${unresolved.join(", ")}`);
+    const { seeds, unresolved, unavailable } = await this.resolveAll(ctx, names);
+    const notFound = unresolved.filter((n) => !unavailable.includes(n));
+    if (notFound.length) caveats.push(`Not found in Qloo: ${notFound.join(", ")}`);
+    if (unavailable.length) caveats.push(`Qloo could not check these audience names: ${unavailable.join(", ")}. Try again.`);
     if (seeds.some((s) => s.match === "closest")) caveats.push("Some seeds matched only the closest Qloo entity; check the resolved names.");
     if (!seeds.length) return this.finish({ ...base, status: "insufficient_evidence", seeds, unresolved, caveats: [...caveats, "No seed resolved to a Qloo entity, so there is no grounded vocabulary."] }, ctx, started);
     const ids = seeds.map((s) => s.entity_id);
@@ -115,8 +128,10 @@ export class Service {
         .map((k) => ({ tag: k.name, family: k.family, affinity: round(k.affinity) })),
       note: "Verbatim Qloo style and ambience tags for this audience. Use them as microcopy tone; applying a space or music descriptor to interface copy is an analogy.",
     };
-    if (Object.values(tokens.dims).every((d) => d.source === "default")) caveats.push("None of the kept tags matched a rule, so every token is a default.");
-    else if (Object.values(tokens.dims).some((d) => d.source === "default")) caveats.push("Tokens marked default had too little mapped Qloo evidence.");
+    if (Object.values(tokens.dims).every((d) => d.source === "default")) {
+      return this.finish({ ...base, status: "insufficient_evidence", seeds, unresolved, vocabulary: { filters }, caveats: [...caveats, "The returned tags do not provide enough mapped design evidence. No tokens or preview were generated. Try different audience names."] }, ctx, started);
+    }
+    if (Object.values(tokens.dims).some((d) => d.source === "default")) caveats.push("Tokens marked default had too little mapped Qloo evidence.");
     if (tokens.unmapped_tags.length) caveats.push(`${tokens.unmapped_tags.length} kept tag(s) have no rule yet: ${tokens.unmapped_tags.join(", ")}`);
 
     // Per-seed attribution for decor tags: derived from separate per-seed Qloo queries (Qloo gives no per-tag explainability).
@@ -124,7 +139,8 @@ export class Service {
     const attribution = kept.filter((k) => k.family === "decor").map((k) => {
       const support = seedLists.map((s) => ({ seed: s.seed, affinity: s.map.get(k.name) ?? null }));
       const tot = support.reduce((a, b) => a + (b.affinity ?? 0), 0);
-      return { tag: k.name, support: support.map((s) => ({ ...s, share: tot && s.affinity ? Math.round((s.affinity / tot) * 100) / 100 : 0 })) };
+      const complete = support.length > 0 && support.every((s) => typeof s.affinity === "number" && Number.isFinite(s.affinity)) && tot > 0;
+      return { tag: k.name, support: support.map((s) => ({ ...s, share: complete ? Math.round((s.affinity! / tot) * 100) / 100 : null })) };
     });
 
     const names2 = new Map(seeds.map((s) => [s.entity_id, s.name]));
@@ -137,7 +153,7 @@ export class Service {
     }));
 
     const failed = ctx.trace.filter((t) => t.status === "error").length;
-    const partial = failed > 0 || !rawBy.ambience.length || !rawBy.style.length;
+    const partial = failed > 0 || unresolved.length > 0 || seeds.some((s) => s.match === "closest") || !rawBy.ambience.length || !rawBy.style.length;
     return this.finish({
       ...base, status: partial ? "partial" : "complete", seeds, unresolved,
       vocabulary: { filters, attribution_note: seeds.length > 1 ? "Per-seed shares are derived from separate per-seed Qloo tag queries, not from Qloo explainability (which Qloo returns only for entity results)." : "Single seed: no attribution split." , attribution },
@@ -157,19 +173,24 @@ export class Service {
 
   /** Critic mode: score candidate references against an audience with Qloo. Flags are relative to what Qloo ranks highest for the same audience. */
   async check(req: { audience?: string; seeds?: string[]; candidates: string[]; fresh?: boolean }) {
-    const names = req.seeds?.length ? req.seeds.slice(0, MAX_SEEDS) : parseSeeds(String(req.audience ?? ""));
-    const cands = [...new Set((req.candidates ?? []).map((c) => String(c).trim()).filter(Boolean))].slice(0, 12);
-    if (!cands.length) throw new InvalidInput("candidates must list 1-12 names (artists, brands, films, shows, books) to check");
+    const names = requestedSeeds(req);
+    if (!Array.isArray(req.candidates) || !req.candidates.length || req.candidates.length > 12 || req.candidates.some((c) => typeof c !== "string" || c.trim().length < 2 || c.length > 60)) {
+      throw new InvalidInput("Provide 1-12 reference names, each between 2 and 60 characters.");
+    }
+    const cands = [...new Set(req.candidates.map((c) => c.trim()))];
     const ctx = this.ctx(!!req.fresh); const started = ctx.now();
     if (!this.d.q.configured) return { status: "insufficient_evidence", caveats: ["QLOO_API_KEY is not configured."], results: [], trace: [] };
-    const [{ seeds, unresolved }, candRes] = await Promise.all([
+    const [{ seeds, unresolved, unavailable }, candRes] = await Promise.all([
       this.resolveAll(ctx, names),
       Promise.all(cands.map(async (c) => {
         const r = await timed(ctx, `resolve candidate "${c}"`, () => this.d.q.search(c.replace(/\s*\(\w+\)\s*$/, ""), 8, ctx.fresh));
-        return { c, seed: r.ok ? chooseSeed(c, entitiesOf(r.data)) : null };
+        return { c, seed: r.ok ? chooseSeed(c, entitiesOf(r.data)) : null, unavailable: !r.ok };
       })),
     ]);
     if (!seeds.length) return { status: "insufficient_evidence", caveats: ["No audience seed resolved in Qloo."], unresolved, results: [], trace: ctx.trace };
+    const caveats: string[] = [];
+    if (unresolved.length) caveats.push(`Audience names excluded from this check: ${unresolved.join(", ")}.${unavailable.length ? " Some names could not be checked because Qloo was unavailable; try again." : " Try a more specific name."}`);
+    if (seeds.some((s) => s.match === "closest")) caveats.push("Some audience names matched the closest available Qloo entity. Check the resolved audience names.");
     const ids = seeds.map((s) => s.entity_id);
     const byType = new Map<string, Seed[]>();
     for (const r of candRes) if (r.seed) byType.set(r.seed.type, [...(byType.get(r.seed.type) ?? []), r.seed]);
@@ -180,21 +201,33 @@ export class Service {
         timed(ctx, `${type.split(":").pop()} reference (what Qloo ranks highest)`, () => this.d.q.entityInsights(ids, type, 10, {}, ctx.fresh)),
       ]);
       if (only.ok) for (const e of entitiesOf(only.data)) if (typeof e.query?.affinity === "number") scored.set(entId(e)!, e.query.affinity);
-      if (top.ok) { const a = entitiesOf(top.data).map((e) => e.query?.affinity).filter((x): x is number => typeof x === "number").sort((x, y) => x - y); if (a.length) typical.set(type, a[Math.floor(a.length / 2)]!); }
+      if (top.ok) {
+        const a = entitiesOf(top.data).map((e) => e.query?.affinity).filter((x): x is number => typeof x === "number").sort((x, y) => x - y);
+        if (a.length) typical.set(type, (a[Math.floor((a.length - 1) / 2)]! + a[Math.floor(a.length / 2)]!) / 2);
+      }
     }));
-    const rows = candRes.map(({ c, seed }) => {
-      if (!seed) return { candidate: c, resolved: null, affinity: null, typical_top: null, gap: null, verdict: "unknown", note: "not found in Qloo" };
+    const rows = candRes.map(({ c, seed, unavailable }) => {
+      if (!seed) return { candidate: c, resolved: null, affinity: null, typical_top: null, gap: null, verdict: "unknown", note: unavailable ? "Qloo could not check this name. Try again." : "Name not found in Qloo. Try a more specific name or add a type such as (artist)." };
       const aff = scored.get(seed.entity_id) ?? null; const typ = typical.get(seed.type) ?? null;
       const gap = aff != null && typ != null ? round(typ - aff) : null;
       const verdict = gap == null ? "unknown" : gap <= 0.05 ? "strong" : gap <= 0.1 ? "ok" : gap <= 0.18 ? "weak" : "off-audience";
-      return { candidate: c, resolved: { name: seed.name, type: seed.type.split(":").pop(), entity_id: seed.entity_id, match: seed.match }, affinity: aff == null ? null : round(aff), typical_top: typ == null ? null : round(typ), gap, verdict, ...(aff == null ? { note: "Qloo returned no affinity for this entity" } : {}) };
+      const notes = [
+        ...(seed.match === "closest" ? [`Closest available match: ${seed.name}. Confirm this is the intended reference.`] : []),
+        ...(aff == null ? ["Qloo returned no affinity for this entity."] : []),
+        ...(typ == null ? ["A comparison baseline was unavailable, so fit could not be determined."] : []),
+      ];
+      return { candidate: c, resolved: { name: seed.name, type: seed.type.split(":").pop(), entity_id: seed.entity_id, match: seed.match }, affinity: aff == null ? null : round(aff), typical_top: typ == null ? null : round(typ), gap, verdict, ...(notes.length ? { note: notes.join(" ") } : {}) };
     });
     const ranked = rows.filter((r) => r.affinity != null).sort((a, b) => b.affinity! - a.affinity!).map((r, i) => ({ ...r, rank: i + 1 }));
     const out = [...ranked, ...rows.filter((r) => r.affinity == null)];
+    const failed = ctx.trace.filter((t) => t.status === "error").length;
+    if (failed) caveats.push("Some Qloo requests failed. Results with unavailable data have not been given a fit verdict.");
+    const hasVerdict = out.some((r) => r.verdict !== "unknown");
+    const partial = failed > 0 || unresolved.length > 0 || out.some((r) => r.verdict === "unknown" || r.resolved?.match === "closest") || seeds.some((s) => s.match === "closest");
     return {
-      status: out.some((r) => r.affinity != null) ? "complete" : "insufficient_evidence", audience_seeds: seeds.map((s) => s.name), unresolved, results: out,
+      status: hasVerdict ? (partial ? "partial" : "complete") : "insufficient_evidence", audience_seeds: seeds.map((s) => s.name), unresolved, results: out, caveats,
       method: "verdict compares a candidate's Qloo affinity with the median affinity of the top-10 Qloo ranks for the same audience and type: gap <= .05 strong, <= .10 ok, <= .18 weak, else off-audience. Thresholds are a heuristic; Qloo affinities are compressed, so read rank and gap, not the raw number.",
-      trace: ctx.trace, timing: { total_ms: ctx.now() - started, qloo_calls: ctx.trace.length },
+      trace: ctx.trace, timing: { total_ms: ctx.now() - started, qloo_calls: ctx.trace.length, fresh: ctx.trace.filter((t) => t.freshness === "fresh").length, cached: ctx.trace.filter((t) => t.freshness === "cached").length, failed },
     };
   }
 }

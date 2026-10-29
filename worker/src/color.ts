@@ -55,7 +55,7 @@ export interface Palette {
   gate: "pass" | "adjusted";
 }
 
-/** Build a palette from mode/hue/chroma, then force WCAG AA: text 4.5, muted text 4.5, accent as UI component 3, accent text 4.5. */
+/** Check text and accent on both page and card surfaces, plus text on the accent. */
 export function buildPalette(inp: PaletteInput): Palette {
   const dark = inp.mode === "dark";
   const h = inp.hue, c = Math.min(0.2, Math.max(0, inp.chroma));
@@ -71,11 +71,12 @@ export function buildPalette(inp: PaletteInput): Palette {
   const adjustments: Adjustment[] = [];
   const hex = () => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, toHex(v)])) as Palette["hex"];
   const dir = dark ? 1 : -1; // direction that increases contrast against bg for foreground colours
+  const onSurfaces = (hex: string) => Math.min(contrast(hex, toHex(o.bg)), contrast(hex, toHex(o.surface)));
 
   const lift = (key: "text" | "muted", need: number) => {
     const start = o[key].l;
-    for (let i = 0; i < 80 && contrast(toHex(o[key]), toHex(o.bg)) < need; i++) o[key] = { ...o[key], l: o[key].l + dir * 0.01 };
-    if (o[key].l !== start) adjustments.push({ token: key, from: start.toFixed(2), to: o[key].l.toFixed(2), reason: `lightness moved to reach ${need}:1 against background` });
+    for (let i = 0; i < 80 && onSurfaces(toHex(o[key])) < need; i++) o[key] = { ...o[key], l: clamp01(o[key].l + dir * 0.01) };
+    if (o[key].l !== start) adjustments.push({ token: key, from: start.toFixed(2), to: o[key].l.toFixed(2), reason: `lightness moved to reach ${need}:1 against background and surface` });
   };
   lift("text", 4.5); lift("muted", 4.5);
 
@@ -87,23 +88,26 @@ export function buildPalette(inp: PaletteInput): Palette {
     for (const sgn of step === 0 ? [0] : [1, -1]) {
       const cand = { ...o.accent, l: Math.min(0.95, Math.max(0.2, a0 + sgn * step * 0.01)) };
       const ax = toHex(cand), tx = textOn(ax);
-      if (contrast(ax, toHex(o.bg)) >= 3 && contrast(tx, ax) >= 4.5) {
+      if (onSurfaces(ax) >= 3 && contrast(tx, ax) >= 4.5) {
         o.accent = cand; o.accentText = tx === "#ffffff" ? { l: 1, c: 0, h } : { l: 0.15, c: 0, h }; found = true; break;
       }
     }
   }
   if (!found) o.accentText = { l: 1, c: 0, h };
-  if (o.accent.l !== a0) adjustments.push({ token: "accent", from: a0.toFixed(2), to: o.accent.l.toFixed(2), reason: "lightness moved so accent is >=3:1 on background and its label is >=4.5:1" });
+  if (o.accent.l !== a0) adjustments.push({ token: "accent", from: a0.toFixed(2), to: o.accent.l.toFixed(2), reason: "lightness moved so accent is >=3:1 on background and surface and its label is >=4.5:1" });
 
   const H = hex();
   const rows = [
     { pair: "text on background", a: H.text, b: H.bg, need: 4.5 },
     { pair: "muted text on background", a: H.muted, b: H.bg, need: 4.5 },
+    { pair: "text on surface", a: H.text, b: H.surface, need: 4.5 },
+    { pair: "muted text on surface", a: H.muted, b: H.surface, need: 4.5 },
     { pair: "accent on background (UI component)", a: H.accent, b: H.bg, need: 3 },
+    { pair: "accent on surface (UI component)", a: H.accent, b: H.surface, need: 3 },
     { pair: "button label on accent", a: H.accentText, b: H.accent, need: 4.5 },
   ].map((r) => {
-    const ratio = r2(contrast(r.a, r.b));
-    return { pair: r.pair, ratio, need: r.need, pass: ratio >= r.need, level: ratio >= 7 ? "AAA" : ratio >= r.need ? "AA" : "fail" };
+    const actual = contrast(r.a, r.b);
+    return { pair: r.pair, ratio: r2(actual), need: r.need, pass: actual >= r.need, level: actual >= 7 ? "AAA" : actual >= r.need ? "AA" : "fail" };
   });
   return { hex: H, oklch: o, contrast: rows, adjustments, gate: adjustments.length ? "adjusted" : "pass" };
 }

@@ -25,7 +25,12 @@ export interface QlooOpts {
   cacheVersion?: string;
 }
 
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+const sleep = (ms: number, signal?: AbortSignal) => new Promise<void>((resolve) => {
+  if (signal?.aborted || ms <= 0) { resolve(); return; }
+  const done = () => { clearTimeout(timer); signal?.removeEventListener("abort", done); resolve(); };
+  const timer = setTimeout(done, ms);
+  signal?.addEventListener("abort", done, { once: true });
+});
 async function sha(s: string) {
   const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
   return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
@@ -76,6 +81,7 @@ export class QlooClient {
     let lastErr = "unknown", status: number | undefined;
     const url = this.o.baseUrl + path + "?" + new URLSearchParams(Object.entries(params).map(([k, v]) => [k, String(v)])).toString();
     for (let attempt = 0; attempt <= retries; attempt++) {
+      if (this.o.signal?.aborted) return { ok: false, error: "cancelled at deadline", ref, freshness: "fresh", fetchedAt: now() };
       this.callsTotal++;
       try {
         const sig = this.o.signal ? AbortSignal.any([this.o.signal, AbortSignal.timeout(this.o.timeoutMs ?? 8000)]) : AbortSignal.timeout(this.o.timeoutMs ?? 8000);
@@ -83,9 +89,10 @@ export class QlooClient {
         status = r.status;
         if (status === 429 || status >= 500) {
           lastErr = `HTTP ${status}`;
+          await r.body?.cancel();
           if (attempt < retries) {
             const ra = Math.min(parseFloat(r.headers.get("Retry-After") ?? ""), 5);
-            await sleep(scale * ((Number.isFinite(ra) ? ra * 1000 : 400 * 2 ** attempt) + Math.random() * 250));
+            await sleep(scale * ((Number.isFinite(ra) ? Math.max(0, ra) * 1000 : 400 * 2 ** attempt) + Math.random() * 250), this.o.signal);
             continue;
           }
           break;
@@ -102,7 +109,7 @@ export class QlooClient {
         if (this.o.signal?.aborted) return { ok: false, error: "cancelled at deadline", ref, freshness: "fresh", fetchedAt: now() };
         lastErr = (e as Error)?.name === "TimeoutError" ? "timeout" : `transport error: ${(e as Error)?.name}`;
       }
-      if (attempt < retries) await sleep(scale * (300 * 2 ** attempt + Math.random() * 200));
+      if (attempt < retries) await sleep(scale * (300 * 2 ** attempt + Math.random() * 200), this.o.signal);
     }
     return { ok: false, status, error: lastErr, ref, freshness: "fresh", fetchedAt: now() };
   }

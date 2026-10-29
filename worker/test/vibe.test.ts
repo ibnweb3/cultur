@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import type { Json } from "../src/types";
 import { InvalidInput, parseSeeds } from "../src/vibe";
-import { FakeQloo, makeSvc } from "./helpers";
+import { QlooClient } from "../src/qloo";
+import { FakeQloo, makeSvc, MemStore } from "./helpers";
 
 describe("parseSeeds", () => {
   it("extracts seeds from natural phrasing", () => {
@@ -9,10 +10,12 @@ describe("parseSeeds", () => {
     expect(parseSeeds("Slowdive & Aesop + Le Labo")).toEqual(["Slowdive", "Aesop", "Le Labo"]);
     expect(parseSeeds("Slowdive (artist), Aesop")).toEqual(["Slowdive (artist)", "Aesop"]);
   });
-  it("de-duplicates, caps at five and rejects empty or oversized input", () => {
-    expect(parseSeeds("a1, A1, b2, c3, d4, e5, f6, g7")).toHaveLength(5);
+  it("de-duplicates and rejects names that would be silently excluded", () => {
+    expect(parseSeeds("a1, A1, b2, c3, d4, e5")).toHaveLength(5);
+    expect(() => parseSeeds("a1, A1, b2, c3, d4, e5, f6, g7")).toThrow(InvalidInput);
     expect(() => parseSeeds("   ")).toThrow(InvalidInput);
     expect(() => parseSeeds("x".repeat(301))).toThrow(InvalidInput);
+    expect(() => parseSeeds("Slowdive, " + "x".repeat(61))).toThrow(InvalidInput);
   });
 });
 
@@ -39,6 +42,22 @@ describe("generate", () => {
     expect(v.seeds[1].entity_id).toBe("B9");
     const hinted = await makeSvc().svc.generate({ seeds: ["Apple (game)", "Slowdive"] });
     expect(hinted.seeds[0].entity_id).toBe("G9");
+    const canonical = await makeSvc().svc.generate({ seeds: ["Apple (videogame)", "Slowdive"] });
+    expect(canonical.seeds[0].entity_id).toBe("G9");
+  });
+  it.each(["tv_show", "person"])("honours the canonical %s type hint despite a same-name brand", async (type) => {
+    const f = new FakeQloo();
+    const fetch = f.fetch;
+    f.fetch = async (input) => {
+      if (new URL(String(input)).pathname === "/search") return new Response(JSON.stringify({ results: [
+        { name: "Apple", entity_id: "brand-1", types: ["urn:entity:brand"], popularity: 0.9 },
+        { name: "Apple", entity_id: "hinted-1", types: [`urn:entity:${type}`], popularity: 0.1 },
+      ] }));
+      return fetch(input);
+    };
+    const v = await makeSvc(f).svc.generate({ seeds: [`Apple (${type})`] });
+    expect(v.seeds[0].entity_id).toBe("hinted-1");
+    expect(v.seeds[0].type).toBe(`urn:entity:${type}`);
   });
   it("derives per-seed attribution from separate queries, not from Qloo explainability", async () => {
     const { svc } = makeSvc();
@@ -47,6 +66,9 @@ describe("generate", () => {
     expect(m.support.map((s: { seed: string }) => s.seed)).toEqual(["Slowdive", "Aesop"]);
     expect(m.support[0].share + m.support[1].share).toBeCloseTo(1, 1);
     expect(v.vocabulary.attribution_note).toContain("not from Qloo explainability");
+    const missing = v.vocabulary.attribution.find((a: { tag: string }) => a.tag === "Cozy");
+    expect(missing.support[0].affinity).toBeNull();
+    expect(missing.support.every((s: { share: unknown }) => s.share === null)).toBe(true);
   });
   it("returns identical vocabulary and tokens for repeated queries", async () => {
     const { svc } = makeSvc();
@@ -65,6 +87,24 @@ describe("generate", () => {
     expect(none.tokens).toBeUndefined();
     const nosearch = new FakeQloo(); nosearch.opts.failSearch = true;
     expect((await makeSvc(nosearch).svc.generate({ audience: "Slowdive" })).status).toBe("insufficient_evidence");
+  });
+  it.each(["Family Friendly", "Zzzz"])("does not render default tokens when returned words (%s) provide no mapped evidence", async (tag) => {
+    const f = new FakeQloo();
+    const fetch = f.fetch;
+    f.fetch = async (input) => {
+      const u = new URL(String(input));
+      if (u.searchParams.get("filter.type") === "urn:tag") return new Response(JSON.stringify({ results: { tags: [{ name: tag, query: { affinity: 0.9 } }] } }));
+      return fetch(input);
+    };
+    const v = await makeSvc(f).svc.generate({ audience: "Slowdive, Aesop" });
+    expect(v.status).toBe("insufficient_evidence");
+    expect(v.tokens).toBeUndefined();
+    expect(v.agent_brief).toBeUndefined();
+  });
+  it("marks an otherwise complete brief partial when an audience name is excluded", async () => {
+    const v = await makeSvc().svc.generate({ audience: "Slowdive, Zorblax" });
+    expect(v.unresolved).toEqual(["Zorblax"]);
+    expect(v.status).toBe("partial");
   });
   it("reports unresolved seeds and returns partial when a family is missing", async () => {
     const f = new FakeQloo(); f.opts.noAmbience = true;
@@ -88,7 +128,7 @@ describe("generate", () => {
 describe("critic", () => {
   it("ranks candidates and flags off-audience picks relative to Qloo's top", async () => {
     const r = await makeSvc().svc.check({ audience: "Slowdive, Aesop", candidates: ["Bon Iver", "Metallica", "Nick Drake", "Nobody Known"] });
-    expect(r.status).toBe("complete");
+    expect(r.status).toBe("partial");
     const by: Record<string, Json> = Object.fromEntries((r.results as Json[]).map((x) => [x.candidate, x]));
     expect(by["Bon Iver"].rank).toBe(1);
     expect(by["Metallica"].verdict).toBe("off-audience");
@@ -98,5 +138,44 @@ describe("critic", () => {
   });
   it("rejects an empty candidate list", async () => {
     await expect(makeSvc().svc.check({ audience: "Slowdive", candidates: [] })).rejects.toThrow(InvalidInput);
+  });
+  it.each([[0.1, 0.3, 0.7, 0.9], [0.1, 0.5, 0.9]])("uses the statistical median of the reference affinities %j", async (...affinities) => {
+    const f = new FakeQloo();
+    const fetch = f.fetch;
+    f.fetch = async (input) => {
+      const u = new URL(String(input));
+      if (u.pathname === "/v2/insights" && !u.searchParams.has("filter.entities")) return new Response(JSON.stringify({ results: { entities: affinities.map((affinity, i) => ({ entity_id: `ref-${i}`, query: { affinity } })) } }));
+      return fetch(input);
+    };
+    const r = await makeSvc(f).svc.check({ audience: "Slowdive", candidates: ["Bon Iver"] });
+    expect(r.results[0].typical_top).toBe(0.5);
+  });
+  it("does not claim a completed check when a comparison baseline fails", async () => {
+    const f = new FakeQloo();
+    const fetch = f.fetch;
+    f.fetch = async (input) => {
+      const u = new URL(String(input));
+      if (u.pathname === "/v2/insights" && !u.searchParams.has("filter.entities")) return new Response("unavailable", { status: 503 });
+      return fetch(input);
+    };
+    const r = await makeSvc(f).svc.check({ audience: "Slowdive", candidates: ["Bon Iver"] });
+    expect(r.status).toBe("insufficient_evidence");
+    expect(r.results[0].verdict).toBe("unknown");
+    expect(r.results[0].note).toContain("baseline");
+    expect(r.timing?.failed).toBe(1);
+  });
+});
+
+describe("provider deadline", () => {
+  it("stops retrying when the request deadline or cancellation arrives", async () => {
+    const controller = new AbortController();
+    let calls = 0;
+    const q = new QlooClient({ apiKey: "test-key", baseUrl: "https://qloo.test", store: new MemStore(), signal: controller.signal,
+      fetchFn: async () => { calls++; controller.abort(); return new Response("busy", { status: 429 }); },
+    });
+    const result = await q.search("Slowdive");
+    expect(result.ok).toBe(false);
+    expect(result.error).toBe("cancelled at deadline");
+    expect(calls).toBe(1);
   });
 });

@@ -15,7 +15,9 @@
 | Scores your candidate references against the audience (`filter.entities`) | Derives per-seed shares for decor tags from separate per-seed queries (Qloo gives no per-tag explainability) |
 | | Builds the palette from rule-chosen hue, chroma and mode, then forces WCAG AA contrast |
 
-**Qloo supplies no colours, fonts or CSS.** The tag-to-token step is our mapping: every rule is a labelled hypothesis, not validated in user studies, and the table is public (`GET /api/rules`). Without fresh Qloo grounding the service returns no vocabulary and no tokens, not defaults and not an LLM guess. No LLM writes the tokens or the preview.
+**Qloo supplies no colours, fonts or CSS.** The tag-to-token step is our mapping: every rule is a labelled hypothesis, not validated in user studies, and the table is public (`GET /api/rules`). The service returns no tokens when Qloo decor data is unavailable or none of the design choices has enough mapped evidence. In a supported brief, choices with too little evidence use explicitly labelled defaults; body type stays system sans for readability. Qloo responses may come from the labelled private cache. No LLM writes the tokens or the preview.
+
+The web app starts with your audience input. Its preview shows the generated colors, typography and spacing, with working copy and download controls. It includes no sample product navigation, sign-up form or invented product metrics. Review the matched audience names and any evidence warnings before using the brief.
 
 ## Use it
 
@@ -36,7 +38,7 @@ MCP tools: `design_brief(audience)` returns a markdown brief (CSS variables for 
 
 ## Measured, not claimed
 
-A batch comparison (script: `scripts/benchmark.mjs`; stored results are served at `GET /api/benchmark` and shown in the Benchmark tab) pits Qloo's top-8 decor words per audience against an LLM (Llama 3.3 70B on Workers AI) that is shown the same pooled word list. 12 audiences, 3 runs at temperature 0.7, run 2026-10-29:
+A batch comparison (script: `scripts/benchmark.mjs`; stored results are served at `GET /api/benchmark` and shown in the page's measured-comparison section) pits Qloo's top-8 decor words per audience against an LLM (Llama 3.3 70B on Workers AI) that is shown the same pooled word list. 12 audiences, 3 runs at temperature 0.7, run 2026-10-29:
 
 | Metric | Qloo | LLM, same word list |
 |---|---|---|
@@ -52,14 +54,15 @@ Read it carefully: the word list is pooled from Qloo's output, which is the easi
 
 - **Colours from Qloo images.** Extracting palettes from images of an audience's lookalike artists, brands, films and venues did not separate audiences (between/within colour distance ratio 0.99 to 1.01, permutation p between 0.22 and 0.70). No colour is taken from images.
 - **A cross-seed intersection filter for noisy tags** kept 0 of 10 tags for one audience and 1 of 10 for another, so the published filter is a top-N cutoff plus a visual-tag screen instead.
-- **Per-tag Qloo explainability** is not returned for tag queries, so attribution is derived from separate per-seed queries and labelled as such.
+- **Per-tag Qloo explainability** is not returned for tag queries, so attribution is derived from separate per-seed queries and labelled as such. Shares are unavailable when any seed's score is missing; missing evidence is not treated as zero support.
 
 ## Limitations
 
 - Decor, ambience and style tags describe physical spaces and music styles; applying them to interfaces is an analogy.
 - Qloo coverage varies: some seeds resolve to the closest entity (flagged), and some tags have no rule yet (listed in the output).
 - Critic verdicts compare a candidate's Qloo affinity with the median of Qloo's top 10 for the same audience and type (strong ≤ .05, ok ≤ .10, weak ≤ .18, else off-audience). Thresholds are a heuristic and Qloo affinities are compressed: read rank and gap.
-- A cold request takes about 4 to 8 seconds (about 10 Qloo calls); repeated seed sets are served from a private cache for 6 hours and are labelled `cached` in the trace.
+- Measured cold requests took about 4 to 8 seconds (about 10 Qloo calls); Qloo requests have a 25-second overall deadline. Repeated seed sets are served from a private cache for 6 hours and are labelled `cached` in the trace.
+- Contrast checks cover text and accent on both page and card surfaces, plus text on the accent. A completed interface still needs its own accessibility review.
 - Free-tier Workers: the rate limiter is per isolate (best effort).
 - Repeatable for the same query and Qloo data version; Qloo data can change over time.
 
@@ -68,7 +71,7 @@ Read it carefully: the word list is pooled from Qloo's output, which is the easi
 ```bash
 cd worker
 npm install
-npm test                                      # 33 tests, synthetic fixtures clearly labelled
+npm test                                      # synthetic fixtures clearly labelled
 npx wrangler kv namespace create QLOOVIBE_KV  # put the id in wrangler.jsonc
 npx wrangler secret put QLOO_API_KEY          # your Qloo key; never committed
 npx wrangler secret put ADMIN_TOKEN           # only needed for the benchmark script
@@ -79,7 +82,7 @@ npx wrangler deploy
 
 ## Privacy
 
-No accounts, no tracking. The input is the audience text you submit. Briefs are kept for 7 days and then expire; the rate limiter keeps IPs in memory only; the Qloo key is a Worker secret and is never logged or returned. Qloo data is not redistributed in this repository.
+No accounts, no tracking. Submitted audience and reference names are sent to Qloo. Briefs are kept for 7 days and then expire; the rate limiter keeps IPs in memory only; the Qloo key is a Worker secret and is never logged or returned. Qloo data is not redistributed in this repository.
 
 ## Repository layout
 
