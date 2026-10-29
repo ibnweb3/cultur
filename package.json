@@ -2,6 +2,10 @@
   "name": "qloovibe",
   "private": true,
   "scripts": {
-    "dev": "npm --prefix worker run dev -- --local"
+    "dev": "npm --prefix worker run dev",
+    "dev:offline": "npm --prefix worker run dev -- --local",
+    "dev:ai": "npm --prefix worker run dev",
+    "mcp": "node scripts/qloovibe-mcp.mjs",
+    "test:mcp": "node --test scripts/qloovibe-mcp.test.mjs"
   }
 }

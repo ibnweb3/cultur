@@ -26,6 +26,7 @@ class Element {
   className = "";
   tabIndex = 0;
   selected = false;
+  files: { name: string; size: number; text(): Promise<string> }[] = [];
   private text = "";
   style = { cssText: "", values: new Map<string, string>(), setProperty(name: string, value: string) { this.values.set(name, value); } };
   constructor(readonly tagName: string, private document: TestDocument) {}
@@ -37,7 +38,7 @@ class Element {
     if (name === "open") this.open = true;
     if (name === "class") this.className = value;
   }
-  getAttribute(name: string) { return this.attributes.get(name) ?? null; }
+  getAttribute(name: string) { return name === "class" ? this.className || null : this.attributes.get(name) ?? null; }
   append(...nodes: unknown[]) {
     for (const value of nodes) {
       const node = value instanceof Element ? value : this.document.createTextNode(String(value));
@@ -112,11 +113,11 @@ function harness(responder: Responder = () => response({}), settings: { origin?:
     revokeObjectURL: vi.fn((_url: string) => {}),
   };
   const fetch = vi.fn(async (url: string, options: RequestOptions = {}) => {
-    if (url === "/health") return settings.health ? settings.health(url, options) : response({ qloo_configured: true });
+    if (url === "/health") return settings.health ? settings.health(url, options) : response({ qloo_configured: true, ai_configured: true });
     if (url === "/api/rules") return response({ version: "qv-rules-test" });
     return responder(url, options);
   });
-  const app = runInNewContext(script + "\n;({ run, loadBench, parseNames, state });", {
+  const app = runInNewContext(script + "\n;({ run, loadBench, parseNames, setInputMode, readProjectFile, selectDirection, state });", {
     document, fetch, navigator: { clipboard: { writeText: clipboard } }, location: new URL(settings.origin ?? "https://qloovibe.test"),
     AbortController, Error, TypeError, Blob, URL: objectURLs, performance,
     setTimeout: timer, setInterval: timer, clearTimeout: (id: number) => pendingTimers.delete(id), clearInterval: (id: number) => pendingTimers.delete(id),
@@ -142,7 +143,7 @@ describe("consumer page flows (real inline script, synthetic responses)", () => 
     await vi.waitFor(() => expect(ui.el("health").textContent).toBe("Worker server required"));
     expect(ui.el("status").textContent).toContain("npm run dev");
     expect(ui.el("status").textContent).toContain("http://localhost:8787");
-    await ui.app.run("Slowdive");
+    await ui.app.run("Slowdive", "audience");
     expect(ui.el("status").textContent).toContain("static files without the API");
     expect(ui.el("out").hidden).toBe(true);
     expect(ui.el("go").disabled).toBe(false);
@@ -151,26 +152,90 @@ describe("consumer page flows (real inline script, synthetic responses)", () => 
 
   it("keeps production HTML failures generic instead of suggesting a local development command", async () => {
     const ui = harness(() => new Response("<!doctype html><title>Unavailable</title>", { status: 404, headers: { "content-type": "text/html" } }));
-    await ui.app.run("Slowdive");
+    await ui.app.run("Slowdive", "audience");
     expect(ui.el("status").textContent).toContain("unreadable response");
     expect(ui.el("status").textContent).not.toContain("npm run dev");
     expect(ui.el("out").hidden).toBe(true);
   });
 
-  it("opens without generating an audience and example buttons only fill the input", async () => {
+  it("starts with project context, and both kinds of example only fill their input", async () => {
     const ui = harness();
     expect(ui.posts()).toHaveLength(0);
     expect(ui.el("out").hidden).toBe(true);
-    expect(ui.el("aud").value).toBe("");
+    expect(ui.app.state.mode).toBe("project");
+    expect(ui.el("project").value).toBe("");
+    expect(ui.el("project-fields").hidden).toBe(false);
+    expect(ui.el("audience-fields").hidden).toBe(true);
+    await button(ui.el("chips"), "Independent bookshop").click();
+    expect(ui.el("project").value).toContain("independent bookshop");
+    expect(ui.document.activeElement).toBe(ui.el("project"));
+    expect(ui.posts()).toHaveLength(0);
+    await ui.el("mode-audience").click();
     await button(ui.el("chips"), "Slowdive, Aesop, A24").click();
     expect(ui.el("aud").value).toBe("Slowdive, Aesop, A24");
     expect(ui.document.activeElement).toBe(ui.el("aud"));
     expect(ui.posts()).toHaveLength(0);
   });
 
+  it("submits project text explicitly without guessing whether prose contains audience names", async () => {
+    const ui = harness(() => response({ status: "insufficient_evidence", caveats: ["No supported audience was found."] }));
+    const project = "Minimal bookshop website";
+    ui.el("project").value = project;
+    await ui.el("ask").dispatch("submit");
+    expect(JSON.parse(ui.posts()[0]![1]!.body!)).toEqual({ project });
+    expect(ui.el("out").hidden).toBe(true);
+    expect(ui.el("project").disabled).toBe(false);
+    expect(ui.el("aud").disabled).toBe(true);
+  });
+
+  it("reads a Markdown file for review and submits its full text with source context only on request", async () => {
+    const ui = harness(() => response({ status: "insufficient_evidence", caveats: ["Synthetic fixture has no evidence."] }));
+    const text = "# Bookshop\n\nA welcoming store for curious readers, with local events and considered recommendations.";
+    ui.el("project-file").files = [{ name: "design.md", size: text.length, text: async () => text }];
+    await ui.el("project-file").dispatch("change");
+    expect(ui.el("project").value).toBe(text);
+    expect(ui.el("file-context").textContent).toContain("design.md");
+    expect(ui.el("clear-file").hidden).toBe(false);
+    expect(ui.posts()).toHaveLength(0);
+    await ui.el("ask").dispatch("submit");
+    expect(JSON.parse(ui.posts()[0]![1]!.body!)).toEqual({ project: text, source_name: "design.md" });
+    await ui.el("clear-file").click();
+    expect(ui.el("project").value).toBe(text);
+    expect(ui.app.state.sourceName).toBeNull();
+  });
+
+  it("rejects oversized or unreadable files without truncating or replacing the reviewed text", async () => {
+    const ui = harness();
+    ui.el("project").value = "A previously reviewed project description.";
+    const huge = "A".repeat(8001);
+    await ui.app.readProjectFile({ name: "large.md", size: huge.length, text: async () => huge });
+    expect(ui.el("status").textContent).toContain("no text has been truncated");
+    expect(ui.el("project").value).toBe("A previously reviewed project description.");
+    await ui.app.readProjectFile({ name: "design.md", size: 50, text: async () => { throw new Error("Unable to read file"); } });
+    expect(ui.el("status").textContent).toContain("Unable to read file");
+    expect(ui.el("go").disabled).toBe(false);
+    expect(ui.el("project-file").disabled).toBe(false);
+    await ui.app.run("Too short");
+    expect(ui.el("status").textContent).toContain("20–8,000 characters");
+    expect(ui.posts()).toHaveLength(0);
+  });
+
+  it("explains missing AI configuration and keeps direct audience mode usable", async () => {
+    const ui = harness(() => response({ status: "insufficient_evidence", caveats: [] }), { health: () => response({ qloo_configured: true, ai_configured: false }) });
+    await vi.waitFor(() => expect(ui.el("configuration-warning").textContent).toContain("Workers AI"));
+    expect(ui.el("configuration-warning").hidden).toBe(false);
+    await ui.app.run("A useful website for an independent bookshop.");
+    expect(ui.posts()).toHaveLength(0);
+    await ui.el("mode-audience").click();
+    expect(ui.el("configuration-warning").hidden).toBe(true);
+    ui.el("aud").value = "Slowdive, Aesop";
+    await ui.el("ask").dispatch("submit");
+    expect(JSON.parse(ui.posts()[0]![1]!.body!).seeds).toEqual(["Slowdive", "Aesop"]);
+  });
+
   it("renders an actual generated brief, supports tabs and copies the actual CSS", async () => {
     const vibe = { ...await fixture(), caveats: [] }, ui = harness(() => response(vibe));
-    await ui.app.run("Slowdive, Aesop");
+    await ui.app.run("Slowdive, Aesop", "audience");
     expect(ui.el("out").hidden, ui.el("status").textContent).toBe(false);
     expect(ui.el("result-head").textContent).toContain("Slowdive");
     expect(ui.el("result-head").textContent).not.toContain("null");
@@ -186,11 +251,40 @@ describe("consumer page flows (real inline script, synthetic responses)", () => 
     expect(ui.clipboard).toHaveBeenCalledWith(vibe.tokens.css_qv);
   });
 
+  it("switches actual preview values and every export to the selected evidence-backed direction", async () => {
+    const vibe = await fixture(), ui = harness(() => response(vibe));
+    expect(vibe.directions.length).toBeGreaterThan(1);
+    await ui.app.run("Slowdive, Aesop", "audience");
+    const selected = vibe.directions[1];
+    const choose = ui.el("direction-picker").querySelectorAll("button").find((node) => node.getAttribute("data-direction-id") === selected.id)!;
+    await choose.click();
+    expect(choose.getAttribute("aria-pressed")).toBe("true");
+    expect(ui.app.state.selectedDirection).toBe(selected.id);
+    expect(ui.el("p-preview").textContent).toContain(selected.fonts.display.name);
+    expect(ui.el("p-preview").textContent).toContain(selected.tokens.palette.hex.accent);
+    const specimen = ui.el("p-preview").querySelector("[class=specimen]")!;
+    expect(specimen.style.values.get("--qv-font-display")).toBe(selected.fonts.display.stack);
+    expect(ui.el("selected-direction-status").textContent).toContain(selected.name + " selected");
+    await button(ui.el("p-tokens"), "Copy CSS").click();
+    expect(ui.clipboard).toHaveBeenLastCalledWith(selected.tokens.css_qv);
+    await button(ui.el("p-tokens"), "Copy design brief").click();
+    expect(ui.clipboard).toHaveBeenLastCalledWith(selected.agent_brief);
+    const mobile = ui.el("p-preview").querySelector("[class=mobile-copy-bar]")!;
+    await button(mobile, "Copy design brief").click();
+    expect(ui.clipboard).toHaveBeenLastCalledWith(selected.agent_brief);
+    await button(ui.el("p-tokens"), "Download CSS").click();
+    await button(ui.el("p-tokens"), "Download brief (.md)").click();
+    expect(await ui.blobs.get(ui.document.downloads[0]!.href)!.text()).toBe(selected.tokens.css_qv);
+    expect(await ui.blobs.get(ui.document.downloads[1]!.href)!.text()).toBe(selected.agent_brief);
+    expect(vibe.tokens.css_qv).toBe(vibe.directions[0].tokens.css_qv);
+    expect(ui.el("p-vocab").textContent).toContain("Minimalist");
+  });
+
   it("clears a previous result before a failing request and releases every control", async () => {
     const vibe = await fixture(); let attempt = 0;
     const ui = harness(() => ++attempt === 1 ? response(vibe) : response({ error: { message: "Provider down" } }, 503));
-    await ui.app.run("Slowdive, Aesop");
-    const next = ui.app.run("Metallica");
+    await ui.app.run("Slowdive, Aesop", "audience");
+    const next = ui.app.run("Metallica", "audience");
     // while loading, only a text-free skeleton is visible: nothing from the previous audience can be read in any tab
     for (const id of ["result-head", "p-preview", "p-tokens", "p-vocab", "p-critic"]) expect(ui.el(id).textContent).toBe("");
     expect(ui.app.state.vibe).toBeNull();
@@ -207,7 +301,7 @@ describe("consumer page flows (real inline script, synthetic responses)", () => 
     const ui = harness((_url, options) => new Promise((_resolve, reject) => {
       options.signal!.addEventListener("abort", () => { const error = new Error("Aborted"); error.name = "AbortError"; reject(error); });
     }));
-    const pending = ui.app.run("Slowdive");
+    const pending = ui.app.run("Slowdive", "audience");
     expect(ui.el("go").disabled).toBe(true);
     expect(ui.el("cancel").hidden).toBe(false);
     await ui.el("cancel").click(); await pending;
@@ -221,7 +315,7 @@ describe("consumer page flows (real inline script, synthetic responses)", () => 
     const ui = harness((_url, options) => new Promise((_resolve, reject) => {
       options.signal!.addEventListener("abort", () => { const error = new Error("Aborted"); error.name = "AbortError"; reject(error); });
     }));
-    const pending = ui.app.run("Slowdive");
+    const pending = ui.app.run("Slowdive", "audience");
     const timeout = [...ui.pendingTimers.values()].filter((timer) => timer.delay === 60000).at(-1);
     expect(timeout).toBeDefined(); timeout!.callback(); await pending;
     expect(ui.el("status").textContent).toContain("taking too long");
@@ -234,7 +328,7 @@ describe("consumer page flows (real inline script, synthetic responses)", () => 
 
   it("offers selectable original text when clipboard access is denied", async () => {
     const vibe = await fixture(), ui = harness(() => response(vibe));
-    await ui.app.run("Slowdive, Aesop");
+    await ui.app.run("Slowdive, Aesop", "audience");
     ui.clipboard.mockRejectedValueOnce(new Error("Clipboard permission denied"));
     const copy = button(ui.el("p-tokens"), "Copy design brief");
     await copy.click();
@@ -249,7 +343,7 @@ describe("consumer page flows (real inline script, synthetic responses)", () => 
 
   it("downloads the generated CSS and brief as real file payloads", async () => {
     const vibe = await fixture(), ui = harness(() => response(vibe));
-    await ui.app.run("Slowdive, Aesop");
+    await ui.app.run("Slowdive, Aesop", "audience");
     await button(ui.el("p-tokens"), "Download CSS").click();
     await button(ui.el("p-tokens"), "Download brief (.md)").click();
     const [css, brief] = ui.document.downloads;
@@ -267,7 +361,7 @@ describe("consumer page flows (real inline script, synthetic responses)", () => 
   it("explains missing reference scores and keeps the check form usable", async () => {
     const vibe = await fixture();
     const ui = harness((url) => url === "/api/vibe" ? response(vibe) : response({ status: "insufficient_evidence", results: [], caveats: ["Qloo could not match this name."] }));
-    await ui.app.run("Slowdive, Aesop");
+    await ui.app.run("Slowdive, Aesop", "audience");
     ui.el("cands").value = "Unknown Reference";
     await ui.el("p-critic").querySelector("form")!.dispatch("submit");
     expect(ui.el("critres").textContent).toContain("No references could be scored");
@@ -279,7 +373,7 @@ describe("consumer page flows (real inline script, synthetic responses)", () => 
 
   it("rejects excess reference names instead of silently truncating them", async () => {
     const vibe = await fixture(), ui = harness(() => response(vibe));
-    await ui.app.run("Slowdive");
+    await ui.app.run("Slowdive", "audience");
     ui.el("cands").value = Array.from({ length: 13 }, (_, i) => `Reference ${i}`).join(", ");
     await ui.el("p-critic").querySelector("form")!.dispatch("submit");
     expect(ui.posts().filter(([url]) => url === "/api/check")).toHaveLength(0);
@@ -292,7 +386,7 @@ describe("consumer page flows (real inline script, synthetic responses)", () => 
     const input = 'Salt & Stone, Pride and Prejudice, "Earth, Wind & Fire", SALT & STONE';
     expect([...ui.app.parseNames(input, 5)]).toEqual(["Salt & Stone", "Pride and Prejudice", "Earth, Wind & Fire"]);
     expect([...ui.app.parseNames('fans of Slowdive, “Earth, Wind & Fire”, Pride and Prejudice', 5, true)]).toEqual(["Slowdive", "Earth, Wind & Fire", "Pride and Prejudice"]);
-    await ui.app.run(input);
+    await ui.app.run(input, "audience");
     expect(JSON.parse(ui.posts()[0]![1]!.body!).seeds).toEqual(["Salt & Stone", "Pride and Prejudice", "Earth, Wind & Fire"]);
     expect(() => ui.app.parseNames('"Earth, Wind & Fire', 5)).toThrow(/Close the quote/);
     expect(ui.el("out").hidden).toBe(true);

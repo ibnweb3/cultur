@@ -1,36 +1,35 @@
 # Devpost text (draft, synced to docs/CLAIMS.md)
 
-**Title:** QlooVibe: audience-grounded design direction for coding agents
+**Title:** QlooVibe: a design partner for vibe coders
 
-**Tagline:** Coding agents guess at taste. QlooVibe asks Qloo, then shows a receipt for every design token.
+**Tagline:** Describe your project. Explore Qloo-grounded styles. Build with the direction you choose.
 
 ## What it does
 
-Vibecoding tools such as Claude Code, Cursor and v0 fall back to generic themes because they guess what an audience likes. QlooVibe is an MCP server and REST API that asks Qloo what a specific audience loves ("fans of Slowdive, Aesop, A24") and returns design direction an agent can apply:
+QlooVibe helps a vibe coder choose a visual direction for what they are building. Describe an app, paste a README or design specification, or connect it to your coding agent through MCP. It returns supported style options with named font pairs, color palettes, spacing, corner radii, motion, CSS and an implementation brief for each option.
 
-- ranked decor, ambience and style vocabulary for the audience, with every dropped tag and the reason it was dropped;
-- touchstone brands, artists and films with per-seed explainability;
-- microcopy tone words, verbatim from Qloo;
-- design tokens (CSS variables for a shadcn-style component set), with a receipt for each: source, relevant Qloo tags and affinity, mapping rule, or an explicit default or fixed-value note;
-- a WCAG AA contrast gate on the palette;
-- a critic tool that scores the artists, brands or films an agent plans to name in copy against the same audience and flags off-audience picks.
+The web app lets you compare and select directions. Its preview, copy controls and downloads use the selected option. A local MCP connection can read Markdown inside your chosen project folder; the hosted MCP endpoint accepts the text read by your coding agent. The MCP workflow asks the agent to show the options and apply the user's choice while respecting the project's framework and functionality.
 
 ## How Qloo is used
 
-`/search` resolves seeds; `/v2/insights` with `filter.type=urn:tag` returns ranked decor, ambience and style tags; entity insights with explainability return touchstones; `filter.entities` scores candidate references. Without available Qloo decor data or enough mapped evidence for any design choice, the service returns no tokens. Supported briefs label individual defaults, and cached Qloo responses are identified in the request trace. No model guesses the tokens.
+When a project has no explicit audience references and remote inference is enabled, a language model proposes plausible artists, brands, films, shows or books. These starting references are assumptions, disclosed in the result. Qloo resolves them; only exact matches are retained for inferred audiences. An entity match confirms its identity, not that the project's audience likes it. The default local development command enables remote Workers AI with local KV; an explicit offline alternative disables remote bindings and requires audience references.
 
-## What we are honest about
+Qloo then supplies ranked decor, ambience and style descriptors, cultural touchstones and affinity scores. QlooVibe filters the descriptors and maps them through its published rule table. The options are distinct interpretations of the same Qloo evidence, with their contributing tags and rules shown. Alternatives require no extra Qloo queries. When evidence supports fewer options, the app returns fewer; unsupported briefs contain no tokens.
 
-Qloo supplies no colours or CSS. The mapping from tags to tokens is our published rule table (`/api/rules`), made of labelled hypotheses. We tested extracting colour from Qloo's images and venue photos; it did not separate audiences (p between 0.22 and 0.70), so we removed it. Space and music tags applied to interfaces is an analogy. Contrast checks cover seven color pairs; a finished interface still needs its own accessibility review.
+## What the design recommendations mean
+
+Qloo supplies no font names, colors or CSS. QlooVibe recommends named font pairs and translates descriptors into tokens. Every option includes its rationale, receipts, explicit defaults and checked contrast pairs. These mappings are design hypotheses; the seven contrast checks do not certify a finished interface's accessibility or prove that an audience will prefer a design.
+
+The reference checker separately scores named artists, brands or films against the resolved audience, using Qloo affinity and a disclosed heuristic baseline. It is useful before naming cultural references in copy or imagery.
 
 ## Measured
 
-12 audiences, Qloo's top-8 decor words against Llama 3.3 70B shown the same pooled word list (3 runs): Qloo's sets are more audience-specific (between-audience Jaccard 0.06 vs 0.15), use more distinct words (61 vs 39) and repeat exactly (1.00 vs 0.78). The LLM agreed with Qloo's top 8 only 19% of the time. We make no claim that either produces a better design.
+The stored vocabulary benchmark compares Qloo's top-eight decor words with Llama 3.3 70B choosing from the same pooled vocabulary: 12 audiences, three runs. Qloo's sets were more audience-specific (between-audience Jaccard 0.06 vs 0.15), used more distinct words (61 vs 39) and repeated identically (1.00 vs 0.78). These measurements concern vocabulary specificity and repeatability, not the quality of the new style choices or project inference.
 
 ## Built with
 
-Cloudflare Workers and KV (free plan), the official MCP SDK, Workers AI (benchmark only), TypeScript and automated tests. No LLM writes the tokens or the preview. The web preview shows the actual generated design choices with working copy and download controls. Public repo, MIT licence.
+Cloudflare Workers, KV, Workers AI for project-reference inference and the benchmark, the official MCP SDK, TypeScript and automated tests. No language model writes the design tokens. Font assets and their license are provided for use with the exports. Enabling remote inference sends selected project text to Workers AI; proposed audience names and reference queries are sent to Qloo. Local file reads are confined to the configured project folder. Remote project submission from the local bridge requires explicit configuration.
 
 ## Try it
 
-https://qloovibe.ibnweb3lab.workers.dev (no login). `claude mcp add --transport http qloovibe https://qloovibe.ibnweb3lab.workers.dev/mcp`
+The development version includes the project-first chooser and local MCP connection. See README.md and docs/MCP.md for setup and data-processing choices. The public endpoint is https://qloovibe.ibnweb3lab.workers.dev; local changes must be deployed before they are available there.

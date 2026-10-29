@@ -195,4 +195,63 @@ describe("api", () => {
     expect(out.result.isError).not.toBe(true);
     expect(JSON.parse(out.result.content[1]!.text).audience.source).toBe("model_suggested");
   });
+  it("reads the complete Markdown payload and returns selectable directions through REST and MCP", async () => {
+    vi.stubGlobal("fetch", new FakeQloo().fetch);
+    const captured: { role: string; content: string }[][] = [];
+    let inferenceSignal: AbortSignal | undefined;
+    const ai = { run: async (_model: string, input: { messages: { role: string; content: string }[] }, options: { signal: AbortSignal }) => {
+      captured.push(input.messages); inferenceSignal = options.signal;
+      return { response: '["Slowdive (artist)", "Aesop (brand)"]' };
+    } };
+    const markdown = "# Quiet journal\n" + "Project requirements and reading notes. ".repeat(180) + "\nFinal requirement: support an offline daily journal.";
+    expect(markdown.length).toBeGreaterThan(6000);
+    const e = env({ AI: ai });
+    const response = await post(e, "/api/vibe", { project_markdown: markdown, source_name: "design.md" });
+    expect(response.status).toBe(200);
+    const output = await response.json() as any;
+    expect(output.project_context.source_name).toBe("design.md");
+    expect(output.directions.length).toBeGreaterThan(1);
+    expect(output.directions[0].tokens).toEqual(output.tokens);
+    expect(output.directions.every((direction: any) => direction.fonts.display.name && direction.tokens.palette.contrast.every((pair: any) => pair.pass))).toBe(true);
+    expect(captured[0]![0]!.role).toBe("system");
+    expect(JSON.parse(captured[0]![1]!.content).project).toBe(markdown);
+    expect(inferenceSignal).toBeInstanceOf(AbortSignal);
+    const result = await (await mcpCall(e, "design_brief", { project_markdown: markdown, source_name: "design.md" }, "markdown-mcp")).json() as any;
+    expect(result.result.isError).not.toBe(true);
+    expect(JSON.parse(result.result.content[1].text).directions.length).toBeGreaterThan(1);
+  });
+  it("rejects ambiguous Markdown inputs and directory paths in source names", async () => {
+    const project = "A small journal for music lovers to record their daily reflections.";
+    for (const body of [{ project, project_markdown: project }, { project_markdown: "short" }, { project_markdown: "x".repeat(8001) }, { project_markdown: "C:\\Projects\\a-long-project\\design.md" }, { project, source_name: "../design.md" }, { project, source_name: "C:\\private\\design.md" }, { project, source_name: ".env.md" }]) {
+      expect((await post(env(), "/api/vibe", body)).status).toBe(422);
+    }
+    const response = await (await mcpCall(env(), "design_brief", { project, project_markdown: project }, "markdown-invalid")).json() as any;
+    expect(response.result.isError).toBe(true);
+    expect(JSON.parse(response.result.content[0].text).error.code).toBe("invalid_input");
+  });
+  it("normalizes model type labels before checking exact Qloo names", async () => {
+    const provider = new FakeQloo();
+    vi.stubGlobal("fetch", provider.fetch);
+    const ai = { run: async () => ({ response: '["Slowdive (musician)", "Aesop (production company)"]' }) };
+    const response = await post(env({ AI: ai }), "/api/vibe", { project: "A calm journal for music lovers and independent shop customers." });
+    const output = await response.json() as any;
+    expect(output.seeds.map((seed: any) => seed.name)).toEqual(["Slowdive", "Aesop"]);
+    expect(output.audience.suggested_seeds).toEqual(["Slowdive (artist)", "Aesop (brand)"]);
+    expect(provider.calls.filter((url) => url.startsWith("/search")).every((url) => !url.includes("production"))).toBe(true);
+  });
+  it("advertises a Markdown-to-choice workflow without spending the inference rate budget", async () => {
+    const e = env({ RATE_LIMIT_PER_MIN: "1" });
+    const rpc = (method: string, params = {}) => call(e, "/mcp", { method: "POST", headers: { "content-type": "application/json", accept: "application/json, text/event-stream", "cf-connecting-ip": "workflow-discovery" }, body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }) });
+    const initialized = await (await rpc("initialize", { protocolVersion: "2025-03-26", capabilities: {}, clientInfo: { name: "test", version: "1" } })).json() as any;
+    expect(initialized.result.instructions).toContain("project_markdown");
+    const prompts = await (await rpc("prompts/list")).json() as any;
+    expect(prompts.result.prompts.map((prompt: any) => prompt.name)).toContain("design_project");
+    const prompt = await (await rpc("prompts/get", { name: "design_project", arguments: { project_file: "design.md" } })).json() as any;
+    expect(prompt.result.messages[0].content.text).toContain("user choose");
+    expect(prompt.result.messages[0].content.text).toContain("design.md");
+    const resource = await (await rpc("resources/read", { uri: "qloovibe://workflow/project-design" })).json() as any;
+    expect(resource.result.contents[0].text).toContain("hosted server cannot read local files");
+    const rules = await (await mcpCall(e, "get_rule_table", {}, "workflow-discovery")).json() as any;
+    expect(rules.result.isError).not.toBe(true);
+  });
 });

@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Turn your audience's favorite artists, brands and films into a design brief with Qloo taste data and a source for every design choice.">
+<meta name="description" content="Turn a project description or design.md into audience-grounded design directions, named font pairs and ready-to-use CSS with Qloo taste data.">
 <meta name="theme-color" content="#121413">
-<title>QlooVibe — Good design starts with their taste</title>
+<title>QlooVibe — Design directions for your project</title>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <style>
 /*
@@ -563,11 +563,11 @@ pre {
 <main id="main">
   <section class="hero wrap" aria-labelledby="hero-title">
     <div class="hero-copy">
-      <p class="eyebrow"><span class="mini-star" aria-hidden="true">✳</span> TASTE IS YOUR STARTING POINT</p>
-      <h1 id="hero-title">Good design<br>starts with<br><em>their taste.</em><span class="headline-star" aria-hidden="true">✳</span></h1>
-      <p class="hero-description">A favorite artist. A cult film. A brand they love.<br class="desktop-break"> Turn your audience’s world into your next design direction.</p>
-      <a class="btn primary hero-cta" href="#create">Let’s find your vibe <span aria-hidden="true">↗</span></a>
-      <p class="hero-note"><span aria-hidden="true">↳</span> Built on taste data. Made for your next build.</p>
+      <p class="eyebrow"><span class="mini-star" aria-hidden="true">✳</span> YOUR PROJECT IS THE STARTING POINT</p>
+      <h1 id="hero-title">Good design<br>starts with<br><em>your project.</em><span class="headline-star" aria-hidden="true">✳</span></h1>
+      <p class="hero-description">Tell us what you’re building. Paste a description, README or design.md.<br class="desktop-break"> Explore design directions you can take straight to your coding agent.</p>
+      <a class="btn primary hero-cta" href="#create">Shape my project <span aria-hidden="true">↗</span></a>
+      <p class="hero-note"><span aria-hidden="true">↳</span> Your context. Qloo taste data. A direction you can build.</p>
     </div>
     <div class="visual-studio" aria-label="Illustrative design study">
       <div class="visual-meta"><span><span class="live-dot"></span> A TASTE OF WHAT’S POSSIBLE</span><span>STUDY / <span id="study-number">01</span></span></div>
@@ -582,36 +582,49 @@ pre {
         <div class="round-stamp" aria-hidden="true">TASTE<br>↓<br>DESIGN</div>
       </div>
       <div class="study-switcher" role="group" aria-label="Explore illustrative design studies"><button class="mood-option" type="button" data-mood="soft" aria-pressed="true"><span></span> Soft signal</button><button class="mood-option" type="button" data-mood="night" aria-pressed="false"><span></span> After hours</button><button class="mood-option" type="button" data-mood="pop" aria-pressed="false"><span></span> Pop culture</button></div>
-      <p class="study-disclaimer">Illustrative studies. Your brief is created from your audience’s taste data.</p>
+      <p class="study-disclaimer">Illustrative studies. Generate directions for your project below.</p>
     </div>
   </section>
   <div class="deliverable-strip"><div class="wrap"><span class="strip-intro">FROM CULTURE TO CREATIVE DIRECTION</span><span>Color palettes <i>↗</i></span><span>Typography <i>↗</i></span><span>Spacing &amp; motion <i>↗</i></span><span>Ready-to-use CSS <i>↗</i></span></div></div>
   <section class="workspace wrap" id="create" aria-labelledby="create-title">
-    <div class="section-heading"><div><p class="eyebrow">01 / THE STARTING POINT</p><h2 id="create-title">Who are you designing for?</h2></div><span class="service" id="health" role="status">Checking service…</span></div>
+    <div class="section-heading"><div><p class="eyebrow">01 / THE STARTING POINT</p><h2 id="create-title">What are you building?</h2></div><span class="service" id="health" role="status">Checking service…</span></div>
     <div class="brief-input">
       <form id="ask" class="ask" autocomplete="off">
-        <label class="label" for="aud">Tell us what your audience loves.</label>
-        <div class="input-line"><span class="input-spark" aria-hidden="true">✳</span><input id="aud" type="text" name="audience" maxlength="300" minlength="2" required spellcheck="false" aria-describedby="aud-help" autocomplete="off" placeholder="e.g. Slowdive, Aesop, A24 — or describe your project"><button class="btn primary" id="go" type="submit">Create design brief</button><button class="btn" id="cancel" type="button" hidden>Cancel</button></div>
-        <p class="small muted" id="aud-help">Add 1–5 artists, brands, films, shows or books, separated by commas, or describe your project in a sentence.</p>
+        <div class="input-mode" role="group" aria-label="How to start"><button type="button" id="mode-project" aria-pressed="true" aria-controls="project-fields">Describe my project</button><button type="button" id="mode-audience" aria-pressed="false" aria-controls="audience-fields">I know my audience’s taste</button></div>
+        <div id="project-fields">
+          <label class="label" for="project">Describe your project or paste your Markdown.</label>
+          <textarea id="project" name="project" rows="7" maxlength="8000" minlength="20" required aria-describedby="project-help file-context" placeholder="What are you building, who is it for, and how should it feel? Paste your README, design.md or project spec here."></textarea>
+          <div class="project-file-row"><label for="project-file" class="file-label">Or choose a text file</label><input id="project-file" type="file" accept=".md,.markdown,.txt,text/markdown,text/plain" aria-describedby="file-context"><button class="btn" type="button" id="clear-file" hidden>Remove file context</button></div>
+          <p class="small muted" id="file-context" role="status">Markdown or plain text · 20–8,000 characters. The file is read into the text box for review.</p>
+          <p class="small muted" id="project-help">Include the product, intended users, key tasks and the feeling you want. Project text is sent to Workers AI to suggest audience references; only those names go to Qloo for taste evidence.</p>
+        </div>
+        <div id="audience-fields" hidden>
+          <label class="label" for="aud">Tell us what your audience loves.</label>
+          <div class="input-line"><span class="input-spark" aria-hidden="true">✳</span><input id="aud" type="text" name="audience" maxlength="300" minlength="2" disabled spellcheck="false" aria-describedby="aud-help" autocomplete="off" placeholder="e.g. Slowdive, Aesop, A24"></div>
+          <p class="small muted" id="aud-help">Add 1–5 artists, brands, films, shows or books, separated by commas. Put names containing commas in double quotes.</p>
+        </div>
+        <p class="notice small" id="configuration-warning" role="status" hidden></p>
+        <div class="create-actions"><button class="btn primary" id="go" type="submit">Explore design directions</button><button class="btn" id="cancel" type="button" hidden>Cancel</button></div>
       </form>
-      <div class="examples" id="chips"><span>Or borrow a little inspiration</span></div>
-      <div class="input-foot"><p class="help">Be specific. Add a hint like <code>Slowdive (artist)</code> when a name has several meanings.</p><span class="privacy-note"><span aria-hidden="true">◈</span> No account needed</span></div>
+      <div class="examples" id="chips"></div>
+      <div class="input-foot"><p class="help">Your text gives us context. Qloo supplies cultural relationships; our published design rules turn them into colors, type and spacing.</p><span class="privacy-note"><span aria-hidden="true">◈</span> No account needed</span></div>
       <div class="status" id="status" role="status" aria-live="polite" aria-atomic="true"></div>
     </div>
     <div class="card stack" id="out" hidden>
       <div class="result-head" id="result-head"></div>
+      <div id="direction-picker" class="direction-picker" role="group" aria-label="Choose a design direction" hidden></div>
       <div role="tablist" aria-label="Design brief" id="tabs"><button role="tab" id="t-preview" aria-controls="p-preview" aria-selected="true">Design direction</button><button role="tab" id="t-tokens" aria-controls="p-tokens" aria-selected="false" tabindex="-1">Export &amp; sources</button><button role="tab" id="t-vocab" aria-controls="p-vocab" aria-selected="false" tabindex="-1">Audience evidence</button><button role="tab" id="t-critic" aria-controls="p-critic" aria-selected="false" tabindex="-1">Check references</button></div>
       <div role="tabpanel" id="p-preview" aria-labelledby="t-preview" tabindex="0"></div><div role="tabpanel" id="p-tokens" aria-labelledby="t-tokens" tabindex="0" hidden></div><div role="tabpanel" id="p-vocab" aria-labelledby="t-vocab" tabindex="0" hidden></div><div role="tabpanel" id="p-critic" aria-labelledby="t-critic" tabindex="0" hidden></div>
     </div>
     <details class="request-drawer"><summary>Behind your brief <span class="drawer-hint">Follow the data</span></summary><div id="trace"><h2>Request details</h2><p class="small muted">After you create a brief, see which Qloo requests succeeded, were cached, or failed.</p></div></details>
   </section>
   <section class="process-section" id="how-it-works" aria-labelledby="process-title"><div class="wrap">
-    <div class="section-heading"><div><p class="eyebrow">02 / A LITTLE METHOD TO THE MAGIC</p><h2 id="process-title">From “they love this”<br>to “let’s build that.”</h2></div><p class="section-description">Taste gives you a place to start.<br>Every design choice shows how it got there.</p></div>
-    <div class="process-grid"><article><span class="step-number">01</span><div class="step-graphic taste-graphic" aria-hidden="true"><span>MUSIC</span><span>FILM</span><span>BRANDS</span><i>✳</i></div><h3>Start with their world.</h3><p>Tell us a few things your audience loves. Qloo connects those favorites to a wider world of cultural tastes.</p></article><article><span class="step-number">02</span><div class="step-graphic mapping-graphic" aria-hidden="true"><span>taste</span><i>⟶</i><span>Aa</span></div><h3>Find a visual language.</h3><p>Our <a href="/api/rules">published design rules</a> turn taste descriptors into color, type and spacing. Each choice comes with its reasoning.</p></article><article><span class="step-number">03</span><div class="step-graphic build-graphic" aria-hidden="true"><span>{</span><i>your next<br>good idea.</i><span>}</span></div><h3>Make it your own.</h3><p>Take the brief to your coding agent, download the CSS, or check creative references against your audience.</p></article></div>
+    <div class="section-heading"><div><p class="eyebrow">02 / A LITTLE METHOD TO THE MAGIC</p><h2 id="process-title">From “what I’m building”<br>to “how it could feel.”</h2></div><p class="section-description">Project context gives us a place to start.<br>Every design choice shows how it got there.</p></div>
+    <div class="process-grid"><article><span class="step-number">01</span><div class="step-graphic taste-graphic" aria-hidden="true"><span>PROJECT</span><span>PEOPLE</span><span>TASTE</span><i>✳</i></div><h3>Start with your project.</h3><p>Describe the product and the people it serves. A language model suggests cultural references; Qloo verifies the names and supplies taste evidence.</p></article><article><span class="step-number">02</span><div class="step-graphic mapping-graphic" aria-hidden="true"><span>taste</span><i>⟶</i><span>Aa</span></div><h3>Explore a few directions.</h3><p>Our <a href="/api/rules">published design rules</a> turn descriptors into palettes, named font pairs and spacing. Compare up to three directions from the same evidence.</p></article><article><span class="step-number">03</span><div class="step-graphic build-graphic" aria-hidden="true"><span>{</span><i>your next<br>good idea.</i><span>}</span></div><h3>Take it into your build.</h3><p>Pick a direction, copy the brief to your coding agent, or download its CSS. Check creative references against the same audience.</p></article></div>
     <details class="method-note"><summary>A starting point, with the sources to back it up.</summary><p class="aside-copy">Qloo provides taste relationships and descriptors, not colors or fonts. Our design mapping is a hypothesis, not a prediction of what every person will prefer. Every choice shows its source; choices without enough evidence are labeled as defaults.</p><p class="aside-copy">Text and interface contrast pairs are checked. The completed interface still needs its own accessibility review. No language model writes the design tokens. Rule version: <code id="rv">qv-rules-1.0</code>.</p></details>
   </div></section>
   <section class="wrap evidence-section"><p class="eyebrow">03 / SHOW YOUR WORK</p><details class="benchmark" id="benchmark"><summary>Does the audience actually change the result?<span class="benchmark-link">Explore the measured comparison <span aria-hidden="true">↗</span></span></summary><div id="bench-content"></div></details></section>
-  <footer class="wrap"><div class="footer-top"><a class="brand" href="/" aria-label="QlooVibe home"><span class="brand-mark" aria-hidden="true">✳</span>qloovibe</a><p>A little culture. A clear direction.</p><a href="#create">Back to the studio <span aria-hidden="true">↑</span></a></div><div class="footer-bottom"><span>Powered by Qloo taste data · <a href="/api/rules">Published design rules</a></span><span>No account or tracking. Audiences are sent to Qloo; briefs are stored for 7 days.</span></div></footer>
+  <footer class="wrap"><div class="footer-top"><a class="brand" href="/" aria-label="QlooVibe home"><span class="brand-mark" aria-hidden="true">✳</span>qloovibe</a><p>A little culture. A clear direction.</p><a href="#create">Back to the studio <span aria-hidden="true">↑</span></a></div><div class="footer-bottom"><span>Powered by Qloo taste data · <a href="/api/rules">Published design rules</a></span><span>No account or tracking. Project text goes to Workers AI; audience names go to Qloo. Briefs are stored for 7 days.</span></div></footer>
   <noscript><p class="notice wrap">JavaScript is needed to create a brief here. You can also use the <a href="/docs">REST API</a>.</p></noscript>
 </main>
 <script>
@@ -626,12 +639,18 @@ const h = (tag, attrs, ...kids) => {
 };
 const fmt = (n, d = 3) => Number.isFinite(n) ? n.toFixed(d) : "Unavailable";
 function readableNote(note) {
+  if (/(?:language model|Workers AI).*(?:not configured|unavailable)/i.test(note)) return "Project descriptions need Workers AI, which is unavailable here. Switch to ‘I know my audience’s taste’ and enter references, or try again later.";
   if (/QLOO_API_KEY|not configured/i.test(note)) return "Design generation is temporarily unavailable while the service is configured. Please try again later.";
   if (/No seed resolved/i.test(note)) return "We couldn't match these favorites. Try a more specific name, or add a hint such as (artist) or (brand).";
   return note.replace(/\bseeds\b/g, "favorites").replace(/\bseed\b/g, "favorite");
 }
 const STARTERS = ["Slowdive, Aesop, A24", "Travis Scott, Supreme", "BLACKPINK, Glossier"];
-const state = { vibe: null, request: null, critic: null };
+const PROJECT_STARTERS = [
+  { label: "Independent bookshop", text: "A website for an independent bookshop and its reading community. Help curious readers discover thoughtful recommendations and book local author events. It should feel warm, editorial and quietly welcoming." },
+  { label: "Creative portfolio", text: "A portfolio for a freelance photographer working with independent fashion and music clients. Showcase image-led projects and make enquiries simple. The direction should feel expressive, confident and contemporary." },
+  { label: "Mindful habit tracker", text: "A habit tracker for busy young professionals who want a calmer daily routine. Make small steps easy to log and progress clear without pressure. It should feel focused, gentle and easy to return to." }
+];
+const state = { vibe: null, request: null, critic: null, mode: "project", selectedDirection: null, sourceName: null, sourceEdited: false, fileReading: false, fileReadId: 0, health: null };
 const tabs = [...document.querySelectorAll("[role=tab]")];
 function selectTab(t) { for (const x of tabs) { const on = x === t; x.setAttribute("aria-selected", String(on)); x.tabIndex = on ? 0 : -1; $("#" + x.getAttribute("aria-controls")).hidden = !on; } }
 tabs.forEach((t, i) => {
@@ -671,7 +690,7 @@ function table(headers, rows, label, extraClass = "") {
   return h("div", { class: "table-scroll " + extraClass, tabindex: "0", role: "region", "aria-label": label }, h("table", { class: extraClass }, h("thead", null, h("tr", null, headers.map((v) => h("th", { scope: "col" }, v)))), h("tbody", null, rows.map((row) => h("tr", null, row.map((v) => h("td", null, v)))))));
 }
 function notice(title, items = []) { return h("div", { class: "notice" }, h("b", null, title), items.length ? h("ul", null, items.map((s) => h("li", null, readableNote(s)))) : null); }
-function sourceBadge(s) { return h("span", { class: "badge " + (s === "rule" ? "ok" : s === "default" ? "warn" : "") }, s === "default" ? "Published default" : s === "rule" ? "Qloo data + design rule" : "Derived by our code"); }
+function sourceBadge(s) { return h("span", { class: "badge " + (s === "rule" ? "ok" : s === "default" ? "warn" : "") }, s === "default" ? "Published default" : s === "rule" ? "Qloo data + design rule" : s === "qloovibe_recommendation" ? "QlooVibe font recommendation" : "Derived by our code"); }
 function parseNames(text, max, audience = false) {
   const body = audience ? text.trim().replace(/^(?:(?:fans of|lovers of|people who (?:like|love)|who (?:like|love)|audience of)\s+|audience:\s*)/i, "") : text.trim();
   const quotes = { '"': '"', "'": "'", "“": "”", "‘": "’" }, names = [];
@@ -719,26 +738,57 @@ function renderTrace(v, label = "Design brief") {
   const t = v.timing || {}, fresh = v.trace.filter((s) => s.freshness === "fresh").length, cached = v.trace.filter((s) => s.freshness === "cached").length, failed = v.trace.filter((s) => s.status !== "ok").length;
   box.append(h("p", { class: "small muted" }, `${label}: ${v.trace.length} requests · ${fresh} fresh, ${cached} cached, ${failed} failed.${Number.isFinite(t.total_ms) ? " " + (t.total_ms / 1000).toFixed(1) + "s server time." : ""}`), h("details", null, h("summary", null, "Inspect requests"), h("ol", { class: "trace-list" }, v.trace.map((s) => h("li", null, h("span", { class: "step" }, s.step), h("span", { class: "badge " + (s.status === "ok" ? "" : "bad") }, s.status === "ok" ? s.freshness : "Failed"), " ", h("span", { class: "muted num" }, `${s.ms} ms`), s.note ? h("p", { class: s.status === "ok" ? "muted" : "err" }, s.note) : null, h("code", null, String(s.call || "").replace(/signal\.interests\.entities=[^&]+/, "signal.interests.entities=…")))))));
 }
+function directionView(v) {
+  const direction = (v.directions || []).find((d) => d.id === state.selectedDirection) || v.directions?.[0];
+  return direction ? { ...v, tokens: direction.tokens, agent_brief: direction.agent_brief, selected_direction: direction } : v;
+}
+function selectDirection(v, id) {
+  const direction = (v.directions || []).find((d) => d.id === id);
+  if (!direction) return;
+  state.selectedDirection = direction.id;
+  $("#direction-picker").querySelectorAll("button").forEach((button) => button.setAttribute("aria-pressed", String(button.getAttribute("data-direction-id") === id)));
+  const view = directionView(v);
+  renderPreview(view); renderTokens(view);
+  $("#selected-direction-status").textContent = `${direction.name} selected. Preview, CSS and design brief now use this direction.`;
+}
+function renderDirections(v) {
+  const picker = $("#direction-picker"), directions = v.directions || [];
+  picker.replaceChildren(); picker.hidden = !directions.length;
+  if (!directions.length) return;
+  picker.append(h("h2", null, directions.length > 1 ? "Choose a direction for your build" : "Your supported direction"),
+    h("p", { class: "small muted" }, `${directions.length} direction${directions.length === 1 ? "" : "s"} from the same Qloo evidence. Colors, named font pairs and spacing are QlooVibe’s design interpretations.`),
+    h("div", { class: "direction-options" }, directions.map((d) => h("button", { type: "button", class: "direction-option", "data-direction-id": d.id, "aria-pressed": String(d.id === state.selectedDirection), onclick: () => selectDirection(v, d.id) },
+      h("span", { class: "direction-name" }, d.name), h("span", { class: "direction-summary" }, d.summary || d.description),
+      d.fonts ? h("span", { class: "direction-fonts" }, `${d.fonts.display.name} + ${d.fonts.body.name}`) : null,
+      h("span", { class: "direction-colors", "aria-hidden": "true" }, ["bg", "surface", "text", "accent"].map((key) => h("span", { style: `background:${d.tokens.palette.hex[key]}` })))
+    ))), h("p", { class: "small muted", id: "selected-direction-status", role: "status", "aria-live": "polite" }, `${directions.find((d) => d.id === state.selectedDirection)?.name || directions[0].name} selected. Preview and exports use this direction.`));
+}
 function renderPreview(v) {
   const p = $("#p-preview"), tk = v.tokens; p.replaceChildren();
   const values = Object.fromEntries([...tk.css_qv.matchAll(/(--qv-[a-z-]+):\s*([^;]+);/g)].map((m) => [m[1], m[2].trim()]));
   const specimen = h("div", { class: "specimen" }); for (const [name, value] of Object.entries(values)) specimen.style.setProperty(name, value);
   const descriptors = (v.voice?.words || []).slice(0, 5).map((w) => w.tag);
+  const contextTitle = v.project_context?.summary || "A direction for your next build";
+  const previewTitle = contextTitle.length > 80 ? contextTitle.slice(0, 77).replace(/\s+\S*$/, "") + "…" : contextTitle;
   specimen.append(
-    h("span", { class: "caption" }, "Your audience, in type and color"),
-    h("h3", null, v.seeds.map((s) => s.name).join(" · ")),
+    h("span", { class: "caption" }, v.selected_direction?.name || "Your audience, in type and color"),
+    h("h3", null, previewTitle),
     h("p", null, descriptors.length ? descriptors.join(" · ") : "Explore the design choices and their sources below."),
     h("div", { class: "spec-card" },
       h("h4", null, "A direction you can build on"),
-      h("p", null, `A ${tk.dims.mode.value} palette with ${tk.dims.font.value} display type, ${values["--qv-radius"]} corners and a ${values["--qv-unit"]} spacing unit.`)
+      h("p", null, `A ${tk.dims.mode.value} palette with ${v.selected_direction?.fonts?.display.name || tk.dims.font.value} display type, ${values["--qv-radius"]} corners and a ${values["--qv-unit"]} spacing unit.`)
     ),
     copyBtn("Copy design brief", () => v.agent_brief, "export")
   );
   p.append(specimen, h("h3", null, "Your color palette"), h("p", { class: "small muted" }, "Select any color to copy its hex value."));
   const feedback = h("p", { class: "feedback", role: "status", "aria-live": "polite" }), colorNames = { bg: "Background", surface: "Surface", text: "Text", muted: "Secondary text", accent: "Accent", accentText: "Text on accent", border: "Border" };
   p.append(h("div", { class: "swatches" }, Object.entries(tk.palette.hex).map(([key, color]) => h("button", { type: "button", class: "swatch", "aria-label": `Copy ${colorNames[key] || key} color ${color}`, onclick: async () => { try { await navigator.clipboard.writeText(color); feedback.textContent = `Copied ${color}.`; } catch { feedback.textContent = `Copy this color: ${color}`; } } }, h("span", { class: "color", style: `background:${color}`, "aria-hidden": "true" }), h("span", { class: "swatch-label" }, colorNames[key] || key, h("code", null, color))))), feedback);
-  const properties = [["Display type", tk.dims.font.value, "font"], ["Corner radius", values["--qv-radius"], "radius"], ["Spacing unit", values["--qv-unit"], "density"], ["Motion duration", values["--qv-dur"], "motion"]];
-  p.append(h("dl", { class: "properties" }, properties.map(([label, value, dim]) => h("div", { class: "property" }, h("dt", null, label), h("dd", null, value, h("br"), sourceBadge(tk.dims[dim].source))))), h("h3", null, "Contrast checks"), h("p", { class: "small muted" }, "Measured against WCAG AA thresholds. These checks cover the listed color pairs, not the accessibility of a finished page."), table(["Color pair", "Contrast", "Required", "Result"], tk.palette.contrast.map((c) => [c.pair, `${fmt(c.ratio, 2)}:1`, `${c.need}:1`, h("span", { class: "badge " + (c.pass ? "ok" : "bad") }, c.pass ? c.level : "Needs attention")]), "Palette contrast checks"));
+  const fonts = v.selected_direction?.fonts;
+  if (fonts) p.append(h("h3", null, "Your font pairing"), h("p", { class: "font-pair-names" }, `${fonts.display.name} for headings · ${fonts.body.name} for body text`), sourceBadge(fonts.source), h("p", { class: "small muted" }, fonts.note), h("p", { class: "small muted" }, fonts.loading_guidance));
+  if (v.selected_direction?.project_fit?.length) p.append(h("h3", null, v.project_context ? "How this could fit your project" : "Applying this direction"), h("ul", { class: "direction-reasons" }, v.selected_direction.project_fit.map((reason) => h("li", null, reason))));
+  if (v.selected_direction?.rationale?.length) p.append(h("h3", null, "Why this direction"), h("ul", { class: "direction-reasons" }, v.selected_direction.rationale.map((reason) => h("li", null, reason))));
+  const properties = [["Display type", fonts?.display.name || tk.dims.font.value, "font"], ["Corner radius", values["--qv-radius"], "radius"], ["Spacing unit", values["--qv-unit"], "density"], ["Motion duration", values["--qv-dur"], "motion"]];
+  p.append(h("dl", { class: "properties" }, properties.map(([label, value, dim]) => h("div", { class: "property" }, h("dt", null, label), h("dd", null, value, h("br"), sourceBadge(dim === "font" && fonts ? fonts.source : tk.dims[dim].source))))), h("h3", null, "Contrast checks"), h("p", { class: "small muted" }, "Measured against WCAG AA thresholds. These checks cover the listed color pairs, not the accessibility of a finished page."), table(["Color pair", "Contrast", "Required", "Result"], tk.palette.contrast.map((c) => [c.pair, `${fmt(c.ratio, 2)}:1`, `${c.need}:1`, h("span", { class: "badge " + (c.pass ? "ok" : "bad") }, c.pass ? c.level : "Needs attention")]), "Palette contrast checks"));
   if (tk.palette.adjustments.length) p.append(h("p", { class: "small muted" }, `${tk.palette.adjustments.length} color lightness adjustment(s) were applied to meet the contrast thresholds.`));
 
   /* Mobile sticky action bar (hidden on wider screens) */
@@ -749,17 +799,20 @@ function renderTokens(v) {
   const p = $("#p-tokens"), tk = v.tokens; p.replaceChildren();
   p.append(
     h("h2", null, "Take this direction into your build"),
-    h("p", { class: "small muted" }, "Give the design brief to your coding agent, or use the CSS variables in your project. Downloads contain this audience's actual generated values."),
+    h("p", { class: "small muted" }, `Give the design brief to your coding agent, or use the CSS variables in your project.${v.selected_direction ? " Selected direction: " + v.selected_direction.name + "." : ""} Downloads contain this direction’s actual values.`),
     h("div", { class: "row" }, copyBtn("Copy design brief", () => v.agent_brief), downloadBtn("Download brief (.md)", "qloovibe-brief.md", () => v.agent_brief, "text/markdown;charset=utf-8")),
     h("pre", { tabindex: "0", "aria-label": "Design brief" }, v.agent_brief),
     h("h3", null, "CSS variables"),
     h("div", { class: "row" }, copyBtn("Copy CSS", () => tk.css_qv), downloadBtn("Download CSS", "qloovibe.css", () => tk.css_qv, "text/css;charset=utf-8")),
     h("pre", { tabindex: "0", "aria-label": "Generated CSS" }, tk.css_qv),
-    h("details", null, h("summary", null, "Using shadcn/ui? Get compatible variables"), h("p", { class: "small muted" }, "Apply these variables after your theme styles. Check your components in the chosen color mode."), copyBtn("Copy shadcn CSS", () => tk.css_shadcn), h("pre", { tabindex: "0" }, tk.css_shadcn)),
+    h("details", null, h("summary", null, "Using shadcn/ui? Get compatible variables"), h("p", { class: "small muted" }, "Apply these variables after your theme styles. They include colors, radius, --font-sans for body text and --font-display for headings. Set body { font-family: var(--font-sans); } and h1, h2, h3 { font-family: var(--font-display); }. Copy the bundled font files using the guidance below, and check your components in the chosen color mode."), copyBtn("Copy shadcn CSS", () => tk.css_shadcn), h("pre", { tabindex: "0" }, tk.css_shadcn)),
     h("details", null, h("summary", null, "Connect a coding agent with MCP"), h("p", { class: "small muted" }, "For Claude Code, run:"), h("pre", { tabindex: "0" }, `claude mcp add --transport http qloovibe ${location.origin}/mcp`), copyBtn("Copy MCP command", () => `claude mcp add --transport http qloovibe ${location.origin}/mcp`), h("p", { class: "small muted" }, "Available tools: design_brief, check_audience_fit, get_rule_table. Other clients can use the same /mcp endpoint.")),
     h("h3", null, "Why each choice was made"),
     h("p", { class: "small muted" }, "Qloo supplies descriptors. Our published rules translate them into design choices. A default means there was too little mapped evidence for that choice.")
   );
+  const fonts = v.selected_direction?.fonts;
+  if (fonts) p.append(h("details", null, h("summary", null, `Use ${fonts.display.name} + ${fonts.body.name}`), h("p", { class: "small muted" }, fonts.note), h("p", { class: "small muted" }, fonts.loading_guidance), fonts.font_face_css ? h("pre", { tabindex: "0", "aria-label": "Font loading CSS" }, fonts.font_face_css) : null, fonts.assets?.length ? h("ul", null, fonts.assets.map((asset) => h("li", null, h("a", { href: asset.path, download: asset.path.split("/").pop() }, `Download ${asset.name}`), " · ", h("a", { href: asset.license, download: asset.license.split("/").pop() }, "Font license")))) : null));
+  if (v.selected_direction?.provenance) p.append(h("p", { class: "small muted" }, v.selected_direction.provenance.note));
 
   /* Compact receipt table: top 3 source tags per token, the rest behind a toggle */
   const receiptRows = tk.receipts.map((r) => {
@@ -802,8 +855,8 @@ function renderTokens(v) {
 function renderVocab(v) {
   const p = $("#p-vocab"); p.replaceChildren(
     h("h2", null, "What Qloo found"),
-    h("p", { class: "small muted" }, "Check these matches first. A similarly named artist or brand may describe a different audience."),
-    table(["You entered", "Matched to", "Type", "Match"], v.seeds.map((s) => [s.query, s.name, s.type.split(":").pop().replaceAll("_", " "), h("span", { class: "badge " + (s.match === "exact" ? "ok" : "warn") }, s.match === "exact" ? "Exact" : s.match === "prefix" ? "Name starts with your input" : "Closest result — review")]), "Audience name matches")
+    h("p", { class: "small muted" }, v.audience?.source === "model_suggested" ? "These audience references were proposed from your project by a language model and verified by Qloo. Review whether they describe the people you want to reach." : "Check these matches first. A similarly named artist or brand may describe a different audience."),
+    table([v.audience?.source === "model_suggested" ? "Proposed reference" : "You entered", "Matched to", "Type", "Match"], v.seeds.map((s) => [s.query, s.name, s.type.split(":").pop().replaceAll("_", " "), h("span", { class: "badge " + (s.match === "exact" ? "ok" : "warn") }, s.match === "exact" ? "Exact" : s.match === "prefix" ? "Name starts with your input" : "Closest result — review")]), "Audience name matches")
   );
 
   if (v.unresolved?.length) p.append(notice("These favorites were not included", v.unresolved));
@@ -908,12 +961,64 @@ async function loadBench() {
 }
 $("#benchmark").addEventListener("toggle", () => { if ($("#benchmark").open) loadBench(); });
 
-function setBusy(busy) { $("#go").disabled = busy; $("#go").textContent = busy ? "Creating brief…" : "Create design brief"; $("#aud").disabled = busy; $("#cancel").hidden = !busy; document.querySelectorAll("#chips button").forEach((b) => b.disabled = busy); $("#ask").setAttribute("aria-busy", String(busy)); }
+function setBusy(busy) {
+  const locked = busy || state.fileReading;
+  $("#go").disabled = locked; $("#go").textContent = busy ? "Creating directions…" : state.fileReading ? "Reading file…" : "Explore design directions";
+  $("#project").disabled = locked || state.mode !== "project"; $("#aud").disabled = locked || state.mode !== "audience";
+  for (const id of ["#mode-project", "#mode-audience", "#project-file", "#clear-file"]) $(id).disabled = locked;
+  $("#cancel").hidden = !busy; document.querySelectorAll("#chips button").forEach((b) => b.disabled = locked); $("#ask").setAttribute("aria-busy", String(locked));
+}
+function showServiceConfiguration() {
+  if (!state.health) return;
+  const d = state.health, e = $("#health"), warning = $("#configuration-warning");
+  e.textContent = !d.qloo_configured ? "Generation unavailable" : state.mode === "project" && d.ai_configured === false ? "Audience mode available" : "Qloo configured";
+  e.className = !d.qloo_configured || (state.mode === "project" && d.ai_configured === false) ? "service down" : "service";
+  e.title = !d.qloo_configured ? "The service needs a Qloo API key before it can create directions." : "Qloo availability is checked when you create directions.";
+  const message = !d.qloo_configured ? "Design generation is temporarily unavailable while Qloo is configured. Please try again later." : state.mode === "project" && d.ai_configured === false ? "Project descriptions need Workers AI, which is not configured here. Switch to ‘I know my audience’s taste’ to use names directly." : "";
+  warning.textContent = message; warning.hidden = !message;
+}
+function updateFileContext() {
+  $("#clear-file").hidden = !state.sourceName;
+  $("#file-context").textContent = state.sourceName ? `${state.sourceName} · ${$("#project").value.length.toLocaleString()} characters${state.sourceEdited ? " · edited in the text box" : " · loaded for review"}. Nothing is submitted until you create directions.` : "Markdown or plain text · 20–8,000 characters. The file is read into the text box for review.";
+}
+function renderStarters() {
+  const project = state.mode === "project";
+  $("#chips").replaceChildren(h("span", null, project ? "Try a project starting point" : "Or borrow a little inspiration"), ...(project ? PROJECT_STARTERS : STARTERS.map((text) => ({ label: text, text }))).map((sample) => h("button", { type: "button", onclick: () => {
+    const field = $(project ? "#project" : "#aud"); field.value = sample.text; field.focus();
+    if (project) { state.sourceName = null; state.sourceEdited = false; $("#project-file").value = ""; updateFileContext(); }
+  } }, sample.label)));
+}
+function setInputMode(mode, focus = true) {
+  if (state.request || state.fileReading) return;
+  state.mode = mode === "audience" ? "audience" : "project";
+  const project = state.mode === "project";
+  $("#project-fields").hidden = !project; $("#audience-fields").hidden = project;
+  $("#project").required = project; $("#aud").required = !project;
+  $("#mode-project").setAttribute("aria-pressed", String(project)); $("#mode-audience").setAttribute("aria-pressed", String(!project));
+  renderStarters(); showServiceConfiguration(); setBusy(false);
+  if (focus) $(project ? "#project" : "#aud").focus();
+}
+async function readProjectFile(file) {
+  if (!file || state.request || state.fileReading) return;
+  const readId = ++state.fileReadId, st = $("#status");
+  state.fileReading = true; setBusy(false); st.className = "status"; st.textContent = `Reading ${file.name}…`;
+  try {
+    if (typeof file.name !== "string" || file.name.length > 120 || /^[.]|[\\/\x00-\x1f\x7f]/.test(file.name) || !/\.(?:md|markdown|txt)$/i.test(file.name)) throw new Error("Choose a .md, .markdown or .txt file with a filename of at most 120 characters. You can also paste the text.");
+    if (file.size > 32000) throw new Error("This file is too large. Paste 20–8,000 characters of relevant project context, or choose a smaller text file.");
+    const text = await file.text();
+    if (readId !== state.fileReadId) return;
+    if (text.trim().length < 20 || text.length > 8000) throw new Error("Project text must be 20–8,000 characters. Choose a shorter file or paste the relevant section; no text has been truncated.");
+    $("#project").value = text; state.sourceName = file.name; state.sourceEdited = false;
+    st.textContent = "File loaded. Review the text, then explore design directions."; updateFileContext();
+  } catch (error) { st.className = "status err"; st.textContent = error.message; $("#project-file").value = ""; }
+  finally { state.fileReading = false; setBusy(false); }
+}
 
 /* Skeleton while a cold Qloo request runs. It marks where the result will appear and implies no progress.
    Everything from the previous audience is cleared so no stale result can be read while waiting. */
 function renderSkeletonLoader() {
-  for (const id of ["#result-head", "#p-tokens", "#p-vocab", "#p-critic"]) $(id).replaceChildren();
+  for (const id of ["#result-head", "#direction-picker", "#p-tokens", "#p-vocab", "#p-critic"]) $(id).replaceChildren();
+  $("#direction-picker").hidden = true;
   const p = $("#p-preview");
   p.replaceChildren(
     h("div", { class: "skeleton-box", "aria-hidden": "true" },
@@ -928,20 +1033,27 @@ function renderSkeletonLoader() {
   $("#out").hidden = false;
 }
 
-async function run(audience) {
-  if (state.request) return;
+async function run(input, mode = state.mode) {
+  if (state.request || state.fileReading) return;
+  if (mode !== state.mode) setInputMode(mode, false);
   state.critic?.abort(); state.critic = null; state.vibe = null;
+  state.selectedDirection = null;
   const controller = new AbortController(); state.request = controller; setBusy(true);
-  const st = $("#status"), t0 = performance.now(); st.className = "status"; st.textContent = "Finding this audience in Qloo. This usually takes a few seconds…";
+  const st = $("#status"), t0 = performance.now(); st.className = "status"; st.textContent = mode === "project" ? "Finding audience references for your project, then checking Qloo evidence…" : "Finding this audience in Qloo. This usually takes a few seconds…";
   $("#trace").replaceChildren(h("h2", null, "Request details"), h("p", { class: "small muted" }, "Requests will appear when this brief finishes."));
   const timer = setInterval(() => { const seconds = Math.round((performance.now() - t0) / 1000); st.textContent = seconds < 12 ? `Building your brief with Qloo data… ${seconds}s` : `Still waiting for the audience data… ${seconds}s. You can cancel and try again.`; }, 1000);
   try {
-    const words = (s) => s.trim().split(/\s+/).length;
-    let seeds = [];
-    try { seeds = parseNames(audience, 5, true); } catch (e) { if (!(words(audience) >= 6 && audience.trim().length >= 20)) throw e; }
-    const describing = audience.trim().length >= 20 && words(audience) >= 6 && (!seeds.length || seeds.some((s) => words(s) >= 6));
+    let body;
+    if (mode === "project") {
+      if (input.trim().length < 20 || input.length > 8000) { $("#project").focus(); throw new Error("Describe your project in 20–8,000 characters, or load a Markdown or text file. Include what you’re building and who it serves."); }
+      if (state.health?.ai_configured === false) throw new Error("Project descriptions need Workers AI, which is unavailable here. Switch to ‘I know my audience’s taste’ and enter references directly.");
+      body = { project: input.trim(), ...(state.sourceName ? { source_name: state.sourceName } : {}) };
+    } else {
+      if (input.length > 300) throw new Error("Use up to 300 characters for audience names.");
+      body = { audience: input.trim(), seeds: parseNames(input, 5, true) };
+    }
     renderSkeletonLoader();
-    const v = await post("/api/vibe", describing ? { project: audience.trim() } : { audience, seeds }, controller); clearInterval(timer); renderTrace(v);
+    const v = await post("/api/vibe", body, controller); clearInterval(timer); renderTrace(v);
     if (v.status === "insufficient_evidence" || !v.tokens) {
       $("#out").hidden = true;
       const reasons = (v.caveats || []).map(readableNote).map((s) => (/[.!?]$/.test(s) ? s : s + "."));
@@ -950,18 +1062,24 @@ async function run(audience) {
       return;
     }
     state.vibe = v;
-    setContent($("#result-head"), h("div", { class: "row space" }, h("h2", null, "Your design direction"), h("span", { class: "badge " + (v.status === "partial" ? "warn" : "ok") }, v.status === "partial" ? "Some evidence is limited" : "Brief ready")), h("p", { class: "small muted" }, "Based on: " + v.seeds.map((s) => `${s.name} (${s.type.split(":").pop().replaceAll("_", " ")})`).join(", ") + "."), v.caveats?.length ? notice("Before you use this direction", v.caveats) : null);
-    renderPreview(v); renderTokens(v); renderVocab(v); renderCritic(v); selectTab($("#t-preview")); $("#out").hidden = false;
-    st.textContent = `Brief ready in ${((performance.now() - t0) / 1000).toFixed(1)}s. Explore the direction below.` + (v.audience && v.audience.source === "model_suggested" && v.seeds && v.seeds.length ? ` Audience names suggested from your description and verified in Qloo: ${v.seeds.map((x) => x.name).join(", ")}.` : "");
+    state.selectedDirection = v.selected_direction_id || v.directions?.[0]?.id || null;
+    setContent($("#result-head"), h("div", { class: "row space" }, h("h2", null, "Your design directions"), h("span", { class: "badge " + (v.status === "partial" ? "warn" : "ok") }, v.status === "partial" ? "Some evidence is limited" : "Ready to explore")), v.project_context ? h("p", { class: "project-context" }, v.project_context.source_name ? `Project context: ${v.project_context.source_name}. ` : "Project context: ", v.project_context.summary || v.project_context.input_excerpt) : null, h("p", { class: "small muted" }, (v.audience?.source === "model_suggested" ? "Qloo-verified references proposed from your project: " : "Audience references: ") + v.seeds.map((s) => `${s.name} (${s.type.split(":").pop().replaceAll("_", " ")})`).join(", ") + "."), v.caveats?.length ? notice("Before you use these directions", v.caveats) : null);
+    const view = directionView(v);
+    renderDirections(v); renderPreview(view); renderTokens(view); renderVocab(v); renderCritic(v); selectTab($("#t-preview")); $("#out").hidden = false;
+    st.textContent = `Directions ready in ${((performance.now() - t0) / 1000).toFixed(1)}s. Choose a direction below; preview and exports follow your selection.`;
   } catch (e) { state.vibe = null; $("#out").hidden = true; st.className = controller.signal.aborted && /^Request canceled/.test(e.message) ? "status" : "status err"; st.textContent = e.name === "TypeError" ? "We couldn't display the returned brief. Please try again." : e.message; renderTrace(null); }
   finally { clearInterval(timer); state.request = null; setBusy(false); }
 }
 
-$("#ask").addEventListener("submit", (e) => { e.preventDefault(); const audience = $("#aud").value.trim(); if (audience.length < 2) { $("#status").className = "status err"; $("#status").textContent = "Enter at least one favorite, using two or more characters."; $("#aud").focus(); return; } run(audience); });
+$("#ask").addEventListener("submit", (e) => { e.preventDefault(); return run($(state.mode === "project" ? "#project" : "#aud").value); });
 $("#cancel").addEventListener("click", () => state.request?.abort());
-$("#chips").append(...STARTERS.map((s) => h("button", { type: "button", onclick: () => { $("#aud").value = s; $("#aud").focus(); } }, s)));
-$("#aud-help").append(' Put names containing commas in double quotes.');
-requestJSON("/health").then((d) => { const e = $("#health"); e.textContent = d.qloo_configured ? "Qloo configured" : "Generation unavailable"; e.className = d.qloo_configured ? "service" : "service down"; e.title = d.qloo_configured ? "The service has a Qloo API key. Availability is checked when you request a brief." : "The service needs a Qloo API key before it can create a brief."; if (!d.qloo_configured && !state.request && !state.vibe) { $("#status").className = "status err"; $("#status").textContent = "Design generation is temporarily unavailable while the service is configured. Please try again later."; } }).catch((error) => { const e = $("#health"); e.textContent = error.code === "local_worker_required" ? "Worker server required" : "Service unreachable"; e.className = "service down"; if (error.code === "local_worker_required" && !state.request && !state.vibe) { $("#status").className = "status err"; $("#status").textContent = error.message; } });
+$("#mode-project").addEventListener("click", () => setInputMode("project"));
+$("#mode-audience").addEventListener("click", () => setInputMode("audience"));
+$("#project-file").addEventListener("change", () => readProjectFile($("#project-file").files?.[0]));
+$("#project").addEventListener("input", () => { if (state.sourceName) { state.sourceEdited = true; updateFileContext(); } });
+$("#clear-file").addEventListener("click", () => { state.sourceName = null; state.sourceEdited = false; $("#project-file").value = ""; updateFileContext(); $("#project").focus(); });
+setInputMode("project", false);
+requestJSON("/health").then((d) => { state.health = d; showServiceConfiguration(); }).catch((error) => { const e = $("#health"); e.textContent = error.code === "local_worker_required" ? "Worker server required" : "Service unreachable"; e.className = "service down"; if (error.code === "local_worker_required" && !state.request && !state.vibe) { $("#status").className = "status err"; $("#status").textContent = error.message; } });
 requestJSON("/api/rules").then((d) => { if (d.version) $("#rv").textContent = d.version; }).catch(() => {});
 </script>
 <script src="/studio.js" defer></script>

@@ -4,15 +4,21 @@ Every sentence in the README, the Devpost text and the demo must fit this ledger
 
 ## Allowed (each is backed by a test, a live call or a measured run)
 
+- A project description or Markdown document can supply the context. A language model proposes audience references; Qloo resolves the names, and only exact matches are retained for inferred audiences. Resolving an entity does not validate the inferred audience's preferences.
+- Supported results include up to three distinct design directions, each with a named font pair, contrast-checked palette, CSS, implementation brief and evidence. Alternatives interpret subsets of the same returned Qloo tags; they are not independent Qloo findings. Sparse evidence yields fewer options.
+- Named font choices, style lenses and palette values are QlooVibe recommendations derived through our code. Qloo does not supply font names or certify these design choices.
+- The web app accepts project text and local Markdown/text files, and switches previews and exports to the selected direction. Files are read on selection and submitted only when the user creates directions.
+- The local stdio MCP bridge reads selected Markdown files within the configured project folder. The hosted MCP server accepts text from its client and cannot read local filesystem paths. Both workflows present directions for the user to choose.
+
 - Qloo supplies ranked decor, ambience and style tags for an audience, touchstone brands/artists/films with per-seed explainability, and affinity scores for candidates we name.
 - Audiences differ strongly on these tags (top-10 decor tag overlap between five test audiences: Jaccard 0.00 to 0.05).
-- Repeated identical queries return identical output (3 of 3 calls, and benchmark re-query Jaccard 1.00).
+- Repeated queries with the same explicit audience names returned identical vocabulary and tokens (3 of 3 calls, and benchmark re-query Jaccard 1.00). Project-to-audience model inference can vary between runs.
 - Without available Qloo decor data, or when no design choice has enough mapped evidence, the service returns no tokens (unit tests cover unavailable data and unmapped or filtered tags). Cached Qloo responses are labelled; supported briefs label individual defaults explicitly.
 - Every exported token carries a receipt: source, mapping or fixed-value note, and contributing Qloo tags with affinity and rule id where applicable.
 - Palette values are derived by our code from rule-chosen hue, chroma and mode and pass WCAG AA for the seven gated pairs (unit-tested over 64 palette combinations): text and accent on page and card surfaces, plus text on the accent. This is not an accessibility certification for a finished interface.
 - Per-seed decor shares come from separate Qloo queries and are unavailable if any seed's score is missing; missing evidence is not treated as zero support.
 - The rule table is ours, public at `/api/rules`, versioned, and every rule is a hypothesis.
-- When given a project description or design.md (`project`), a language model proposes audience names only; each name is checked against Qloo and only exact or prefix matches are kept. All design vocabulary still comes from Qloo, and the response says `audience.source: "model_suggested"` and lists the proposed names. If the model, or Qloo, is unavailable, no tokens are produced.
+- When given a project description or design.md (`project`), a language model proposes audience names only; each name is checked against Qloo and only exact matches are kept. All design vocabulary still comes from Qloo, and the response says `audience.source: "model_suggested"` and lists the proposed names. If the model or Qloo is unavailable for project-only inference, no tokens are produced.
 - Benchmark numbers exactly as stored by `scripts/benchmark.mjs` (n=12, one model, one temperature, closed vocabulary pooled from Qloo output).
 
 ## Not allowed
@@ -21,8 +27,8 @@ Every sentence in the README, the Devpost text and the demo must fit this ledger
 - "Qloo generates colours / hex codes / CSS / design systems." It does not.
 - "Colours come from brand affinities / images." Tested: no audience signal (p = 0.22 to 0.70).
 - "Per-tag explainability weights from Qloo." Qloo returns explainability for entity results only.
-- "No defaults" for every token. Individual unsupported choices and fixed body typography are labelled defaults; entirely unsupported briefs produce no tokens.
-- "100% deterministic" without "for the same query and Qloo data version".
+- "No defaults" for every token. Individual unsupported choices are labelled defaults; named body fonts are labelled QlooVibe readability recommendations. Entirely unsupported briefs produce no tokens.
+- "100% deterministic" without specifying the same resolved audience names, Qloo data and rule version; model-based project inference may vary.
 - "250M+ entities", "audited consumer preferences", "millions of profiles": unverified, not ours to claim.
 - "Better design", "higher conversion", "users prefer": never measured.
 - "Sub-100 ms", "real-time": measured latency is 4 to 8 s cold, under 1 s cached.

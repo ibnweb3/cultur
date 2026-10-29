@@ -54,6 +54,20 @@ describe("generate", () => {
     expect(v.trace.length).toBeGreaterThanOrEqual(9);
     expect(v.limitations.join(" ")).toContain("rule table");
   });
+  it("returns selectable directions without additional Qloo calls and keeps the default aliases", async () => {
+    const { svc, f } = makeSvc();
+    const v = await svc.generate({ audience: "Slowdive, Aesop" });
+    expect(v.directions).toHaveLength(3);
+    expect(f.calls).toHaveLength(10);
+    expect(v.selected_direction_id).toBe(v.directions[0].id);
+    expect(v.tokens).toEqual(v.directions[0].tokens);
+    expect(v.agent_brief).toBe(v.directions[0].agent_brief);
+    for (const direction of v.directions) {
+      expect(direction.agent_brief).toContain(direction.name);
+      expect(direction.agent_brief).toContain(direction.fonts.display.name);
+      expect(direction.agent_brief).toContain(direction.tokens.css_qv);
+    }
+  });
   it("prefers a brand over a more popular same-name video game, and honours a type hint", async () => {
     const v = await makeSvc().svc.generate({ audience: "Slowdive, Apple" });
     expect(v.seeds[1].entity_id).toBe("B9");
@@ -98,10 +112,12 @@ describe("generate", () => {
     const v = await makeSvc(f).svc.generate({ audience: "Slowdive, Aesop" });
     expect(v.status).toBe("insufficient_evidence");
     expect(v.tokens).toBeUndefined();
+    expect(v.directions).toBeUndefined();
     expect(v.caveats.join(" ")).toContain("no tokens");
     const none = await makeSvc(new FakeQloo(), { key: undefined }).svc.generate({ audience: "Slowdive, Aesop" });
     expect(none.status).toBe("insufficient_evidence");
     expect(none.tokens).toBeUndefined();
+    expect(none.directions).toBeUndefined();
     const nosearch = new FakeQloo(); nosearch.opts.failSearch = true;
     expect((await makeSvc(nosearch).svc.generate({ audience: "Slowdive" })).status).toBe("insufficient_evidence");
   });
@@ -228,6 +244,26 @@ describe("project text to audience names", () => {
     const v = await svc.generate({ seeds: ["Slowdive"], project: PROJECT });
     expect(called).toBe(0);
     expect(v.audience.source).toBe("named");
+    expect(v.project_context).toMatchObject({ summary: PROJECT, basis: "user_supplied" });
+    expect(v.directions[0].project_fit.join(" ")).toContain(PROJECT);
+  });
+  it("requires exact model-proposed names, while user-provided prefixes remain disclosed", async () => {
+    const { svc } = makeSvc(new FakeQloo(), { suggest: suggest(["Slow (artist)", "Aesop (brand)"]) });
+    const inferred = await svc.generate({ project: PROJECT });
+    expect(inferred.seeds.map((seed: Json) => seed.name)).toEqual(["Aesop"]);
+    expect(inferred.unresolved).toContain("Slow (artist)");
+    const named = await svc.generate({ seeds: ["Slow (artist)"] });
+    expect(named.seeds[0]).toMatchObject({ name: "Slowdive", match: "prefix" });
+  });
+  it("exports only a short project excerpt and a safe source filename", async () => {
+    const project = PROJECT + " ".repeat(2) + "Public requirements. ".repeat(25) + "PRIVATE_END_OF_DOCUMENT";
+    const { svc } = makeSvc();
+    const v = await svc.generate({ seeds: ["Slowdive", "Aesop"], project, source_name: "design.md" });
+    expect(v.project_context.source_name).toBe("design.md");
+    expect(v.project_context.input_excerpt.length).toBeLessThanOrEqual(240);
+    expect(v.agent_brief).not.toContain("PRIVATE_END_OF_DOCUMENT");
+    expect(JSON.stringify(v)).not.toContain("PRIVATE_END_OF_DOCUMENT");
+    await expect(svc.generate({ seeds: ["Slowdive"], project: PROJECT, source_name: "../private/design.md" })).rejects.toThrow(InvalidInput);
   });
   it("treats a long sentence Qloo cannot match as a project description", async () => {
     const { svc } = makeSvc(new FakeQloo(), { suggest: suggest(["Slowdive", "Aesop"]) });
@@ -246,6 +282,7 @@ describe("project text to audience names", () => {
       const v = await makeSvc(new FakeQloo(), o).svc.generate({ project: PROJECT });
       expect(v.status).toBe("insufficient_evidence");
       expect(v.tokens).toBeUndefined();
+      expect(v.directions).toBeUndefined();
       expect(v.caveats.length).toBeGreaterThan(0);
     }
   });

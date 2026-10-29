@@ -1,6 +1,7 @@
 // QlooVibe service: audience -> Qloo design vocabulary -> published rule table -> tokens, plus the critic check.
 // Without fresh Qloo grounding there is no vocabulary and therefore no tokens.
-import { compileTokens, filterTags, type FilterTrace, type KeptTag, type Tokens } from "./compile";
+import { filterTags, type FilterTrace, type KeptTag, type Tokens } from "./compile";
+import { buildDirections, type DirectionDraft, type ProjectContext } from "./directions";
 import { RULE_TABLE_VERSION } from "./rules";
 import { QlooClient, entId, entitiesOf, etype, tagsOf, type QResult } from "./qloo";
 import { FAMILIES, SCHEMA_VERSION, type Family, type Json, type Store, type TraceStep } from "./types";
@@ -83,10 +84,22 @@ function chooseSeed(query: string, results: Json[]): Seed | null {
 /** Proposes audience names from free text (a project description or design.md). Only the names come from the model; Qloo verifies them and supplies all vocabulary. */
 export type SuggestFn = (project: string) => Promise<{ names: string[]; model: string }>;
 interface Deps { store: Store; q: QlooClient; now?: () => number; suggest?: SuggestFn }
-export interface AudienceReq { audience?: string; seeds?: string[]; project?: string }
+export interface AudienceReq { audience?: string; seeds?: string[]; project?: string; source_name?: string }
 interface Audience { names: string[]; seeds: Seed[]; unresolved: string[]; unavailable: string[]; source: "named" | "model_suggested"; suggested: string[]; caveats: string[]; input: string }
 export const MAX_PROJECT = 8000, MIN_PROJECT = 20;
 interface Ctx { trace: TraceStep[]; fresh: boolean; now: () => number }
+
+function projectContext(project?: string, sourceName?: string): ProjectContext | undefined {
+  if (sourceName !== undefined && (sourceName.length > 120 || !/^[^\\/\u0000-\u001f\u007f.][^\\/\u0000-\u001f\u007f]*\.(?:md|markdown|txt)$/i.test(sourceName))) {
+    throw new InvalidInput("source_name must be a plain .md, .markdown or .txt filename, up to 120 characters.");
+  }
+  if (project === undefined) return undefined;
+  const text = project.trim();
+  if (text.length < MIN_PROJECT || project.length > MAX_PROJECT) throw new InvalidInput(`project must be ${MIN_PROJECT}-${MAX_PROJECT} characters.`);
+  const plain = text.replace(/\s+/g, " ");
+  const excerpt = plain.length > 240 ? `${plain.slice(0, 237).replace(/\s+\S*$/, "")}...` : plain;
+  return { summary: excerpt, input_excerpt: excerpt, ...(sourceName ? { source_name: sourceName } : {}), basis: "user_supplied" };
+}
 
 async function timed(ctx: Ctx, step: string, run: () => Promise<QResult>, note?: string): Promise<QResult> {
   const t0 = ctx.now();
@@ -135,7 +148,7 @@ export class Service {
     }
     if (!proposed.length) return none("The language model returned no usable audience names. Pass audience names (seeds) instead.");
     const r = await this.resolveAll(ctx, proposed);
-    const exact = r.seeds.filter((x) => x.match !== "closest").slice(0, MAX_SEEDS);
+    const exact = r.seeds.filter((x) => x.match === "exact").slice(0, MAX_SEEDS);
     const kept = new Set(exact.map((x) => x.query));
     return {
       names: proposed, seeds: exact, unresolved: proposed.filter((n) => !kept.has(n)), unavailable: r.unavailable, source: "model_suggested", suggested: proposed, input,
@@ -144,17 +157,19 @@ export class Service {
   }
 
   async generate(req: AudienceReq & { fresh?: boolean }) {
+    const suppliedContext = projectContext(req.project, req.source_name);
     const ctx = this.ctx(!!req.fresh);
     const started = ctx.now();
     const stamp = { id: crypto.randomUUID().replace(/-/g, "").slice(0, 12), schema_version: SCHEMA_VERSION, rule_table_version: RULE_TABLE_VERSION, created_at: new Date().toISOString() };
     if (!this.d.q.configured) {
       const names = req.project && req.seeds === undefined && !req.audience?.trim() ? [] : requestedSeeds(req);
-      return this.finish({ ...stamp, audience: { input: req.audience ?? names.join(", "), seeds_requested: names, source: "named" }, status: "insufficient_evidence", seeds: [], unresolved: names, caveats: ["QLOO_API_KEY is not configured; QlooVibe produces no design vocabulary without Qloo."] }, ctx, started);
+      return this.finish({ ...stamp, ...(suppliedContext ? { project_context: suppliedContext } : {}), audience: { input: req.audience ?? names.join(", "), seeds_requested: names, source: "named" }, status: "insufficient_evidence", seeds: [], unresolved: names, caveats: ["QLOO_API_KEY is not configured; QlooVibe produces no design vocabulary without Qloo."] }, ctx, started);
     }
     const aud = await this.audienceFor(ctx, req);
     const { names, seeds, unresolved, unavailable } = aud;
     const caveats: string[] = [...aud.caveats];
-    const base = { ...stamp, audience: { input: aud.input, seeds_requested: names, source: aud.source, ...(aud.source === "model_suggested" ? { suggested_seeds: aud.suggested } : {}) } };
+    const context = suppliedContext ?? (aud.source === "model_suggested" && req.audience ? projectContext(req.audience, req.source_name) : undefined);
+    const base = { ...stamp, ...(context ? { project_context: context } : {}), audience: { input: aud.input, seeds_requested: names, source: aud.source, ...(aud.source === "model_suggested" ? { suggested_seeds: aud.suggested } : {}) } };
     const notFound = unresolved.filter((n) => !unavailable.includes(n));
     if (notFound.length) caveats.push(`Not found in Qloo: ${notFound.join(", ")}`);
     if (unavailable.length) caveats.push(`Qloo could not check these audience names: ${unavailable.join(", ")}. Try again.`);
@@ -180,7 +195,8 @@ export class Service {
 
     const filters: FilterTrace[] = []; const kept: KeptTag[] = [];
     for (const f of FAMILIES) { const r = filterTags(f, rawBy[f]); filters.push(r.trace); kept.push(...r.kept); }
-    const tokens = compileTokens(kept);
+    const directionDrafts = buildDirections(kept, context);
+    const tokens = directionDrafts[0]?.tokens;
     // Tone words are passed through verbatim from Qloo's style and ambience tags: no rule, no mapping, nothing invented.
     const seenVoice = new Set<string>();
     const voice = {
@@ -189,7 +205,7 @@ export class Service {
         .map((k) => ({ tag: k.name, family: k.family, affinity: round(k.affinity) })),
       note: "Verbatim Qloo style and ambience tags for this audience. Use them as microcopy tone; applying a space or music descriptor to interface copy is an analogy.",
     };
-    if (Object.values(tokens.dims).every((d) => d.source === "default")) {
+    if (!tokens) {
       return this.finish({ ...base, status: "insufficient_evidence", seeds, unresolved, vocabulary: { filters }, caveats: [...caveats, "The returned tags do not provide enough mapped design evidence. No tokens or preview were generated. Try different audience names."] }, ctx, started);
     }
     if (Object.values(tokens.dims).some((d) => d.source === "default")) caveats.push("Tokens marked default had too little mapped Qloo evidence.");
@@ -215,10 +231,12 @@ export class Service {
 
     const failed = ctx.trace.filter((t) => t.status === "error").length;
     const partial = failed > 0 || unresolved.length > 0 || seeds.some((s) => s.match === "closest") || !rawBy.ambience.length || !rawBy.style.length;
+    if (directionDrafts.length < 3) caveats.push(`The returned evidence supports ${directionDrafts.length} distinct design direction${directionDrafts.length === 1 ? "" : "s"}; no extra options were invented to fill three slots.`);
+    const directions = directionDrafts.map((direction) => ({ ...direction, agent_brief: agentBrief(base.audience.input, seeds, direction.tokens, touchstones, voice.words.map((w) => w.tag), direction, context) }));
     return this.finish({
       ...base, status: partial ? "partial" : "complete", seeds, unresolved,
       vocabulary: { filters, attribution_note: seeds.length > 1 ? "Per-seed shares are derived from separate per-seed Qloo tag queries, not from Qloo explainability (which Qloo returns only for entity results)." : "Single seed: no attribution split." , attribution },
-      touchstones, voice, tokens, agent_brief: agentBrief(base.audience.input, seeds, tokens, touchstones, voice.words.map((w) => w.tag)),
+      touchstones, voice, directions, selected_direction_id: directions[0]!.id, tokens, agent_brief: directions[0]!.agent_brief,
       caveats, limitations: LIMITS,
     }, ctx, started);
   }
@@ -300,21 +318,24 @@ const LIMITS = [
   "Decor, ambience and style tags describe physical spaces and music styles; applying them to interfaces is an analogy.",
   "Palette hex values are derived from rule-chosen hue/chroma/mode and forced through a WCAG AA contrast gate (our code).",
   "Colours extracted from Qloo images did not separate audiences in our test (p = 0.22 to 0.70), so no colour is taken from images.",
-  "Same query and data version return identical output; Qloo data can change over time.",
+  "The same resolved audience names, Qloo data and rule version produce identical design tokens. Model-inferred audience names may vary between runs; Qloo data can also change over time.",
 ];
 
-function agentBrief(audience: string, seeds: Seed[], t: Tokens, touch: { type: string; items: { name: string }[] }[], voice: string[]): string {
+function agentBrief(audience: string, seeds: Seed[], t: Tokens, touch: { type: string; items: { name: string }[] }[], voice: string[], direction?: DirectionDraft, context?: ProjectContext): string {
   const top = (type: string) => (touch.find((x) => x.type === type)?.items ?? []).slice(0, 4).map((i) => i.name).join(", ");
   const d = t.dims;
   return [
     `# Design direction for: ${audience}`,
     `Grounded in Qloo taste data for ${seeds.map((s) => `${s.name} (${s.type.split(":").pop()})`).join(", ")}. Rule table ${t.rule_table_version}; tokens are rule-mapped hypotheses, not Qloo output.`,
+    ...(direction ? [`Selected direction: ${direction.name}. ${direction.description}`, `Evidence interpretation: ${direction.provenance.method}; rules ${direction.provenance.focus_rules.join(", ")}. Alternatives are design choices from the same Qloo data, not separate audience findings.`] : []),
+    ...(context ? [`Project context (user supplied${context.source_name ? `, ${context.source_name}` : ""}): ${context.summary}`, `Project application: ${direction?.project_fit.at(-1) ?? "Use these tokens with the supplied project requirements."}`] : []),
     ``,
     `Use a standard accessible component set (shadcn/ui, Radix). Do not invent layout patterns. Change only the skin with these variables:`,
     "```css", t.css_shadcn, "", t.css_qv, "```",
     ``,
     `- Colour mode: ${d.mode.value}; corner radius ${d.radius.value}px; spacing unit ${Math.round((d.density.value as number) * 4 * 100) / 100}px; display type: ${d.font.value}; motion ${d.motion.value}ms.`,
     `- Contrast gate: ${t.palette.gate} (all AA pairs ${t.palette.contrast.every((c) => c.pass) ? "pass" : "NOT all passing"}).`,
+    ...(direction ? [`- Font pair: ${direction.fonts.display.name} headings + ${direction.fonts.body.name} body. ${direction.fonts.note}`, `- Apply fonts: body { font-family: var(--qv-font-body, var(--font-sans)); } h1, h2, h3, h4, h5, h6 { font-family: var(--qv-font-display, var(--font-display)); }`, `- Font loading: ${direction.fonts.loading_guidance}`] : []),
     `- Microcopy tone words from Qloo (verbatim): ${voice.join(", ") || "n/a"}.`,
     `- Touchstones this audience loves (use for tone and imagery references, not logos): brands ${top("brand") || "n/a"}; artists ${top("artist") || "n/a"}; films ${top("movie") || "n/a"}.`,
     `- Before shipping copy or imagery that names artists, brands or films, call check_audience_fit to score each against this audience.`,
