@@ -34,7 +34,7 @@ The stored vocabulary benchmark compares Qloo's top-eight decor words with Llama
 
 ## Built with
 
-Cloudflare Workers, KV, Workers AI for project-reference inference and the benchmark, the official MCP SDK, TypeScript and automated tests. No language model writes the design tokens. Font assets and their license are provided for use with the exports. Enabling remote inference sends selected project text to Workers AI; proposed audience names and reference queries are sent to Qloo. Local file reads are confined to the configured project folder. Remote project submission from the local bridge requires explicit configuration.
+Cloudflare Workers, KV, Groq (open model) for project-reference inference with Workers AI as backup, Workers AI for the benchmark, the official MCP SDK, TypeScript and automated tests. No language model writes the design tokens. Font assets and their license are provided for use with the exports. Enabling remote inference sends selected project text to Workers AI; proposed audience names and reference queries are sent to Qloo. Local file reads are confined to the configured project folder. Remote project submission from the local bridge requires explicit configuration.
 
 ## Try it
 

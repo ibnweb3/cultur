@@ -4,6 +4,8 @@ export interface Env extends Pick<CloudflareBindings, "KV" | "ASSETS">,
   ADMIN_TOKEN?: string;
   /** Optional smaller model for the project-to-names step; defaults to the benchmark model. */
   SUGGEST_MODEL?: string;
+  GROQ_API_KEY?: string;
+  GROQ_MODEL?: string;
 }
 
 export interface Store {

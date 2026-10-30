@@ -155,9 +155,10 @@ export class Service {
       const r = cached ?? await this.d.suggest(project);
       if (!cached && r.names.length) { try { await this.d.store.put(key, JSON.stringify({ names: r.names, model: r.model }), 30 * 24 * 3600); } catch { /* storage must not break the response */ } }
       proposed = [...new Map(r.names.map((n) => [n.toLowerCase(), n])).values()].slice(0, 8);
-      ctx.trace.push({ step: "suggest audience names from project text", call: `Workers AI ${r.model} (names only)`, freshness: cached ? "cached" : "fresh", status: "ok", ms: ctx.now() - t0 });
+      ctx.trace.push({ step: "suggest audience names from project text", call: `${r.model.startsWith("@cf/") ? "Workers AI" : "Groq"} ${r.model} (names only)`, freshness: cached ? "cached" : "fresh", status: "ok", ms: ctx.now() - t0 });
     } catch (e) {
-      ctx.trace.push({ step: "suggest audience names from project text", call: "Workers AI", freshness: "fresh", status: "error", ms: ctx.now() - t0, note: "language model unavailable" });
+      console.error("suggest failed", String(e));
+      ctx.trace.push({ step: "suggest audience names from project text", call: "Workers AI", freshness: "fresh", status: "error", ms: ctx.now() - t0, note: "language model unavailable: " + String(e).slice(0, 300) });
       return none("The language model that turns a project description into audience names was unavailable. Pass audience names (seeds) instead.");
     }
     if (!proposed.length) return none("The language model returned no usable audience names. Pass audience names (seeds) instead.");

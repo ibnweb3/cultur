@@ -83,7 +83,7 @@ Read it carefully: the word list is pooled from Qloo's output, which is the easi
 ## Limitations
 
 - Decor, ambience and style tags describe physical spaces and music styles; applying them to interfaces is an analogy. Named font pairs and alternative design directions are QlooVibe recommendations, not font data returned by Qloo.
-- Project-only requests use Workers AI to propose audience references, then Qloo verifies entity matches. This identifies known entities; it does not establish that the inferred audience assumptions are correct. Supplying your own audience names keeps that choice explicit.
+- Project-only requests use a language model (Groq's open `openai/gpt-oss-20b`, with Workers AI as the backup) to propose audience references, then Qloo verifies entity matches. This identifies known entities; it does not establish that the inferred audience assumptions are correct. Supplying your own audience names keeps that choice explicit.
 - Qloo coverage varies: some seeds resolve to the closest entity (flagged), and some tags have no rule yet (listed in the output).
 - Critic verdicts compare a candidate's Qloo affinity with the median of Qloo's top 10 for the same audience and type (strong ≤ .05, ok ≤ .10, weak ≤ .18, else off-audience). Thresholds are a heuristic and Qloo affinities are compressed: read rank and gap.
 - Measured cold requests took about 4 to 8 seconds (about 10 Qloo calls); Qloo requests have a 25-second overall deadline. Repeated seed sets are served from a private cache for 6 hours and are labelled `cached` in the trace.
@@ -128,7 +128,7 @@ No accounts, no tracking. Submitted audience and reference names are sent to Qlo
 
 ## Repository layout
 
-- `worker/` the deployed app (TypeScript, Cloudflare Workers, KV, Workers AI for audience inference and the optional benchmark, official MCP SDK)
+- `worker/` the deployed app (TypeScript, Cloudflare Workers, KV, Groq for audience inference (Workers AI as backup, also used by the optional benchmark), official MCP SDK)
   - `src/rules.ts` the published rule table and tag filter terms · `src/color.ts` OKLCH maths and the contrast gate · `src/compile.ts` the token compiler · `src/vibe.ts` the service and critic · `src/index.ts` routes and MCP
 - `scripts/benchmark.mjs` the batch comparison
 - `scripts/qloovibe-mcp.mjs` scoped local file access and the stdio MCP bridge
