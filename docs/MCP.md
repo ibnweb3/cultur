@@ -75,7 +75,7 @@ Project submission to a non-local URL is disabled by default, even if `QLOOVIBE_
 node scripts/qloovibe-mcp.mjs --project-root "/absolute/path/to/the-project" --url "https://qloovibe.ibnweb3lab.workers.dev" --allow-remote-projects
 ```
 
-This enables submission only when `design_project` is called; starting the server and listing or reading documents do not upload them. The public service receives the selected text and may process it with Workers AI to infer audience references. Audience names are sent to Qloo. Saved briefs contain a short project excerpt and expire after seven days. Do not select documents containing confidential information you have not chosen to share. Filename checks cannot detect secrets embedded in an otherwise ordinary brief.
+This enables submission only when `design_project` is called; starting the server and listing or reading documents do not upload them. The public service receives the selected text and may send it to Groq (with Cloudflare Workers AI as backup) to infer audience references. Audience names are sent to Qloo. Saved briefs contain a short project excerpt and expire after seven days. Do not select documents containing confidential information you have not chosen to share. Filename checks cannot detect secrets embedded in an otherwise ordinary brief.
 
 HTTPS is required for remote URLs. Plain HTTP is accepted only for `localhost`, `127.0.0.1` and `::1`. Redirects are not followed.
 

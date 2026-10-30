@@ -158,7 +158,7 @@ export class Service {
       ctx.trace.push({ step: "suggest audience names from project text", call: `${r.model.startsWith("@cf/") ? "Workers AI" : "Groq"} ${r.model} (names only)`, freshness: cached ? "cached" : "fresh", status: "ok", ms: ctx.now() - t0 });
     } catch (e) {
       console.error("suggest failed", String(e));
-      ctx.trace.push({ step: "suggest audience names from project text", call: "Workers AI", freshness: "fresh", status: "error", ms: ctx.now() - t0, note: "language model unavailable: " + String(e).slice(0, 300) });
+      ctx.trace.push({ step: "suggest audience names from project text", call: "language model", freshness: "fresh", status: "error", ms: ctx.now() - t0, note: "language model unavailable: " + String(e).slice(0, 300) });
       return none("The language model that turns a project description into audience names was unavailable. Pass audience names (seeds) instead.");
     }
     if (!proposed.length) return none("The language model returned no usable audience names. Pass audience names (seeds) instead.");

@@ -566,7 +566,7 @@ pre {
           <textarea id="project" name="project" rows="5" maxlength="8000" minlength="20" required aria-describedby="project-help file-context"></textarea>
           <div class="project-file-row"><label for="project-file" class="file-label">Or choose a text file</label><input id="project-file" type="file" accept=".md,.markdown,.txt,text/markdown,text/plain" aria-describedby="file-context"><button class="btn" type="button" id="clear-file" hidden>Keep text only</button></div>
           <p class="small muted" id="file-context" role="status">Markdown or plain text · 20–8,000 characters. The file is read into the text box for review.</p>
-          <p class="small muted" id="project-help">Include what it does, who it serves and how it should feel. Your text goes to Cloudflare Workers AI to suggest references; those names go to Qloo for audience data.</p>
+          <p class="small muted" id="project-help">Include what it does, who it serves and how it should feel. Your text goes to a language model (Groq, with Cloudflare Workers AI as backup) to suggest references; those names go to Qloo for audience data.</p>
         </div>
         <div id="audience-fields" hidden>
           <label class="label" for="aud">Tell us what your audience loves.</label>

@@ -124,7 +124,7 @@ npx wrangler deploy
 
 ## Privacy
 
-No accounts, no tracking. Submitted audience and reference names are sent to Qloo. Project descriptions or selected Markdown text go to your configured QlooVibe service; when audience inference is needed, the text is processed through Workers AI. Saved briefs include a short project excerpt and expire after 7 days. Suggested audience names are cached for 30 days under a hash of normalized project text; that cache does not store the project text. The local bridge reads only permitted project documents, does not edit them, and requires a launcher opt-in before sending project text to a remote service. The rate limiter keeps IPs in memory only; the Qloo key is a Worker secret and is never logged or returned. Qloo data is not redistributed in this repository.
+No accounts, no tracking. Submitted audience and reference names are sent to Qloo. Project descriptions or selected Markdown text go to your configured QlooVibe service; when audience inference is needed, the text is sent to Groq (with Cloudflare Workers AI as backup) to propose names. Saved briefs include a short project excerpt and expire after 7 days. Suggested audience names are cached for 30 days under a hash of normalized project text; that cache does not store the project text. The local bridge reads only permitted project documents, does not edit them, and requires a launcher opt-in before sending project text to a remote service. The rate limiter keeps IPs in memory only; the Qloo key is a Worker secret and is never logged or returned. Qloo data is not redistributed in this repository.
 
 ## Repository layout
 
